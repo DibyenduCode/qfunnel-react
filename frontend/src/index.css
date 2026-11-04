@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ground: #f4f6f8;
+  --surface: #ffffff;
+  --raised: #f2f8fd;
+  --active: #dcf1ff;
+  --border: #e2e5e9;
+  --rule: #edf0f3;
+  --control: #d6d9dd;
+  --text: #131416;
+  --muted: #5d5f60;
+  --faint: #6b6b6b;
+  --accent: #1d5fd6;
+  --accent-soft: #dcf1ff;
+  --accent-ink: #0a3a80;
+  --primary: #1d5fd6;
+  --primary-hover: #1853bf;
+  --primary-ink: #ffffff;
+  --positive: #2f7a45;
+  --negative: #c41c29;
+  --warning: #92400e;
+  --chart-1: #1d5fd6;
+  --chart-2: #2a8798;
+  --chart-3: #b45309;
+  --pill-positive-bg: #dcfae5;
+  --pill-positive-ink: #04250e;
+  --pill-negative-bg: #ffedea;
+  --pill-negative-ink: #831c1e;
+  --pill-warning-bg: #fffbeb;
+  --pill-warning-ink: #92400e;
+  --pill-neutral-bg: #eef1f4;
+  --pill-neutral-ink: #3a3d40;
+  --pill-accent-bg: #dcf1ff;
+  --pill-accent-ink: #0a3a80;
+  --radius-card: 10px;
+  --radius-control: 8px;
+  --radius-sheet: 16px;
+  --sheet-inset: 8px;
+  --sidebar-width: 232px;
+  --gap: 24px;
+  --pad: 24px;
+  --control-height: 36px;
+  --row-height: 48px;
+  --fs-title: 22px;
+  --fs-section: 16px;
+  --fs-kpi: 28px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+  --font: "IBM Plex Sans", Inter, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+body {
+  font-family: var(--font);
+  background-color: var(--ground);
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+.num, table, .kpi-value {
+  font-variant-numeric: tabular-nums;
+}
+
+td.num, th.num {
+  text-align: right;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--control);
+}
+
+/* Smooth GPU-accelerated skeleton shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f3f6 25%, #e2e6eb 37%, #f1f3f6 63%); /* taste-skill-ignore */
+  background-size: 300% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Subtle hairline loading bar animation */
+@keyframes top-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-top-bar {
+  animation: top-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+

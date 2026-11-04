@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent directory listing
+    Options -Indexes
+
+    # Block sensitive internal directories and files
+    RewriteRule ^(\.env|app|config|database|storage|docs-internal|tests) - [F,L,NC]
+
+    # If request is not already targeting public/, route into public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

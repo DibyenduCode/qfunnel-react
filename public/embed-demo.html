@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QFunnel Widget Embed Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen py-12 px-4 sm:px-6">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">Live Integration Demo</span>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">QFunnel HTML Embed Examples</h1>
+                    <p class="text-sm text-slate-500 mt-1">This page demonstrates how to embed interactive quizzes on any website or plain HTML page.</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Example 1: Popup Modal Trigger Button -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Option 1</span>
+                <h2 class="text-lg font-bold text-slate-900 mt-0.5">Popup Lightbox Button</h2>
+                <p class="text-xs text-slate-500">Opens the interactive quiz inside an overlay modal dialog when visitors click the button.</p>
+            </div>
+
+            <div class="p-6 bg-slate-50 border border-dashed border-slate-200 rounded-xl flex items-center justify-center">
+                <!-- POPUP SNIPPET START -->
+                <button 
+                    data-qfunnel-embed="doctor-referral" 
+                    data-qfunnel-host="http://localhost/qfunnel" 
+                    data-qfunnel-mode="popup"
+                    class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer">
+                    ✨ Take Doctor Practice Referral Quiz (Popup)
+                </button>
+                <!-- POPUP SNIPPET END -->
+            </div>
+        </section>
+
+        <!-- Example 2: Inline Embed (Embedded directly in page content) -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Option 2 (Your Snippet)</span>
+                <h2 class="text-lg font-bold text-slate-900 mt-0.5">Inline Embedded Quiz</h2>
+                <p class="text-xs text-slate-500">Renders the quiz directly in-place inside your page's body content.</p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-100 p-2">
+                <!-- INLINE SNIPPET START -->
+                <div data-qfunnel-embed="doctor-referral" data-qfunnel-host="http://localhost/qfunnel" data-qfunnel-mode="inline" data-qfunnel-height="720px"></div>
+                <!-- INLINE SNIPPET END -->
+            </div>
+        </section>
+
+        <!-- Example 3: Floating Corner Widget -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Option 3</span>
+                <h2 class="text-lg font-bold text-slate-900 mt-0.5">Floating Corner Widget</h2>
+                <p class="text-xs text-slate-500">Notice the circular bubble pinned to the bottom-right corner of your screen.</p>
+            </div>
+
+            <!-- FLOATING SNIPPET START -->
+            <div 
+                data-qfunnel-embed="doctor-referral" 
+                data-qfunnel-host="http://localhost/qfunnel" 
+                data-qfunnel-mode="floating">
+            </div>
+            <!-- FLOATING SNIPPET END -->
+        </section>
+
+    </div>
+
+    <!-- REQUIRED EMBED ENGINE SCRIPT (Include once at bottom of <body>) -->
+    <script src="http://localhost/qfunnel/assets/js/embed.js?v=2" async></script>
+</body>
+</html>

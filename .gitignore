@@ -1,0 +1,44 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Frontend Dependencies & Builds
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PHP & Composer
+/vendor/
+composer.phar
+
+# Storage, Uploads & Logs
+storage/logs/*
+!storage/logs/.gitkeep
+storage/sessions/*
+!storage/sessions/.gitkeep
+storage/cache/*
+!storage/cache/.gitkeep
+storage/framework/*
+!storage/framework/.gitkeep
+public/uploads/*
+!public/uploads/.gitkeep
+!public/uploads/logos/.gitkeep
+
+# IDEs & OS Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Agent & Skills local cache
+.taste-skill/
