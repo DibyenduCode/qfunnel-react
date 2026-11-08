@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   ReactFlow,
@@ -22,8 +22,10 @@ import { FormNode } from './nodes/FormNode';
 import { QuestionNode } from './nodes/QuestionNode';
 import { VideoGateNode } from './nodes/VideoGateNode';
 import { DestinationNode } from './nodes/DestinationNode';
+import { ContentNode } from './nodes/ContentNode';
 import { LoaderNode } from './nodes/LoaderNode';
 import { BookingNode } from './nodes/BookingNode';
+import { ConditionNode } from './nodes/ConditionNode';
 import { NodeInspector } from './inspector/NodeInspector';
 import { BuilderToolbar } from './toolbar/BuilderToolbar';
 import { NodePalette, AVAILABLE_NODES } from './palette/NodePalette';
@@ -31,7 +33,9 @@ import {
   X,
   ArrowRight,
   Plus,
-  Play
+  Play,
+  Keyboard,
+  Command
 } from 'lucide-react';
 
 interface QuickAddState {
@@ -43,7 +47,7 @@ interface QuickAddState {
 
 const BuilderInner: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView, zoomIn, zoomOut } = useReactFlow();
 
   const [funnel, setFunnel] = useState<any>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -52,13 +56,97 @@ const BuilderInner: React.FC = () => {
 
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isJustSaved, setIsJustSaved] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [bannerMsg, setBannerMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Canvas History Stack for Undo/Redo
+  const [historyPast, setHistoryPast] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  const [historyFuture, setHistoryFuture] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+
+  const nodesRef = useRef<Node[]>(nodes);
+  const edgesRef = useRef<Edge[]>(edges);
+  const isNudgingRef = useRef<boolean>(false);
+  const nudgeTimerRef = useRef<any>(null);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
+
+  const pushHistory = useCallback(() => {
+    setHistoryPast((past) => {
+      const snapshot = {
+        nodes: JSON.parse(JSON.stringify(nodesRef.current)),
+        edges: JSON.parse(JSON.stringify(edgesRef.current)),
+      };
+      const updated = [...past, snapshot];
+      if (updated.length > 30) updated.shift();
+      return updated;
+    });
+    setHistoryFuture([]);
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    setHistoryPast((past) => {
+      if (past.length === 0) return past;
+      const previous = past[past.length - 1];
+      const newPast = past.slice(0, -1);
+
+      const currentSnapshot = {
+        nodes: JSON.parse(JSON.stringify(nodesRef.current)),
+        edges: JSON.parse(JSON.stringify(edgesRef.current)),
+      };
+      setHistoryFuture((future) => [currentSnapshot, ...future]);
+
+      setNodes(previous.nodes);
+      setEdges(previous.edges);
+      setSelectedNodeId(null);
+      setIsDirty(true);
+
+      setBannerMsg({ type: 'success', text: 'Action undone.' });
+      setTimeout(() => {
+        setBannerMsg((c) => (c?.text === 'Action undone.' ? null : c));
+      }, 1500);
+
+      return newPast;
+    });
+  }, [setNodes, setEdges]);
+
+  const handleRedo = useCallback(() => {
+    setHistoryFuture((future) => {
+      if (future.length === 0) return future;
+      const next = future[0];
+      const newFuture = future.slice(1);
+
+      const currentSnapshot = {
+        nodes: JSON.parse(JSON.stringify(nodesRef.current)),
+        edges: JSON.parse(JSON.stringify(edgesRef.current)),
+      };
+      setHistoryPast((past) => [...past, currentSnapshot]);
+
+      setNodes(next.nodes);
+      setEdges(next.edges);
+      setSelectedNodeId(null);
+      setIsDirty(true);
+
+      setBannerMsg({ type: 'success', text: 'Action redone.' });
+      setTimeout(() => {
+        setBannerMsg((c) => (c?.text === 'Action redone.' ? null : c));
+      }, 1500);
+
+      return newFuture;
+    });
+  }, [setNodes, setEdges]);
 
   // Define node types memoized for React Flow performance
   const nodeTypes = useMemo(
@@ -66,10 +154,12 @@ const BuilderInner: React.FC = () => {
       start: StartNode,
       form: FormNode,
       question: QuestionNode,
+      content: ContentNode,
       video_gate: VideoGateNode,
       destination: DestinationNode,
       loader: LoaderNode,
       booking: BookingNode,
+      condition: ConditionNode,
     }),
     []
   );
@@ -78,39 +168,12 @@ const BuilderInner: React.FC = () => {
     loadGraph();
   }, [id]);
 
-  // Global Keyboard Shortcuts (Ctrl+S, L for layout, Escape)
+  // Reset just-saved success indicator when user makes new edits
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const activeEl = document.activeElement;
-      const isInput =
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          activeEl.tagName === 'SELECT' ||
-          (activeEl as HTMLElement).isContentEditable);
-
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        handleSaveGraph();
-        return;
-      }
-
-      if (e.key === 'Escape') {
-        setSelectedNodeId(null);
-        setQuickAdd(null);
-        return;
-      }
-
-      if (!isInput && e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        handleAutoArrange();
-        return;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, edges, isDirty]);
+    if (isDirty) {
+      setIsJustSaved(false);
+    }
+  }, [isDirty]);
 
   const loadGraph = async () => {
     try {
@@ -146,7 +209,26 @@ const BuilderInner: React.FC = () => {
             destination_mode: n.destination_mode,
             calculator: n.calculator,
             quick_connect: n.quick_connect,
-            video_gate: n.video_gate,
+            video_gate: (() => {
+              const rawVg = n.video_gate || parsedConfig.video_gate || parsedConfig || {};
+              const cleanVg = { ...(typeof rawVg === 'object' ? rawVg : {}) };
+              delete (cleanVg as any).video_gate;
+              const vgSeconds = Number(
+                n.video_gate?.gate_timestamp_seconds ??
+                parsedConfig.video_gate?.gate_timestamp_seconds ??
+                parsedConfig.gate_timestamp_seconds ??
+                45
+              );
+              const vgFormFields =
+                n.video_gate?.form_fields ||
+                parsedConfig.video_gate?.form_fields ||
+                parsedConfig.form_fields ||
+                n.fields ||
+                [];
+              cleanVg.gate_timestamp_seconds = vgSeconds;
+              cleanVg.form_fields = vgFormFields;
+              return cleanVg;
+            })(),
             loader: parsedConfig.loader || n.loader,
             booking: parsedConfig.booking || n.booking,
             config: parsedConfig || n.config || {},
@@ -158,7 +240,7 @@ const BuilderInner: React.FC = () => {
       const rfEdges: Edge[] = (res.edges || []).map((e: any, idx: number) => ({
         id: e.id ? String(e.id) : `e-${e.source_node_id}-${e.target_node_id}-${idx}`,
         source: String(e.source_node_id),
-        sourceHandle: e.source_option_id ? String(e.source_option_id) : 'output',
+        sourceHandle: e.source_handle || (e.source_option_id ? String(e.source_option_id) : 'output'),
         target: String(e.target_node_id),
         targetHandle: 'input',
         animated: true,
@@ -177,6 +259,7 @@ const BuilderInner: React.FC = () => {
 
   const onConnect = useCallback(
     (params: Connection) => {
+      pushHistory();
       setEdges((eds) =>
         addEdge(
           {
@@ -189,7 +272,7 @@ const BuilderInner: React.FC = () => {
       );
       setIsDirty(true);
     },
-    [setEdges]
+    [setEdges, pushHistory]
   );
 
   // Contextual Wire Drag-and-Release Handler
@@ -224,22 +307,24 @@ const BuilderInner: React.FC = () => {
 
   const handleUpdateNode = useCallback(
     (updatedNode: Node) => {
+      pushHistory();
       setNodes((nds) =>
         nds.map((n) => (n.id === updatedNode.id ? updatedNode : n))
       );
       setIsDirty(true);
     },
-    [setNodes]
+    [setNodes, pushHistory]
   );
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
+      pushHistory();
       setNodes((nds) => nds.filter((n) => n.id !== nodeId));
       setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
       setSelectedNodeId(null);
       setIsDirty(true);
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges, pushHistory]
   );
 
   const handleModeChange = async (mode: 'quiz' | 'calculator') => {
@@ -258,6 +343,7 @@ const BuilderInner: React.FC = () => {
 
   const handleAddNode = useCallback(
     (type: string, subType?: string, position?: { x: number; y: number }): string => {
+      pushHistory();
       const newId = `node_${Date.now()}`;
       const x = position ? position.x : Math.floor(Math.random() * 150) + 200;
       const y = position ? position.y : Math.floor(Math.random() * 150) + 150;
@@ -381,6 +467,26 @@ const BuilderInner: React.FC = () => {
           whatsapp_button_text: 'Chat on WhatsApp',
           whatsapp_message: 'Hi! I just completed the {{funnel_name}} and received my quote: {{formatted_quote}}.',
         };
+      } else if (type === 'condition') {
+        initialData.title = 'Conditional Router';
+        initialData.condition = {
+          condition_type: 'score',
+          operator: '>=',
+          value: '80',
+          variable_key: 'Q1',
+          match_label: 'Qualified Lead',
+          default_label: 'Standard Route',
+        };
+        initialData.config = initialData.condition;
+      } else if (type === 'content') {
+        initialData.title = 'Key Insight & Overview';
+        initialData.content = {
+          headline: 'Did you know? 80% of organizations see higher ROI',
+          body_text: 'Explore this visual breakdown of key metrics before reviewing your customized recommendations.',
+          image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop',
+          button_text: 'Continue to Next Step',
+        };
+        initialData.config = initialData.content;
       }
 
       const newNode: Node = {
@@ -395,7 +501,7 @@ const BuilderInner: React.FC = () => {
       setIsDirty(true);
       return newId;
     },
-    [nodes, funnel, setNodes]
+    [nodes, funnel, setNodes, pushHistory]
   );
 
   // Quick-Add Next Step Selection Callback
@@ -445,6 +551,7 @@ const BuilderInner: React.FC = () => {
 
   const handleAutoArrange = () => {
     if (nodes.length === 0) return;
+    pushHistory();
 
     const adj = new Map<string, string[]>();
     const inDegree = new Map<string, number>();
@@ -529,6 +636,7 @@ const BuilderInner: React.FC = () => {
     try {
       setIsSaving(true);
       setBannerMsg(null);
+      const startTime = Date.now();
 
       const payload = {
         nodes: nodes.map((n) => {
@@ -551,24 +659,76 @@ const BuilderInner: React.FC = () => {
             calculator: d.calculator,
             quick_connect: d.quick_connect,
             form: d.form,
-            fields: d.fields || d.form?.fields,
-            video_gate: d.video_gate || d.config,
+            fields: d.fields || d.form?.fields || d.video_gate?.form_fields,
+            ...(() => {
+              const vgClean = {
+                ...(d.config?.video_gate || {}),
+                ...(d.video_gate || {}),
+              };
+              delete (vgClean as any).video_gate;
+              const vgSeconds = Number(d.video_gate?.gate_timestamp_seconds ?? d.config?.gate_timestamp_seconds ?? 45);
+              const vgFields = d.video_gate?.form_fields || d.config?.form_fields || d.fields || [];
+              const vgCtaDelay = Number(d.video_gate?.cta_delay_seconds ?? d.config?.video_gate?.cta_delay_seconds ?? d.config?.cta_delay_seconds ?? 15);
+              const vgCtaReveal = d.video_gate?.cta_reveal || d.config?.video_gate?.cta_reveal || d.config?.cta_reveal || 'always';
+              const vgCtaBtn = d.video_gate?.cta_button_text || d.config?.video_gate?.cta_button_text || d.config?.cta_button_text || 'Continue to Next Step';
+              const vgPlaybackMode = d.video_gate?.playback_mode || d.config?.video_gate?.playback_mode || d.config?.playback_mode || 'gated';
+
+              vgClean.gate_timestamp_seconds = vgSeconds;
+              vgClean.form_fields = vgFields;
+              vgClean.playback_mode = vgPlaybackMode;
+              vgClean.cta_reveal = vgCtaReveal;
+              vgClean.cta_delay_seconds = vgCtaDelay;
+              vgClean.cta_button_text = vgCtaBtn;
+
+              const configClean = { ...(d.config || {}) };
+              delete (configClean as any).video_gate;
+              configClean.video_gate = vgClean;
+              configClean.gate_timestamp_seconds = vgSeconds;
+              configClean.form_fields = vgFields;
+              configClean.playback_mode = vgPlaybackMode;
+              configClean.cta_reveal = vgCtaReveal;
+              configClean.cta_delay_seconds = vgCtaDelay;
+              configClean.cta_button_text = vgCtaBtn;
+
+              return {
+                video_gate: vgClean,
+                config: configClean,
+              };
+            })(),
+            condition: d.condition || d.config?.condition,
+            content: d.content || d.config?.content,
             loader: d.loader || d.config?.loader,
             booking: d.booking || d.config?.booking,
-            config: d.config,
+            media: d.media || d.config?.media,
           };
         }),
         edges: edges.map((e) => ({
           source_node_id: e.source,
-          source_option_id: e.sourceHandle && e.sourceHandle !== 'output' ? e.sourceHandle : null,
+          source_handle: e.sourceHandle || null,
+          source_option_id: e.sourceHandle && !['output', 'match', 'default'].includes(e.sourceHandle) && !isNaN(Number(e.sourceHandle)) ? e.sourceHandle : null,
           target_node_id: e.target,
         })),
       };
 
       await api.post(`/api/funnels/${id}/graph`, payload);
+
+      // Ensure minimum 400ms duration so spinner is clearly perceptible & feels reassuring
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 400) {
+        await new Promise((resolve) => setTimeout(resolve, 400 - elapsed));
+      }
+
       setIsDirty(false);
+      setIsJustSaved(true);
       setBannerMsg({ type: 'success', text: 'Canvas saved successfully.' });
-      setTimeout(() => setBannerMsg(null), 3000);
+
+      setTimeout(() => {
+        setIsJustSaved(false);
+      }, 2600);
+
+      setTimeout(() => {
+        setBannerMsg((current) => (current?.text === 'Canvas saved successfully.' ? null : current));
+      }, 2600);
     } catch (err: any) {
       setBannerMsg({ type: 'error', text: err.message || 'Failed to save graph.' });
     } finally {
@@ -604,6 +764,264 @@ const BuilderInner: React.FC = () => {
     }
   };
 
+  // Global Professional Keyboard Shortcuts (Delete, Nudge, Duplicate, Layout, Zoom, Fit)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.tagName === 'SELECT' ||
+          (activeEl as HTMLElement).isContentEditable);
+
+      // 1. Save Canvas: Ctrl+S or Cmd+S (Always intercepted globally)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveGraph();
+        return;
+      }
+
+      // If user is currently typing in an input/textarea, do NOT intercept node manipulation keys
+      if (isInput) {
+        if (e.key === 'Escape') {
+          (activeEl as HTMLElement).blur();
+        }
+        return;
+      }
+
+      // 2. Escape: Close modals, deselect nodes/edges & cancel quickAdd
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+          return;
+        }
+        setSelectedNodeId(null);
+        setQuickAdd(null);
+        setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+        setEdges((eds) => eds.map((ed) => ({ ...ed, selected: false })));
+        return;
+      }
+
+      // 3. Shortcuts Modal Toggle: ? or Shift + /
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setShowShortcutsModal((prev) => !prev);
+        return;
+      }
+
+      // 4. Delete: Delete selected node(s) or selected edge(s) (Backspace removed as requested)
+      if (e.key === 'Delete') {
+        // A. Check for selected edges first
+        const selectedEdges = edges.filter((ed) => ed.selected);
+        if (selectedEdges.length > 0) {
+          e.preventDefault();
+          pushHistory();
+          setEdges((eds) => eds.filter((ed) => !ed.selected));
+          setIsDirty(true);
+          return;
+        }
+
+        // B. Check for selected node(s)
+        const targetNodeIds = new Set<string>();
+        if (selectedNodeId) targetNodeIds.add(selectedNodeId);
+        nodes.forEach((n) => {
+          if (n.selected) targetNodeIds.add(n.id);
+        });
+
+        if (targetNodeIds.size > 0) {
+          e.preventDefault();
+
+          // Guard: Start Step cannot be deleted
+          const nodesToDelete: string[] = [];
+          let blockedStart = false;
+
+          targetNodeIds.forEach((nId) => {
+            const nodeObj = nodes.find((n) => n.id === nId);
+            if (nodeObj?.type === 'start') {
+              blockedStart = true;
+            } else {
+              nodesToDelete.push(nId);
+            }
+          });
+
+          if (blockedStart && nodesToDelete.length === 0) {
+            setBannerMsg({ type: 'error', text: 'Start Step cannot be deleted.' });
+            setTimeout(() => setBannerMsg(null), 2500);
+            return;
+          }
+
+          if (nodesToDelete.length > 0) {
+            pushHistory();
+            setNodes((nds) => nds.filter((n) => !nodesToDelete.includes(n.id)));
+            setEdges((eds) =>
+              eds.filter(
+                (ed) => !nodesToDelete.includes(ed.source) && !nodesToDelete.includes(ed.target)
+              )
+            );
+            setSelectedNodeId(null);
+            setIsDirty(true);
+            setBannerMsg({
+              type: 'success',
+              text: nodesToDelete.length === 1 ? 'Step deleted.' : `${nodesToDelete.length} steps deleted.`,
+            });
+            setTimeout(() => setBannerMsg(null), 2000);
+          }
+          return;
+        }
+      }
+
+      // 5. Undo: Ctrl+Z (Windows) or Cmd+Z (Mac)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      // 6. Redo: Ctrl+Y (Windows) or Cmd+Shift+Z / Cmd+Y (Mac)
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
+      ) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      // 7. Arrow Keys (Up, Down, Left, Right): Nudge selected node(s) with pixel precision
+      const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (arrowKeys.includes(e.key)) {
+        const hasSelection = selectedNodeId || nodes.some((n) => n.selected);
+        if (hasSelection) {
+          e.preventDefault();
+          if (!isNudgingRef.current) {
+            pushHistory();
+            isNudgingRef.current = true;
+          }
+          if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
+          nudgeTimerRef.current = setTimeout(() => {
+            isNudgingRef.current = false;
+          }, 800);
+
+          const step = e.shiftKey ? 40 : 10;
+          let dx = 0;
+          let dy = 0;
+
+          if (e.key === 'ArrowUp') dy = -step;
+          if (e.key === 'ArrowDown') dy = step;
+          if (e.key === 'ArrowLeft') dx = -step;
+          if (e.key === 'ArrowRight') dx = step;
+
+          setNodes((nds) =>
+            nds.map((n) => {
+              if (n.id === selectedNodeId || n.selected) {
+                return {
+                  ...n,
+                  position: {
+                    x: Math.round(n.position.x + dx),
+                    y: Math.round(n.position.y + dy),
+                  },
+                };
+              }
+              return n;
+            })
+          );
+          setIsDirty(true);
+          return;
+        }
+      }
+
+      // 8. Duplicate Step: Ctrl+D or Cmd+D
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        const activeNodeId = selectedNodeId || nodes.find((n) => n.selected)?.id;
+        if (!activeNodeId) return;
+
+        const sourceNode = nodes.find((n) => n.id === activeNodeId);
+        if (!sourceNode) return;
+
+        if (sourceNode.type === 'start') {
+          setBannerMsg({ type: 'error', text: 'Cannot duplicate the Start Step.' });
+          setTimeout(() => setBannerMsg(null), 2500);
+          return;
+        }
+
+        pushHistory();
+        const newId = `node_${Date.now()}`;
+        const clonedData = JSON.parse(JSON.stringify(sourceNode.data || {}));
+        if (clonedData.title) {
+          clonedData.title = `${clonedData.title} (Copy)`;
+        }
+        if (Array.isArray(clonedData.options)) {
+          clonedData.options = clonedData.options.map((opt: any, idx: number) => ({
+            ...opt,
+            id: `opt_${Date.now()}_${idx}`,
+          }));
+        }
+
+        const newNode: Node = {
+          ...sourceNode,
+          id: newId,
+          selected: true,
+          position: {
+            x: Math.round(sourceNode.position.x + 40),
+            y: Math.round(sourceNode.position.y + 40),
+          },
+          data: clonedData,
+        };
+
+        setNodes((nds) => [
+          ...nds.map((n) => ({ ...n, selected: false })),
+          newNode,
+        ]);
+        setSelectedNodeId(newId);
+        setIsDirty(true);
+        setBannerMsg({ type: 'success', text: `Duplicated "${sourceNode.data?.title || 'Step'}".` });
+        setTimeout(() => setBannerMsg(null), 2000);
+        return;
+      }
+
+      // 7. Select All Nodes: Ctrl+A or Cmd+A
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setNodes((nds) => nds.map((n) => ({ ...n, selected: true })));
+        return;
+      }
+
+      // 8. Auto-Arrange Tree Layout: L
+      if (e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        handleAutoArrange();
+        return;
+      }
+
+      // 9. Fit View: F
+      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        fitView({ duration: 300, padding: 0.2 });
+        return;
+      }
+
+      // 10. Zoom In: + or =
+      if ((e.key === '=' || e.key === '+') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        zoomIn({ duration: 200 });
+        return;
+      }
+
+      // 11. Zoom Out: -
+      if (e.key === '-' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        zoomOut({ duration: 200 });
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, edges, selectedNodeId, isDirty, showShortcutsModal, fitView, zoomIn, zoomOut, handleUndo, handleRedo, pushHistory]);
+
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
   if (loading) {
@@ -624,7 +1042,12 @@ const BuilderInner: React.FC = () => {
         funnel={funnel}
         isDirty={isDirty}
         isSaving={isSaving}
+        isJustSaved={isJustSaved}
         isPublishing={isPublishing}
+        canUndo={historyPast.length > 0}
+        canRedo={historyFuture.length > 0}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
         funnelMode={funnel?.funnel_mode || 'quiz'}
         onModeChange={handleModeChange}
         onSave={handleSaveGraph}
@@ -633,18 +1056,39 @@ const BuilderInner: React.FC = () => {
         onAutoArrange={handleAutoArrange}
         isPaletteOpen={isPaletteOpen}
         onTogglePalette={() => setIsPaletteOpen((prev) => !prev)}
+        onOpenShortcuts={() => setShowShortcutsModal(true)}
       />
 
-      {/* Global Toast Notification */}
+      {/* Floating Canvas Notification Pill (Zero Layout Shift) */}
       {bannerMsg && (
-        <div
-          className={`px-4 py-2 text-xs font-medium text-center border-b ${
-            bannerMsg.type === 'success'
-              ? 'bg-[#dcfae5] text-[#04250e] border-[#bbf0cc]'
-              : 'bg-[#ffedea] text-[#831c1e] border-[#fad2cd]'
-          }`}
-        >
-          {bannerMsg.text}
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 ease-out">
+          <div
+            className={`flex items-center gap-2.5 px-4 py-2 rounded-full shadow-lg border text-xs font-medium backdrop-blur-md animate-in fade-in slide-in-from-top-3 duration-200 pointer-events-auto ${
+              bannerMsg.type === 'success'
+                ? 'bg-white/95 border-[#bbf0cc] text-[#04250e] shadow-[0_8px_24px_rgba(4,37,14,0.08)]'
+                : 'bg-white/95 border-[#fad2cd] text-[#831c1e] shadow-[0_8px_24px_rgba(131,28,30,0.08)]'
+            }`}
+          >
+            {bannerMsg.type === 'success' ? (
+              <span className="w-4 h-4 rounded-full bg-[#dcfae5] text-[#04250e] flex items-center justify-center shrink-0">
+                <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M4.5 8.2L6.8 10.5L11.5 5.5"
+                    stroke="#04250e"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="animate-check-stroke"
+                  />
+                </svg>
+              </span>
+            ) : (
+              <span className="w-4 h-4 rounded-full bg-[#ffedea] text-[#831c1e] flex items-center justify-center shrink-0 font-bold text-[10px]">
+                !
+              </span>
+            )}
+            <span className="tracking-tight">{bannerMsg.text}</span>
+          </div>
         </div>
       )}
 
@@ -696,6 +1140,7 @@ const BuilderInner: React.FC = () => {
               onEdgesChange(changes);
               setIsDirty(true);
             }}
+            onNodeDragStart={() => pushHistory()}
             onConnect={onConnect}
             onConnectEnd={onConnectEnd}
             onNodeClick={onNodeClick}
@@ -716,6 +1161,8 @@ const BuilderInner: React.FC = () => {
                 if (n.type === 'video_gate') return '#c41c29';
                 if (n.type === 'loader') return '#b45309';
                 if (n.type === 'booking') return '#2f7a45';
+                if (n.type === 'condition') return '#c2410c';
+                if (n.type === 'content') return '#1d5fd6';
                 if (n.type === 'destination') return '#1d5fd6';
                 return '#5d5f60';
               }}
@@ -810,6 +1257,156 @@ const BuilderInner: React.FC = () => {
           />
         )}
       </div>
+
+      {/* 5. Keyboard Shortcuts Help Modal */}
+      {showShortcutsModal && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowShortcutsModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#e8eaec] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-[#e8eaec] flex items-center justify-between bg-[#f9fbfc]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#dcf1ff] text-[#0a3a80] flex items-center justify-center shrink-0">
+                  <Keyboard className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#131416]">Keyboard Shortcuts</h3>
+                  <p className="text-[11px] text-[#5d5f60]">Master canvas editing like a pro</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShortcutsModal(false)}
+                className="p-1.5 rounded-lg text-[#5d5f60] hover:text-[#131416] hover:bg-[#eef1f4] transition"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Shortcuts Content */}
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto text-xs">
+              {/* Group: Editing */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#5d5f60]">Step Manipulation</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Undo canvas action</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Ctrl</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Z</kbd>
+                      <span className="text-[#5d5f60] text-[10px] ml-1">/ ⌘Z</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Redo canvas action</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Ctrl</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Y</kbd>
+                      <span className="text-[#5d5f60] text-[10px] ml-1">/ ⌘⇧Z</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Delete selected step or connection</span>
+                    <kbd className="px-2 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Del</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Nudge step position (10px)</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">↑</kbd>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">↓</kbd>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">←</kbd>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">→</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Fast nudge step (40px)</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Shift</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Arrow</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Duplicate selected step</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Ctrl</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">D</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Save canvas changes</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Ctrl</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">S</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[#131416]">Select all steps</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Ctrl</kbd>
+                      <span className="text-[10px]">+</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">A</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group: Navigation & Canvas */}
+              <div className="space-y-2 pt-2 border-t border-[#e8eaec]">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#5d5f60]">View & Navigation</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Auto-align clean tree layout</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">L</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Fit canvas to screen</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">F</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Zoom in / Zoom out</span>
+                    <div className="flex items-center gap-1">
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">+</kbd>
+                      <span className="text-[#5d5f60] text-[10px]">/</span>
+                      <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">-</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1 border-b border-[#f4f6f8]">
+                    <span className="text-[#131416]">Deselect step / Close panel</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">Esc</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[#131416]">Toggle shortcuts guide</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-[#f4f6f8] border border-[#e2e5e9] font-mono text-[10px] text-[#131416] shadow-2xs">?</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 border-t border-[#e8eaec] bg-[#f9fbfc] flex items-center justify-between">
+              <span className="text-[11px] text-[#5d5f60]">Press <kbd className="px-1.5 py-0.5 rounded bg-white border border-[#e2e5e9] font-mono text-[10px]">Esc</kbd> to dismiss</span>
+              <button
+                type="button"
+                onClick={() => setShowShortcutsModal(false)}
+                className="px-3.5 py-1.5 rounded-lg bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition shadow-xs"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

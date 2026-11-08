@@ -123,3 +123,57 @@ td.num, th.num {
   animation: top-indeterminate 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Animated Checkmark Pop & SVG Stroke Draw */
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-check-pop {
+  animation: checkmark-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-check-stroke {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmark-draw 0.38s cubic-bezier(0.65, 0, 0.45, 1) 0.04s forwards;
+}
+
+@keyframes loader-spin-smooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: loader-spin-smooth 0.75s linear infinite;
+}
+
+

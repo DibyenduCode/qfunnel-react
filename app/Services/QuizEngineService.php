@@ -287,6 +287,11 @@ class QuizEngineService
             return self::completeSession($session, $node, $graphSnapshot, $settingsSnapshot);
         }
 
+        // If current node is a conditional router node, evaluate rule & advance automatically
+        if ($node['node_type'] === 'condition') {
+            return self::evaluateAndAdvanceCondition($rawToken, $session, $node, $graphSnapshot);
+        }
+
         // If current node is a video gate node, return video gate step
         if ($node['node_type'] === 'video_gate') {
             $nodeConfig = !empty($node['config_json']) ? (json_decode($node['config_json'], true) ?: []) : [];
@@ -301,6 +306,10 @@ class QuizEngineService
                 "SELECT id FROM quiz_step_events WHERE session_id = ? AND node_id = ? AND event_type IN ('video_gate_completed', 'video_gate_skipped')",
                 [$session['id'], $currentNodeId]
             );
+
+            $playbackMode = $vgConfig['playback_mode'] ?? 'gated';
+            $isStandard = ($playbackMode === 'standard');
+            $isGateUnlocked = $isStandard || $alreadyUnlocked;
 
             // Question options if gate_type is question
             $question = null;
@@ -338,15 +347,19 @@ class QuizEngineService
                     'node_id' => $currentNodeId,
                     'node_type' => 'video_gate',
                     'title' => $node['title'] ?? 'Video Presentation',
-                    'is_gate_unlocked' => $alreadyUnlocked,
+                    'is_gate_unlocked' => $isGateUnlocked,
                     'video_gate' => [
                         'video_provider' => $vgConfig['video_provider'] ?? 'youtube',
                         'video_url' => $vgConfig['video_url'] ?? '',
                         'video_id' => $vgConfig['video_id'] ?? '',
                         'video_hash' => $vgConfig['video_hash'] ?? '',
                         'video_headline' => $vgConfig['video_headline'] ?? '',
+                        'playback_mode' => $playbackMode,
+                        'cta_reveal' => $vgConfig['cta_reveal'] ?? 'always',
+                        'cta_delay_seconds' => (int)($vgConfig['cta_delay_seconds'] ?? 15),
+                        'cta_button_text' => $vgConfig['cta_button_text'] ?? 'Continue to Next Step ➔',
                         'autoplay_behavior' => isset($vgConfig['autoplay_behavior']) ? (bool)$vgConfig['autoplay_behavior'] : true,
-                        'gate_enabled' => isset($vgConfig['gate_enabled']) ? (bool)$vgConfig['gate_enabled'] : true,
+                        'gate_enabled' => !$isStandard && (isset($vgConfig['gate_enabled']) ? (bool)$vgConfig['gate_enabled'] : true),
                         'gate_timestamp_seconds' => (float)($vgConfig['gate_timestamp_seconds'] ?? 45.0),
                         'gate_type' => $vgConfig['gate_type'] ?? 'lead_form',
                         'gate_headline' => $vgConfig['gate_headline'] ?? '🔒 Complete this quick step to continue watching',
@@ -399,6 +412,37 @@ class QuizEngineService
                     'button_text' => $formConfig['button_text'] ?? ($node['button_text'] ?? 'Submit Details'),
                     'success_heading' => $formConfig['success_heading'] ?? 'Thank You!',
                     'success_message' => $formConfig['success_message'] ?? 'Your submission has been received.',
+                    'step_number' => $historyCount + 1,
+                    'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
+                ]
+            ];
+        }
+
+        // If current node is a content slide step
+        if ($node['node_type'] === 'content') {
+            $contentConfig = !empty($node['config_json']) ? (json_decode($node['config_json'], true) ?: []) : [];
+            $content = $contentConfig['content'] ?? ($node['content'] ?? $contentConfig);
+            $historyCount = (int) Database::fetchColumn(
+                "SELECT COUNT(DISTINCT node_id) FROM quiz_answers WHERE session_id = ? AND superseded_at IS NULL",
+                [$session['id']]
+            );
+
+            return [
+                'success' => true,
+                'status' => 'in_progress',
+                'funnel_name' => $session['funnel_name'],
+                'settings' => $settingsSnapshot,
+                'step' => [
+                    'step_type' => 'content',
+                    'node_id' => $currentNodeId,
+                    'node_type' => 'content',
+                    'title' => $node['title'] ?? 'Key Insight & Overview',
+                    'content' => [
+                        'headline' => $content['headline'] ?? ($node['title'] ?? 'Key Insight & Overview'),
+                        'body_text' => $content['body_text'] ?? ($content['subtext'] ?? ''),
+                        'image_url' => $content['image_url'] ?? '',
+                        'button_text' => $content['button_text'] ?? 'Continue to Next Step',
+                    ],
                     'step_number' => $historyCount + 1,
                     'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
                 ]
@@ -583,7 +627,7 @@ class QuizEngineService
             return self::advanceVideoStep($rawToken, $nodeId);
         }
 
-        if ($node && in_array($node['node_type'], ['loader', 'booking'], true)) {
+        if ($node && in_array($node['node_type'], ['content', 'loader', 'booking'], true)) {
             $targetNodeId = null;
             foreach ($graphSnapshot['edges'] ?? [] as $edge) {
                 if ((int)$edge['source_node_id'] === $nodeId) {
@@ -910,6 +954,29 @@ class QuizEngineService
             $destUrl = '';
         }
 
+        // Media (Image or Video)
+        $mediaConfig = $destNode['media'] ?? ($destConfig['media'] ?? ($destTracking['media'] ?? null));
+        $media = null;
+        if ($mediaConfig && ($mediaConfig['media_type'] ?? 'none') !== 'none') {
+            $mType = $mediaConfig['media_type'];
+            if ($mType === 'video' && !empty($mediaConfig['video_url'])) {
+                $parsed = FunnelGraphService::parseVideoUrl($mediaConfig['video_url']);
+                $media = [
+                    'media_type' => 'video',
+                    'video_url' => $mediaConfig['video_url'],
+                    'provider' => $parsed['provider'],
+                    'video_id' => $parsed['id'],
+                    'video_hash' => $parsed['hash'] ?? ''
+                ];
+            } elseif ($mType === 'image' && !empty($mediaConfig['image_url'])) {
+                $media = [
+                    'media_type' => 'image',
+                    'image_url' => $mediaConfig['image_url'],
+                    'alt_text' => $mediaConfig['alt_text'] ?? ''
+                ];
+            }
+        }
+
         $summary = [
             'funnel_name' => $session['funnel_name'],
             'lead_fields' => $formVals,
@@ -921,6 +988,7 @@ class QuizEngineService
             'calculator' => $quoteCard,
             'quote_card' => $quoteCard,
             'quick_connect' => $quickConnect,
+            'media' => $media,
             'completed_at' => date('Y-m-d H:i:s'),
         ];
 
@@ -982,6 +1050,7 @@ class QuizEngineService
                 'formatted_quote' => $formattedQuote,
                 'quote_card' => $quoteCard,
                 'quick_connect' => $quickConnect,
+                'media' => $media,
                 'summary' => $summary,
                 'auto_redirect' => !empty($settingsSnapshot['auto_redirect']),
                 'redirect_delay_seconds' => (int)($settingsSnapshot['redirect_delay_seconds'] ?? 3),
@@ -1159,7 +1228,13 @@ class QuizEngineService
                 ['field_key' => 'name', 'label' => 'Full Name', 'field_type' => 'text', 'is_required' => 1],
                 ['field_key' => 'email', 'label' => 'Email Address', 'field_type' => 'email', 'is_required' => 1],
             ];
-            $formData = $payload['form_data'] ?? $payload;
+            $rawFormData = $payload['form_data'] ?? $payload;
+            $formData = [];
+            foreach ($rawFormData as $k => $v) {
+                if (!in_array($k, ['session_token', 'node_id', 'form_data'], true)) {
+                    $formData[$k] = is_string($v) ? trim($v) : $v;
+                }
+            }
 
             $errors = [];
             foreach ($fields as $f) {
@@ -1496,6 +1571,7 @@ class QuizEngineService
         $formattedQuote = $result['formatted_quote'] ?? ($summary['formatted_quote'] ?? null);
         $quoteCard = $summary['quote_card'] ?? ($summary['calculator'] ?? null);
         $quickConnect = $summary['quick_connect'] ?? null;
+        $media = $summary['media'] ?? null;
 
         if (($summary['completion_type'] ?? '') === 'message') {
             return [
@@ -1532,6 +1608,7 @@ class QuizEngineService
                 'formatted_quote' => $formattedQuote,
                 'quote_card' => $quoteCard,
                 'quick_connect' => $quickConnect,
+                'media' => $media,
                 'summary' => $summary,
                 'auto_redirect' => !empty($settingsSnapshot['auto_redirect']),
             ]
@@ -1760,5 +1837,133 @@ class QuizEngineService
             'summary' => json_decode($result['summary_json'], true) ?: [],
             'completed_at' => $result['completed_at'],
         ];
+    }
+
+    public static function evaluateCondition(array $condConfig, int $sessionId, array $graphSnapshot): bool
+    {
+        $condType = $condConfig['condition_type'] ?? 'score';
+        $operator = $condConfig['operator'] ?? '>=';
+        $targetVal = trim((string)($condConfig['value'] ?? '0'));
+        $variables = self::extractSessionVariables($sessionId, $graphSnapshot);
+
+        $actualVal = null;
+        if ($condType === 'score') {
+            // Cumulative score of all answers so far
+            $actualVal = (float)array_sum($variables);
+        } elseif ($condType === 'variable') {
+            $varKey = strtoupper(ltrim($condConfig['variable_key'] ?? 'Q1', '@'));
+            $actualVal = isset($variables[$varKey]) ? (float)$variables[$varKey] : 0.0;
+        } elseif ($condType === 'slider' || $condType === 'answer') {
+            $targetNodeId = (int)($condConfig['target_node_id'] ?? 0);
+            $ans = null;
+            if ($targetNodeId > 0) {
+                $ans = Database::fetchOne(
+                    "SELECT * FROM quiz_answers WHERE session_id = ? AND node_id = ? AND superseded_at IS NULL ORDER BY id DESC LIMIT 1",
+                    [$sessionId, $targetNodeId]
+                );
+            }
+            if (!$ans) {
+                // Fallback to most recent slider answer
+                $ans = Database::fetchOne(
+                    "SELECT * FROM quiz_answers WHERE session_id = ? AND answer_type = 'slider' AND superseded_at IS NULL ORDER BY id DESC LIMIT 1",
+                    [$sessionId]
+                );
+            }
+
+            if ($ans) {
+                if ($ans['answer_type'] === 'slider' || is_numeric($ans['answer_value_text'])) {
+                    $actualVal = (float)$ans['answer_value_text'];
+                } else {
+                    $actualVal = $ans['answer_value_text'];
+                }
+            } else {
+                $actualVal = 0.0;
+            }
+        } else {
+            $actualVal = (float)array_sum($variables);
+        }
+
+        // Compare values
+        if (is_numeric($actualVal) && is_numeric($targetVal)) {
+            $numActual = (float)$actualVal;
+            $numTarget = (float)$targetVal;
+            switch ($operator) {
+                case '>': return $numActual > $numTarget;
+                case '>=': return $numActual >= $numTarget;
+                case '<': return $numActual < $numTarget;
+                case '<=': return $numActual <= $numTarget;
+                case '==': return abs($numActual - $numTarget) < 0.0001;
+                case '!=': return abs($numActual - $numTarget) >= 0.0001;
+                default: return $numActual >= $numTarget;
+            }
+        } else {
+            $strActual = strtolower(trim((string)$actualVal));
+            $strTarget = strtolower($targetVal);
+            switch ($operator) {
+                case '==': return $strActual === $strTarget;
+                case '!=': return $strActual !== $strTarget;
+                case 'contains': return strpos($strActual, $strTarget) !== false;
+                default: return $strActual === $strTarget;
+            }
+        }
+    }
+
+    public static function evaluateAndAdvanceCondition(string $rawToken, array $session, array $condNode, array $graphSnapshot): array
+    {
+        $nodeConfig = !empty($condNode['config_json']) ? (json_decode($condNode['config_json'], true) ?: []) : [];
+        $condConfig = $condNode['condition'] ?? ($nodeConfig['condition'] ?? $nodeConfig);
+
+        $isMatch = self::evaluateCondition($condConfig, (int)$session['id'], $graphSnapshot);
+
+        $edges = $graphSnapshot['edges'] ?? [];
+        $matchTarget = null;
+        $defaultTarget = null;
+        $fallbackTarget = null;
+
+        foreach ($edges as $e) {
+            if ((int)$e['source_node_id'] === (int)$condNode['id']) {
+                $handle = $e['source_handle'] ?? $e['source_option_id'] ?? null;
+                if ($handle === 'match') {
+                    $matchTarget = (int)$e['target_node_id'];
+                } elseif ($handle === 'default' || $handle === 'else') {
+                    $defaultTarget = (int)$e['target_node_id'];
+                } else {
+                    if (!$fallbackTarget) $fallbackTarget = (int)$e['target_node_id'];
+                }
+            }
+        }
+
+        $nextTarget = null;
+        if ($isMatch && $matchTarget) {
+            $nextTarget = $matchTarget;
+        } elseif (!$isMatch && $defaultTarget) {
+            $nextTarget = $defaultTarget;
+        } elseif ($matchTarget) {
+            $nextTarget = $matchTarget;
+        } elseif ($defaultTarget) {
+            $nextTarget = $defaultTarget;
+        } elseif ($fallbackTarget) {
+            $nextTarget = $fallbackTarget;
+        }
+
+        if (!$nextTarget) {
+            throw new RuntimeException("Conditional routing error: No destination connected for condition in '{$condNode['title']}'.");
+        }
+
+        // Record journey event
+        Database::execute(
+            "INSERT INTO quiz_step_events (tenant_id, funnel_id, funnel_version_id, session_id, event_type, node_id, occurred_at) 
+             VALUES (?, ?, ?, ?, 'condition_routed', ?, NOW())",
+            [$session['tenant_id'], $session['funnel_id'], $session['funnel_version_id'], $session['id'], $condNode['id']]
+        );
+
+        // Advance session
+        Database::execute(
+            "UPDATE quiz_sessions SET current_node_id = ?, last_activity_at = NOW() WHERE id = ?",
+            [$nextTarget, $session['id']]
+        );
+
+        // Recursively return next step
+        return self::getCurrentStep($rawToken);
     }
 }

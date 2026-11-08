@@ -479,24 +479,94 @@ export const LeadDetailPage: React.FC = () => {
                     </div>
 
                     <div className="pl-7">
-                      {ans.answer_type === 'slider' ? (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#ebf3fc] text-[#2f70bb] text-xs">
-                          <Sliders className="w-3 h-3" />
-                          <span>Slider value:</span>
-                          <span className="font-mono">{ans.answer_value_text}</span>
-                        </div>
-                      ) : ans.answer_type === 'video_gate_question' ? (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#ffedea] text-[#c4242a] text-xs">
-                          <Video className="w-3 h-3" />
-                          <span>Video option:</span>
-                          <span>{ans.answer_value_text}</span>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#f4f6f8] text-[#131416] border border-[#e8eaec] text-xs">
-                          <span>Choice:</span>
-                          <span className="font-medium">{ans.answer_value_text}</span>
-                        </div>
-                      )}
+                      {(() => {
+                        if (ans.answer_type === 'slider') {
+                          return (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#ebf3fc] text-[#2f70bb] text-xs">
+                              <Sliders className="w-3 h-3" />
+                              <span>Slider value:</span>
+                              <span className="font-mono">{ans.answer_value_text}</span>
+                            </div>
+                          );
+                        }
+
+                        if (ans.answer_type === 'video_gate_question') {
+                          return (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#ffedea] text-[#c4242a] text-xs">
+                              <Video className="w-3 h-3" />
+                              <span>Video response:</span>
+                              <span className="font-medium">{ans.answer_value_text}</span>
+                            </div>
+                          );
+                        }
+
+                        // Handle video_gate_lead or any JSON-formatted form answer
+                        let parsedJson: Record<string, any> | null = null;
+                        if (
+                          ans.answer_type === 'video_gate_lead' ||
+                          ans.answer_type === 'form' ||
+                          (typeof ans.answer_value_text === 'string' && ans.answer_value_text.trim().startsWith('{'))
+                        ) {
+                          try {
+                            const obj = JSON.parse(ans.answer_value_text);
+                            if (typeof obj === 'object' && obj !== null) {
+                              parsedJson = {};
+                              for (const [k, v] of Object.entries(obj)) {
+                                if (
+                                  !['session_token', 'node_id', 'form_data', 'funnel_id', 'tenant_id'].includes(k) &&
+                                  v !== null &&
+                                  v !== ''
+                                ) {
+                                  parsedJson[k] = String(v);
+                                }
+                              }
+                            }
+                          } catch {
+                            parsedJson = null;
+                          }
+                        }
+
+                        if (ans.answer_type === 'video_gate_lead' || parsedJson) {
+                          return (
+                            <div className="space-y-2 pt-0.5">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-xs font-semibold">
+                                <Lock className="w-3.5 h-3.5 text-emerald-600 stroke-[2.2]" />
+                                <span>Turnstile Gate Unlocked</span>
+                              </div>
+
+                              {parsedJson && Object.keys(parsedJson).length > 0 ? (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {Object.entries(parsedJson).map(([key, val]) => {
+                                    const label = key
+                                      .replace(/_/g, ' ')
+                                      .replace(/\b\w/g, (c) => c.toUpperCase());
+                                    return (
+                                      <div
+                                        key={key}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-[#f8f9fa] border border-[#e8eaec] text-xs"
+                                      >
+                                        <span className="text-[#5d5f60] font-medium">{label}:</span>
+                                        <span className="font-semibold text-[#131416]">{val}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-[#5d5f60] italic block pl-1">
+                                  Contact details captured
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#f4f6f8] text-[#131416] border border-[#e8eaec] text-xs">
+                            <span>Choice:</span>
+                            <span className="font-medium">{ans.answer_value_text}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -524,12 +594,14 @@ export const LeadDetailPage: React.FC = () => {
                   else if (eventType === 'video_gate_reached') bulletBg = 'bg-[#92400e]';
                   else if (eventType === 'video_gate_completed') bulletBg = 'bg-[#1e7b4f]';
                   else if (eventType === 'video_completed') bulletBg = 'bg-[#1b6c80]';
+                  else if (eventType === 'condition_routed') bulletBg = 'bg-[#c2410c]';
 
                   let eventLabel = eventType.replace(/_/g, ' ');
                   if (eventType === 'video_started') eventLabel = 'Video playback started';
                   else if (eventType === 'video_gate_reached') eventLabel = 'Video gate paused';
                   else if (eventType === 'video_gate_completed') eventLabel = 'Video gate passed';
                   else if (eventType === 'video_completed') eventLabel = 'Video completed';
+                  else if (eventType === 'condition_routed') eventLabel = 'Condition Evaluated & Routed';
 
                   return (
                     <div key={evt.id || idx} className="relative text-xs">

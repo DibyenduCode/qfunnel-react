@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Flag, ExternalLink, Calculator, Zap } from 'lucide-react';
+import { Flag, ExternalLink, Calculator, Zap, Image as ImageIcon, Video as VideoIcon } from 'lucide-react';
 
 export const DestinationNode = memo(({ data, selected }: NodeProps) => {
   const dest = (data.destination as any) || {};
@@ -8,6 +8,8 @@ export const DestinationNode = memo(({ data, selected }: NodeProps) => {
   const qc = (data.quick_connect as any) || {};
   const destMode = (data.destination_mode as string) || (qc.enabled ? 'direct_connect' : 'redirect');
   const isDirectConnect = destMode === 'direct_connect';
+  const media = (data.media as any) || (data.config as any)?.media || {};
+  const mediaType = media.media_type || 'none';
 
   const calc = (data.calculator as any) || {};
   const isCalc = Boolean(calc.enabled);
@@ -79,6 +81,21 @@ export const DestinationNode = memo(({ data, selected }: NodeProps) => {
                 <span>Direct on-page outcome</span>
               </div>
             )
+          )}
+
+          {/* Media Attached Indicator */}
+          {mediaType === 'image' && media.image_url && (
+            <div className="flex items-center gap-1.5 text-xs text-[#0f766e] bg-[#f0fdfa] px-2 py-1 rounded-[6px] border border-[#ccfbf1] mt-1 truncate">
+              <ImageIcon className="w-3.5 h-3.5 text-[#0f766e] shrink-0" />
+              <span className="truncate font-medium text-[11px]">Image attached</span>
+            </div>
+          )}
+
+          {mediaType === 'video' && media.video_url && (
+            <div className="flex items-center gap-1.5 text-xs text-[#c2410c] bg-[#fff7ed] px-2 py-1 rounded-[6px] border border-[#ffedd5] mt-1 truncate">
+              <VideoIcon className="w-3.5 h-3.5 text-[#c2410c] shrink-0" />
+              <span className="truncate font-medium text-[11px]">Video presentation attached</span>
+            </div>
           )}
         </div>
 

@@ -1,16 +1,25 @@
 import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Video, Lock, PlayCircle, Check } from 'lucide-react';
+import { Video, Lock, PlayCircle, Check, Play, Clock } from 'lucide-react';
 
 export const VideoGateNode = memo(({ data, selected }: NodeProps) => {
   const vg = (data.video_gate as any) || (data.config as any) || {};
-  const title = (data.title as string) || vg.gate_headline || 'Video Turnstile Gate';
+  const isStandard = vg.playback_mode === 'standard';
+  const title = (data.title as string) || vg.video_headline || vg.gate_headline || (isStandard ? 'Video Presentation' : 'Interactive Video Gate');
   const videoUrl = vg.video_url || '';
   const gateSeconds = Number(vg.gate_timestamp_seconds ?? 45);
   const gateMin = Math.floor(gateSeconds / 60);
   const gateSec = Math.floor(gateSeconds % 60);
   const formattedTime = gateMin > 0 ? `${gateMin}m ${gateSec}s` : `${gateSec}s`;
   const allowSkip = Boolean(vg.allow_skip_gate);
+  const fields = vg.form_fields || data.fields || [];
+  const fieldsCount = Array.isArray(fields) && fields.length > 0 ? fields.length : 2;
+  const ctaReveal = vg.cta_reveal || 'always';
+  const ctaDelay = Number(vg.cta_delay_seconds ?? 15);
+  const ctaMin = Math.floor(ctaDelay / 60);
+  const ctaSec = Math.floor(ctaDelay % 60);
+  const formattedCtaDelay = ctaMin > 0 ? `${ctaMin}m ${ctaSec}s` : `${ctaSec}s`;
+  const ctaButtonText = vg.cta_button_text || 'Continue to Next Step';
 
   return (
     <div
@@ -32,12 +41,19 @@ export const VideoGateNode = memo(({ data, selected }: NodeProps) => {
           <div className="w-6 h-6 rounded-[6px] bg-[#ffedea] text-[#c41c29] border border-[#fad2cd] flex items-center justify-center">
             <Video className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-semibold text-[#131416]">Video Gate</span>
+          <span className="text-xs font-semibold text-[#131416]">Interactive Video</span>
         </div>
-        <span className="text-[10px] font-medium text-[#c41c29] bg-[#ffedea] px-2 py-0.5 rounded-[4px] border border-[#fad2cd] flex items-center gap-1 font-mono">
-          <Lock className="w-2.5 h-2.5" />
-          <span>{formattedTime}</span>
-        </span>
+        {isStandard ? (
+          <span className="text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-[4px] border border-emerald-200 flex items-center gap-1 font-mono">
+            <Play className="w-2.5 h-2.5 fill-current" />
+            <span>Standard Video</span>
+          </span>
+        ) : (
+          <span className="text-[10px] font-medium text-[#c41c29] bg-[#ffedea] px-2 py-0.5 rounded-[4px] border border-[#fad2cd] flex items-center gap-1 font-mono">
+            <Lock className="w-2.5 h-2.5" />
+            <span>{formattedTime}</span>
+          </span>
+        )}
       </div>
 
       {/* Body Content */}
@@ -54,40 +70,70 @@ export const VideoGateNode = memo(({ data, selected }: NodeProps) => {
           )}
         </div>
 
-        <div className="p-2 rounded-[8px] bg-[#f4f6f8] border border-[#e8eaec] space-y-1 text-xs text-[#5d5f60]">
-          <div className="flex items-center justify-between">
-            <span>Turnstile pause</span>
-            <span className="font-mono text-[#131416]">{formattedTime}</span>
+        {isStandard ? (
+          <div className="p-2 rounded-[8px] bg-emerald-50/60 border border-emerald-100 space-y-1 text-xs text-[#5d5f60]">
+            <div className="flex items-center justify-between">
+              <span className="text-emerald-950">Mode</span>
+              <span className="font-semibold text-emerald-800 text-[11px]">Ungated VSL / Explainer</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Next Button</span>
+              <span className="font-medium text-[#131416] text-[11px] flex items-center gap-1">
+                {ctaReveal === 'always' && 'Visible immediately'}
+                {ctaReveal === 'delayed' && (
+                  <>
+                    <Clock className="w-2.5 h-2.5 text-amber-600" />
+                    At {formattedCtaDelay}
+                  </>
+                )}
+                {ctaReveal === 'on_end' && 'When video ends'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Button Label</span>
+              <span className="font-mono text-[#131416] text-[10px] truncate max-w-[140px]">{ctaButtonText}</span>
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span>Skip option</span>
-            <span className="font-medium text-[#131416] flex items-center gap-1">
-              {allowSkip ? (
-                <>
-                  <Check className="w-3 h-3 text-[#1e7b4f]" /> Optional
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3 h-3 text-[#92400e]" /> Required
-                </>
-              )}
-            </span>
+        ) : (
+          <div className="p-2 rounded-[8px] bg-[#f4f6f8] border border-[#e8eaec] space-y-1 text-xs text-[#5d5f60]">
+            <div className="flex items-center justify-between">
+              <span>Turnstile pause</span>
+              <span className="font-mono text-[#131416]">{formattedTime}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Pop-up fields</span>
+              <span className="font-medium text-[#131416]">{fieldsCount} {fieldsCount === 1 ? 'Field' : 'Fields'}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Skip option</span>
+              <span className="font-medium text-[#131416] flex items-center gap-1">
+                {allowSkip ? (
+                  <>
+                    <Check className="w-3 h-3 text-[#1e7b4f]" /> Optional
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-3 h-3 text-[#92400e]" /> Required
+                  </>
+                )}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Footer / Output Handle */}
       <div className="px-3 py-2 bg-[#f4f6f8] border-t border-[#f0f1f2] flex items-center justify-between text-xs rounded-b-[12px] relative">
         <span className="text-[#5d5f60] flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#c4242a]" />
-          <span>Advance after gate</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#c41c29]" />
+          <span>{isStandard ? 'Advance to next step' : 'Advance after gate'}</span>
         </span>
 
         <Handle
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-3 !h-3 !bg-[#c4242a] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
+          className="!w-3 !h-3 !bg-[#c41c29] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
         />
       </div>
     </div>

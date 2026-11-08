@@ -209,6 +209,8 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->get('/api/funnels/{id}', [ApiSpaController::class, 'getFunnel']);
         $router->post('/api/funnels/{id}/settings', [ApiSpaController::class, 'updateFunnelSettings']);
         $router->post('/api/funnels/{id}/upload-logo', [ApiSpaController::class, 'uploadFunnelLogo']);
+        $router->post('/api/funnels/{id}/upload-media', [ApiSpaController::class, 'uploadFunnelMedia']);
+        $router->post('/api/media/upload', [ApiSpaController::class, 'uploadGeneralMedia']);
         $router->post('/api/funnels/{id}/duplicate', [ApiSpaController::class, 'duplicateFunnel']);
         $router->post('/api/funnels/{id}/publish', [ApiSpaController::class, 'publishFunnel']);
         $router->post('/api/funnels/{id}/unpublish', [ApiSpaController::class, 'unpublishFunnel']);

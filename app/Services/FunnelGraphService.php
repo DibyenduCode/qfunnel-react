@@ -110,10 +110,12 @@ class FunnelGraphService
                 $destObj = $destinationsByNode[$node['id']] ?? null;
                 $calcObj = $nodeConfig['calculator'] ?? null;
                 $quickConnectObj = $nodeConfig['quick_connect'] ?? null;
+                $mediaObj = $nodeConfig['media'] ?? null;
                 if (!empty($destObj['tracking_config_json'])) {
                     $tConf = json_decode($destObj['tracking_config_json'], true) ?: [];
                     if (!$calcObj) $calcObj = $tConf['calculator'] ?? null;
                     if (!$quickConnectObj) $quickConnectObj = $tConf['quick_connect'] ?? null;
+                    if (!$mediaObj) $mediaObj = $tConf['media'] ?? null;
                 }
                 $node['calculator'] = $calcObj ?? [
                     'enabled' => ($funnel['funnel_mode'] ?? 'quiz') === 'calculator',
@@ -131,6 +133,11 @@ class FunnelGraphService
                     'whatsapp_number' => '',
                     'whatsapp_button_text' => 'Chat on WhatsApp',
                     'whatsapp_message' => 'Hi! I just completed the {{funnel_name}} and received my quote: {{formatted_quote}}.'
+                ];
+                $node['media'] = $mediaObj ?? [
+                    'media_type' => 'none',
+                    'image_url' => '',
+                    'video_url' => '',
                 ];
                 $node['destination'] = $destObj;
             } elseif ($node['node_type'] === 'form') {
@@ -162,6 +169,10 @@ class FunnelGraphService
                 $vg['video_hash'] = $parsed['hash'] ?: ($vg['video_hash'] ?? '');
                 $vg['video_url'] = $vgUrl;
                 $vg['video_headline'] = $vg['video_headline'] ?? '';
+                $vg['playback_mode'] = $vg['playback_mode'] ?? 'gated';
+                $vg['cta_reveal'] = $vg['cta_reveal'] ?? 'always';
+                $vg['cta_delay_seconds'] = isset($vg['cta_delay_seconds']) ? (int)$vg['cta_delay_seconds'] : 15;
+                $vg['cta_button_text'] = $vg['cta_button_text'] ?? 'Continue to Next Step ➔';
                 $vg['autoplay_behavior'] = isset($vg['autoplay_behavior']) ? (bool)$vg['autoplay_behavior'] : true;
                 $vg['gate_enabled'] = isset($vg['gate_enabled']) ? (bool)$vg['gate_enabled'] : true;
                 $vg['gate_timestamp_seconds'] = isset($vg['gate_timestamp_seconds']) ? (float)$vg['gate_timestamp_seconds'] : 45.0;
@@ -187,6 +198,25 @@ class FunnelGraphService
                 if (!empty($questionsByNode[$node['id']])) {
                     $node['question'] = $questionsByNode[$node['id']];
                 }
+            } elseif ($node['node_type'] === 'condition') {
+                $cond = !empty($nodeConfig['condition']) ? $nodeConfig['condition'] : $nodeConfig;
+                $node['condition'] = [
+                    'condition_type' => $cond['condition_type'] ?? 'score',
+                    'operator' => $cond['operator'] ?? '>=',
+                    'value' => $cond['value'] ?? '80',
+                    'variable_key' => $cond['variable_key'] ?? 'Q1',
+                    'target_node_id' => $cond['target_node_id'] ?? null,
+                    'match_label' => $cond['match_label'] ?? 'Qualified Lead',
+                    'default_label' => $cond['default_label'] ?? 'Standard Route',
+                ];
+            } elseif ($node['node_type'] === 'content') {
+                $content = !empty($nodeConfig['content']) ? $nodeConfig['content'] : $nodeConfig;
+                $node['content'] = [
+                    'headline' => $content['headline'] ?? ($node['title'] ?? 'Key Insight & Overview'),
+                    'body_text' => $content['body_text'] ?? ($content['subtext'] ?? ''),
+                    'image_url' => $content['image_url'] ?? '',
+                    'button_text' => $content['button_text'] ?? 'Continue to Next Step',
+                ];
             }
             $enrichedNodes[] = $node;
         }
@@ -272,6 +302,7 @@ class FunnelGraphService
                     if (isset($node['destination_mode'])) $configPayload['destination_mode'] = $node['destination_mode'];
                     if (isset($node['calculator'])) $configPayload['calculator'] = $node['calculator'];
                     if (isset($node['quick_connect'])) $configPayload['quick_connect'] = $node['quick_connect'];
+                    if (isset($node['media'])) $configPayload['media'] = $node['media'];
                 } elseif ($nodeType === 'video_gate') {
                     $vgPayload = $node['video_gate'] ?? [];
                     if (is_string($vgPayload)) {
@@ -306,6 +337,26 @@ class FunnelGraphService
                     $configPayload['booking'] = $mergedBooking;
                     // Also expose top-level keys for direct access
                     foreach ($mergedBooking as $k => $v) {
+                        $configPayload[$k] = $v;
+                    }
+                } elseif ($nodeType === 'condition') {
+                    $condPayload = $node['condition'] ?? ($configPayload['condition'] ?? $configPayload);
+                    if (is_string($condPayload)) {
+                        $condPayload = json_decode($condPayload, true) ?: [];
+                    }
+                    $mergedCond = array_merge($configPayload['condition'] ?? [], $condPayload);
+                    $configPayload['condition'] = $mergedCond;
+                    foreach ($mergedCond as $k => $v) {
+                        $configPayload[$k] = $v;
+                    }
+                } elseif ($nodeType === 'content') {
+                    $contentPayload = $node['content'] ?? ($configPayload['content'] ?? $configPayload);
+                    if (is_string($contentPayload)) {
+                        $contentPayload = json_decode($contentPayload, true) ?: [];
+                    }
+                    $mergedContent = array_merge($configPayload['content'] ?? [], $contentPayload);
+                    $configPayload['content'] = $mergedContent;
+                    foreach ($mergedContent as $k => $v) {
                         $configPayload[$k] = $v;
                     }
                 }
@@ -406,9 +457,11 @@ class FunnelGraphService
                     $url = trim($dData['url'] ?? '');
                     $calcPayload = $node['calculator'] ?? ($configPayload['calculator'] ?? null);
                     $qcPayload = $node['quick_connect'] ?? ($configPayload['quick_connect'] ?? null);
+                    $mediaPayload = $node['media'] ?? ($configPayload['media'] ?? null);
                     $trackingJson = json_encode([
                         'calculator' => $calcPayload,
-                        'quick_connect' => $qcPayload
+                        'quick_connect' => $qcPayload,
+                        'media' => $mediaPayload
                     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
                     $existingDest = Database::fetchOne("SELECT id FROM destinations WHERE node_id = ?", [$dbNodeId]);
@@ -454,6 +507,7 @@ class FunnelGraphService
                 $srcKey = $edge['source_node_key'] ?? $edge['source_node_id'] ?? null;
                 $tgtKey = $edge['target_node_key'] ?? $edge['target_node_id'] ?? null;
                 $optKey = $edge['source_option_key'] ?? $edge['source_option_id'] ?? null;
+                $sourceHandle = $edge['source_handle'] ?? null;
 
                 $srcNodeId = $nodeIdMap[$srcKey] ?? (is_numeric($srcKey) ? (int)$srcKey : null);
                 $tgtNodeId = $nodeIdMap[$tgtKey] ?? (is_numeric($tgtKey) ? (int)$tgtKey : null);
@@ -461,11 +515,14 @@ class FunnelGraphService
                 if (!empty($optKey)) {
                     $optId = $nodeIdMap["opt_{$optKey}"] ?? (is_numeric($optKey) ? (int)$optKey : null);
                 }
+                if (empty($sourceHandle) && !empty($optKey)) {
+                    $sourceHandle = (string)$optKey;
+                }
 
                 if ($srcNodeId && $tgtNodeId) {
                     Database::execute(
-                        "INSERT INTO funnel_edges (tenant_id, funnel_id, source_node_id, source_option_id, target_node_id) VALUES (?, ?, ?, ?, ?)",
-                        [$tenantId, $funnelId, $srcNodeId, $optId, $tgtNodeId]
+                        "INSERT INTO funnel_edges (tenant_id, funnel_id, source_node_id, source_option_id, source_handle, target_node_id) VALUES (?, ?, ?, ?, ?, ?)",
+                        [$tenantId, $funnelId, $srcNodeId, $optId, $sourceHandle, $tgtNodeId]
                     );
                 }
             }
@@ -697,6 +754,16 @@ class FunnelGraphService
                         'type' => 'booking_missing_route',
                         'severity' => 'error',
                         'message' => "Booking Step '{$node['title']}' must connect to an outcome destination.",
+                        'node_id' => $node['id'],
+                    ];
+                }
+            } elseif ($node['node_type'] === 'condition') {
+                $condEdges = $edgesBySourceNode[$node['id']] ?? [];
+                if (empty($condEdges)) {
+                    $issues[] = [
+                        'type' => 'condition_missing_route',
+                        'severity' => 'error',
+                        'message' => "Conditional Router '{$node['title']}' must connect to at least one next step.",
                         'node_id' => $node['id'],
                     ];
                 }

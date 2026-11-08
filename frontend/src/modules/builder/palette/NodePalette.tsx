@@ -4,6 +4,7 @@ import {
   Sliders,
   FileText,
   Video,
+  Image as ImageIcon,
   Flag,
   Calendar,
   Sparkles,
@@ -65,9 +66,19 @@ export const AVAILABLE_NODES: NodeDefinition[] = [
 
   // 2. Media & Interstitials
   {
+    type: 'content',
+    title: 'Content Slide',
+    description: 'Image banner, story, or infographic with next button',
+    category: 'media',
+    icon: ImageIcon,
+    color: 'text-[#1d5fd6]',
+    bgColor: 'bg-[#dcf1ff]',
+    borderColor: 'border-[#b9e6fe]',
+  },
+  {
     type: 'video_gate',
-    title: 'Video Presentation Gate',
-    description: 'Video playback with timed interactive gate',
+    title: 'Interactive Video',
+    description: 'Standard presentation video or timed lead capture gate',
     category: 'media',
     icon: Video,
     color: 'text-[#c41c29]',

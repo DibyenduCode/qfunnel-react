@@ -17,6 +17,7 @@ import {
   Loader2,
   Lock
 } from 'lucide-react';
+import { VideoGateStep } from './VideoGateStep';
 
 export const QuizRunnerPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -101,6 +102,13 @@ export const QuizRunnerPage: React.FC = () => {
       setCurrentStep({
         step_type: 'destination',
         result: res.result || {},
+      });
+    } else if (res.status === 'content_step' || res.step?.node_type === 'content') {
+      setCurrentStep({
+        step_type: 'content',
+        ...(res.step || {}),
+        content: res.step?.content || res.step?.config?.content || {},
+        can_go_back: Boolean(res.step?.can_go_back),
       });
     } else if (res.status === 'video_gate_step') {
       setCurrentStep({
@@ -284,6 +292,23 @@ export const QuizRunnerPage: React.FC = () => {
       processStepResponse(res);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to advance booking step.');
+    } finally {
+      setStepLoading(false);
+    }
+  };
+
+  const handleContentAdvance = async () => {
+    if (!sessionToken || !currentStep || stepLoading) return;
+    try {
+      setStepLoading(true);
+      const res = await api.post('/api/quiz/answer', {
+        session_token: sessionToken,
+        node_id: currentStep.node_id,
+        answer: { continue: true },
+      });
+      processStepResponse(res);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to advance content slide.');
     } finally {
       setStepLoading(false);
     }
@@ -612,6 +637,74 @@ export const QuizRunnerPage: React.FC = () => {
             </form>
           )}
 
+          {/* STEP: VIDEO GATE PRESENTATION */}
+          {currentStep?.step_type === 'video_gate' && (
+            <VideoGateStep
+              step={currentStep}
+              sessionToken={sessionToken || ''}
+              isDark={isDark}
+              accentColor={accent}
+              buttonRadius={buttonRadius}
+              onAdvance={processStepResponse}
+              onError={(msg) => setErrorMsg(msg)}
+            />
+          )}
+
+          {/* STEP: CONTENT SLIDE (STANDALONE INTERSTITIAL / STORY) */}
+          {currentStep?.step_type === 'content' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Optional Top Media / Image */}
+              {currentStep.content?.image_url && (
+                <div className="w-full max-h-[340px] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-sm flex items-center justify-center">
+                  <img
+                    src={resolveMediaUrl(currentStep.content.image_url)}
+                    alt={currentStep.content?.headline || 'Content media'}
+                    className="w-full h-full object-cover max-h-[340px]"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Content Text: Headline & Body */}
+              <div className="space-y-3">
+                <h2 className={`text-2xl font-bold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-[#131416]'}`}>
+                  {currentStep.content?.headline || currentStep.title || 'Key Information'}
+                </h2>
+                {currentStep.content?.body_text && (
+                  <div
+                    className={`text-sm sm:text-base leading-relaxed whitespace-pre-line ${
+                      isDark ? 'text-slate-300' : 'text-[#5d5f60]'
+                    }`}
+                  >
+                    {currentStep.content.body_text}
+                  </div>
+                )}
+              </div>
+
+              {/* Action: Continue CTA Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleContentAdvance}
+                  disabled={stepLoading}
+                  style={{ backgroundColor: accent }}
+                  className={`w-full py-3.5 px-6 text-white font-semibold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 ${buttonRadius}`}
+                >
+                  {stepLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <span>{currentStep.content?.button_text || 'Continue to Next Step'}</span>
+                      <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* STEP 2: QUESTION STEP (CHOICE OR SLIDER) */}
           {currentStep?.step_type === 'question' && (
             <div className="space-y-6">
@@ -849,11 +942,39 @@ export const QuizRunnerPage: React.FC = () => {
           {/* STEP 3: DESTINATION / OUTCOME RESULT */}
           {currentStep?.step_type === 'destination' && (
             <div className="text-center space-y-5">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto border ${
-                isDark ? 'bg-emerald-950/70 text-emerald-400 border-emerald-800/80' : 'bg-[#dcfae5] text-[#0f5132] border-[#bbf7d0]'
-              }`}>
-                <Check className="w-6 h-6 stroke-[2.5]" />
-              </div>
+              {/* Media Display: Video, Image, or Default Check Icon */}
+              {currentStep.result?.media?.media_type === 'video' && currentStep.result.media.video_id ? (
+                <div className="relative rounded-2xl overflow-hidden bg-black shadow-xl border border-black/20 aspect-video select-none my-3 max-w-lg mx-auto">
+                  <iframe
+                    src={
+                      currentStep.result.media.provider === 'vimeo'
+                        ? `https://player.vimeo.com/video/${currentStep.result.media.video_id}?autoplay=0&controls=1`
+                        : `https://www.youtube.com/embed/${currentStep.result.media.video_id}?autoplay=0&controls=1&rel=0`
+                    }
+                    title={currentStep.result?.destination_name || 'Outcome Presentation'}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : currentStep.result?.media?.media_type === 'image' && currentStep.result.media.image_url ? (
+                <div className="relative rounded-2xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-800 max-w-md mx-auto my-3 bg-slate-100 dark:bg-slate-900">
+                  <img
+                    src={resolveMediaUrl(currentStep.result.media.image_url)}
+                    alt={currentStep.result?.destination_name || 'Outcome Media'}
+                    className="w-full h-auto max-h-[320px] object-cover object-center"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto border ${
+                  isDark ? 'bg-emerald-950/70 text-emerald-400 border-emerald-800/80' : 'bg-[#dcfae5] text-[#0f5132] border-[#bbf7d0]'
+                }`}>
+                  <Check className="w-6 h-6 stroke-[2.5]" />
+                </div>
+              )}
 
               <div>
                 <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-[#131416]'}`}>

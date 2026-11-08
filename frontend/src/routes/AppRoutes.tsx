@@ -66,6 +66,8 @@ export const AppRoutes: React.FC = () => {
       {/* Public Visitor Quiz Runner */}
       <Route path="/quiz/:slug" element={<QuizRunnerPage />} />
       <Route path="/funnel/:slug" element={<QuizRunnerPage />} />
+      <Route path="/qfunnel2/quiz/:slug" element={<QuizRunnerPage />} />
+      <Route path="/qfunnel2/funnel/:slug" element={<QuizRunnerPage />} />
 
       {/* Authentication */}
       <Route element={<AuthLayout />}>

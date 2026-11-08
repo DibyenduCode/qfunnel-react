@@ -393,6 +393,137 @@ class ApiSpaController
         }
     }
 
+    public function uploadFunnelMedia(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+
+        try {
+            $existing = FunnelService::getFunnel($tenantId, (int)$id);
+            if (!$existing) {
+                return Response::error("Funnel not found.", "NOT_FOUND", null, 404);
+            }
+
+            $uploadedFile = $request->file('media_file') ?? $request->file('file') ?? $request->file('image');
+            if (!$uploadedFile || $uploadedFile['error'] !== UPLOAD_ERR_OK) {
+                return Response::error("Please select a valid image file to upload.", "NO_FILE", null, 400);
+            }
+
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'];
+            $mimeType = null;
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo) {
+                    $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
+                    if (\PHP_VERSION_ID < 80100) {
+                        finfo_close($finfo);
+                    }
+                }
+            }
+            if (!$mimeType && function_exists('mime_content_type')) {
+                $mimeType = mime_content_type($uploadedFile['tmp_name']);
+            }
+
+            if (!in_array($mimeType, $allowedTypes, true)) {
+                return Response::error("Invalid file format. Allowed types: PNG, JPG, WebP, SVG, GIF.", "INVALID_FORMAT", null, 400);
+            }
+
+            if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                return Response::error("Image file size must be less than 10MB.", "FILE_TOO_LARGE", null, 400);
+            }
+
+            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
+            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $fileName = 'media_' . (int)$id . '_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
+            $targetDir = dirname(__DIR__, 2) . '/public/uploads/media';
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+
+            $targetPath = $targetDir . '/' . $fileName;
+            $saved = is_uploaded_file($uploadedFile['tmp_name'])
+                ? @move_uploaded_file($uploadedFile['tmp_name'], $targetPath)
+                : @copy($uploadedFile['tmp_name'], $targetPath);
+
+            if (!$saved) {
+                return Response::error("Failed to save uploaded image file.", "UPLOAD_SAVE_FAILED", null, 500);
+            }
+
+            $mediaUrl = url('/uploads/media/' . $fileName);
+            $fullMediaUrl = full_url('/uploads/media/' . $fileName);
+
+            return Response::success([
+                'url' => $mediaUrl,
+                'full_url' => $fullMediaUrl,
+                'file_name' => $fileName,
+            ], "Image uploaded successfully.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "UPLOAD_FAILED", null, 400);
+        }
+    }
+
+    public function uploadGeneralMedia(Request $request): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+
+        try {
+            $uploadedFile = $request->file('media_file') ?? $request->file('file') ?? $request->file('image');
+            if (!$uploadedFile || $uploadedFile['error'] !== UPLOAD_ERR_OK) {
+                return Response::error("Please select a valid image file to upload.", "NO_FILE", null, 400);
+            }
+
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'];
+            $mimeType = null;
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo) {
+                    $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
+                    if (\PHP_VERSION_ID < 80100) {
+                        finfo_close($finfo);
+                    }
+                }
+            }
+            if (!$mimeType && function_exists('mime_content_type')) {
+                $mimeType = mime_content_type($uploadedFile['tmp_name']);
+            }
+
+            if (!in_array($mimeType, $allowedTypes, true)) {
+                return Response::error("Invalid file format. Allowed types: PNG, JPG, WebP, SVG, GIF.", "INVALID_FORMAT", null, 400);
+            }
+
+            if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                return Response::error("Image file size must be less than 10MB.", "FILE_TOO_LARGE", null, 400);
+            }
+
+            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
+            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $fileName = 'media_t' . (int)$tenantId . '_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
+            $targetDir = dirname(__DIR__, 2) . '/public/uploads/media';
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+
+            $targetPath = $targetDir . '/' . $fileName;
+            $saved = is_uploaded_file($uploadedFile['tmp_name'])
+                ? @move_uploaded_file($uploadedFile['tmp_name'], $targetPath)
+                : @copy($uploadedFile['tmp_name'], $targetPath);
+
+            if (!$saved) {
+                return Response::error("Failed to save uploaded image file.", "UPLOAD_SAVE_FAILED", null, 500);
+            }
+
+            $mediaUrl = url('/uploads/media/' . $fileName);
+            $fullMediaUrl = full_url('/uploads/media/' . $fileName);
+
+            return Response::success([
+                'url' => $mediaUrl,
+                'full_url' => $fullMediaUrl,
+                'file_name' => $fileName,
+            ], "Image uploaded successfully.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "UPLOAD_FAILED", null, 400);
+        }
+    }
+
     public function duplicateFunnel(Request $request, string $id): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();

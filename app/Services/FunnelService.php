@@ -466,8 +466,8 @@ class FunnelService
                 $newSourceOptionId = $edge['source_option_id'] ? ($optionMap[$edge['source_option_id']] ?? null) : null;
 
                 Database::execute(
-                    "INSERT INTO funnel_edges (tenant_id, funnel_id, source_node_id, source_option_id, target_node_id) VALUES (?, ?, ?, ?, ?)",
-                    [$tenantId, $newFunnelId, $newSourceNodeId, $newSourceOptionId, $newTargetNodeId]
+                    "INSERT INTO funnel_edges (tenant_id, funnel_id, source_node_id, source_option_id, source_handle, target_node_id) VALUES (?, ?, ?, ?, ?, ?)",
+                    [$tenantId, $newFunnelId, $newSourceNodeId, $newSourceOptionId, $edge['source_handle'] ?? null, $newTargetNodeId]
                 );
             }
 
