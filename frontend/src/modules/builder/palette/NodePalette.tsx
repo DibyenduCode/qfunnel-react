@@ -68,8 +68,8 @@ export const AVAILABLE_NODES: NodeDefinition[] = [
   // 2. Media & Interstitials
   {
     type: 'content',
-    title: 'Landing Page / Story',
-    description: 'High-converting intro, pre-sell or advertorial page',
+    title: 'Mini Landing Page / Story',
+    description: 'High-converting intro, pre-sell or advertorial story page',
     category: 'media',
     icon: Layout,
     color: 'text-[#1d5fd6]',

@@ -479,12 +479,24 @@ const BuilderInner: React.FC = () => {
         };
         initialData.config = initialData.condition;
       } else if (type === 'content') {
-        initialData.title = 'Key Insight & Overview';
+        initialData.title = 'Mini Landing Page / Story';
         initialData.content = {
-          headline: 'Did you know? 80% of organizations see higher ROI',
-          body_text: 'Explore this visual breakdown of key metrics before reviewing your customized recommendations.',
+          badge_text: '🔥 LIMITED TIME ASSESSMENT',
+          headline: 'Discover Why Top Teams Scale Conversions with QFunnel',
+          subheadline: 'A customized 60-second diagnostic designed for high-growth businesses',
+          body_text: 'Explore this visual breakdown before reviewing your customized recommendations.',
+          media_type: 'image',
           image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop',
-          button_text: 'Continue to Next Step',
+          show_benefits: true,
+          benefits: [
+            '100% personalized analysis based on your industry',
+            'Instant roadmap & action steps in under 60 seconds',
+            'Zero fluff, actionable next steps',
+          ],
+          show_social_proof: true,
+          social_proof_text: 'Rated 4.9/5 by 1,200+ users',
+          button_text: 'Start Your Free Assessment ➔',
+          button_subtext: '🔒 Takes less than 1 minute • 100% Free',
         };
         initialData.config = initialData.content;
       }

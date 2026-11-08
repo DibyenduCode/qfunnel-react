@@ -671,7 +671,11 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
       <div className="p-3.5 border-b border-[#f0f1f2] flex items-center justify-between bg-white shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-semibold text-[#131416] capitalize truncate">
-            {nodeType.replace('_', ' ')} Settings
+            {nodeType === 'content'
+              ? 'Mini Landing Page / Story'
+              : nodeType === 'video_gate'
+              ? 'Interactive Video'
+              : `${nodeType.replace('_', ' ')} Settings`}
           </span>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#ebedee] text-[#131416] font-medium shrink-0">
             #{node.id}

@@ -6,7 +6,7 @@ import { resolveMediaUrl } from '../../../api/client';
 export const ContentNode = memo(({ data, selected }: NodeProps) => {
   const d = data as any;
   const content = d.content || d.config?.content || d.config || {};
-  const title = (d.title as string) || content.headline || 'Landing Page & Story';
+  const title = (d.title as string) || content.headline || 'Mini Landing Page / Story';
   const badgeText = content.badge_text || '';
   const subheadline = content.subheadline || '';
   const mediaType = content.media_type || (content.image_url ? 'image' : 'none');
@@ -39,10 +39,10 @@ export const ContentNode = memo(({ data, selected }: NodeProps) => {
           <div className="w-6 h-6 rounded-[6px] bg-[#dcf1ff] text-[#0a3a80] border border-[#b9e6fe] flex items-center justify-center">
             <Layout className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-semibold text-[#131416]">Landing Page</span>
+          <span className="text-xs font-semibold text-[#131416]">Mini Landing Page / Story</span>
         </div>
         <span className="text-[10px] font-medium text-[#0a3a80] bg-[#dcf1ff] px-2 py-0.5 rounded-[4px] border border-[#b9e6fe] font-mono">
-          Bridge / LP
+          Story / LP
         </span>
       </div>
 
