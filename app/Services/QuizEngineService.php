@@ -282,6 +282,18 @@ class QuizEngineService
             throw new RuntimeException("Current question node could not be resolved from graph snapshot.");
         }
 
+        // Calculate total interactive steps for progress tracking
+        $interactiveTypes = ['question', 'form', 'content', 'video_gate', 'loader', 'booking'];
+        $totalInteractiveNodes = 0;
+        foreach ($graphSnapshot['nodes'] ?? [] as $n) {
+            if (in_array($n['node_type'] ?? '', $interactiveTypes, true)) {
+                $totalInteractiveNodes++;
+            }
+        }
+        if ($totalInteractiveNodes < 1) {
+            $totalInteractiveNodes = 1;
+        }
+
         // If current node is a destination node, complete it
         if ($node['node_type'] === 'destination') {
             return self::completeSession($session, $node, $graphSnapshot, $settingsSnapshot);
@@ -382,6 +394,7 @@ class QuizEngineService
                         ]
                     ],
                     'step_number' => $historyCount + 1,
+                    'total_steps' => $totalInteractiveNodes,
                     'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
                 ]
             ];
@@ -413,6 +426,7 @@ class QuizEngineService
                     'success_heading' => $formConfig['success_heading'] ?? 'Thank You!',
                     'success_message' => $formConfig['success_message'] ?? 'Your submission has been received.',
                     'step_number' => $historyCount + 1,
+                    'total_steps' => $totalInteractiveNodes,
                     'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
                 ]
             ];
@@ -453,6 +467,7 @@ class QuizEngineService
                         'button_subtext' => $content['button_subtext'] ?? '',
                     ],
                     'step_number' => $historyCount + 1,
+                    'total_steps' => $totalInteractiveNodes,
                     'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
                 ]
             ];
@@ -479,6 +494,7 @@ class QuizEngineService
                     'subtext' => $loaderConfig['subtext'] ?? 'Matching optimal solutions based on your answers...',
                     'duration_seconds' => (float)($loaderConfig['duration_seconds'] ?? 2.5),
                     'step_number' => $historyCount + 1,
+                    'total_steps' => $totalInteractiveNodes,
                     'can_go_back' => false,
                 ]
             ];
@@ -506,6 +522,7 @@ class QuizEngineService
                     'booking_url' => $bookingConfig['booking_url'] ?? '',
                     'embed_mode' => $bookingConfig['embed_mode'] ?? 'inline',
                     'step_number' => $historyCount + 1,
+                    'total_steps' => $totalInteractiveNodes,
                     'can_go_back' => $historyCount > 0 && !empty($settingsSnapshot['enable_back_button']),
                 ]
             ];
@@ -597,6 +614,7 @@ class QuizEngineService
                 'options' => $options,
                 'selected_option_ids' => $selectedOptionIds,
                 'step_number' => $historyCount + 1,
+                'total_steps' => $totalInteractiveNodes,
                 'can_go_back' => $hasPreviousStep && !empty($settingsSnapshot['enable_back_button']),
             ]
         ];

@@ -263,6 +263,28 @@ export const QuizRunnerPage: React.FC = () => {
     }
   }, [loaderProgress, currentStep?.step_type]);
 
+  // Typeform-style Keyboard Navigation (Press A, B, C... to select option)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (currentStep?.step_type === 'question' && Array.isArray(currentStep.options) && !stepLoading) {
+        const key = e.key.toUpperCase();
+        if (key.length === 1 && key >= 'A' && key <= 'Z') {
+          const charCode = key.charCodeAt(0) - 65;
+          if (charCode >= 0 && charCode < currentStep.options.length) {
+            const opt = currentStep.options[charCode];
+            const optId = String(opt.id || opt.option_key || charCode);
+            handleSelectOption(optId, opt.label);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, stepLoading, sessionToken]);
+
   const handleLoaderAdvance = async () => {
     if (!sessionToken || !currentStep || stepLoading) return;
     try {
@@ -394,12 +416,12 @@ export const QuizRunnerPage: React.FC = () => {
     : 'bg-[#f9fbfc] text-[#131416]';
 
   const elevationClass = isDark
-    ? 'border border-slate-800 shadow-2xl bg-slate-900 text-slate-100'
+    ? 'border border-slate-800/80 shadow-[0_25px_60px_rgba(0,0,0,0.5)] bg-slate-900/90 backdrop-blur-xl text-slate-100'
     : cardElevation === 'flat'
-    ? 'border border-[#e8eaec] bg-white text-[#131416]'
+    ? 'border border-slate-200/80 bg-white/95 backdrop-blur-xl text-[#131416]'
     : cardElevation === 'floating'
-    ? 'border border-[#e8eaec] shadow-xl bg-white text-[#131416]'
-    : 'border border-[#e8eaec] shadow-sm bg-white text-[#131416]';
+    ? 'border border-slate-200/80 shadow-[0_30px_70px_rgba(0,0,0,0.08),0_4px_12px_rgba(0,0,0,0.03)] bg-white/95 backdrop-blur-xl text-[#131416]'
+    : 'border border-slate-200/80 shadow-[0_20px_50px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.04)] bg-white/95 backdrop-blur-xl text-[#131416]';
 
   const btnStyleClass = buttonStyle === 'outline'
     ? `bg-transparent border-2 border-[var(--brand-color)] !text-[var(--brand-color)] hover:bg-[var(--brand-color)] hover:!text-white ${buttonRadius}`
@@ -479,9 +501,35 @@ export const QuizRunnerPage: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-between ${fontClass} ${bgClass} ${isEmbedded ? '!p-2' : 'p-4 sm:p-6 lg:p-10'}`}
+      className={`min-h-screen relative overflow-hidden flex flex-col justify-between ${fontClass} ${bgClass} ${isEmbedded ? '!p-2' : 'p-4 sm:p-6 lg:p-10'}`}
       style={{ '--brand-color': accent } as any}
     >
+      {/* Ambient Background Aura Lights for Depth */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 select-none">
+        {isDark ? (
+          <>
+            <div
+              style={{
+                background: `radial-gradient(circle 650px at 50% 25%, ${accent}28, transparent 75%)`
+              }}
+              className="absolute inset-0 opacity-80"
+            />
+            <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[160px]" />
+            <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[140px]" />
+          </>
+        ) : (
+          <>
+            <div
+              style={{
+                background: `radial-gradient(circle 750px at 50% 20%, ${accent}14, transparent 70%)`
+              }}
+              className="absolute inset-0 opacity-90"
+            />
+            <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-blue-100/50 rounded-full blur-[130px]" />
+            <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-purple-50/40 rounded-full blur-[110px]" />
+          </>
+        )}
+      </div>
       {/* Brand Header */}
       {!isEmbedded && (
         <>
@@ -611,6 +659,36 @@ export const QuizRunnerPage: React.FC = () => {
           {stepLoading && (
             <div className={`absolute top-0 left-0 right-0 h-1 overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-[#dcf1ff]'}`}>
               <div className="w-full h-full bg-[var(--brand-color)] animate-top-bar" />
+            </div>
+          )}
+
+          {/* STEP PROGRESS BAR & TRACKER */}
+          {currentStep?.step_type !== 'destination' && (
+            <div className="mb-6 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className={`font-semibold tracking-wide flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <span>Step {currentStep?.step_number || 1}</span>
+                  {currentStep?.total_steps ? (
+                    <span className="opacity-50 font-normal">of {currentStep.total_steps}</span>
+                  ) : null}
+                </span>
+                <span className={`font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  isDark
+                    ? 'bg-slate-800/80 text-slate-300 border-slate-700/60'
+                    : 'bg-slate-100/90 text-slate-700 border-slate-200/80'
+                }`}>
+                  {Math.min(100, Math.max(10, Math.round(((currentStep?.step_number || 1) / (currentStep?.total_steps || 3)) * 100)))}% Completed
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  style={{
+                    width: `${Math.min(100, Math.max(10, Math.round(((currentStep?.step_number || 1) / (currentStep?.total_steps || 3)) * 100)))}%`,
+                    backgroundColor: accent,
+                  }}
+                  className="h-full rounded-full transition-all duration-500 ease-out shadow-xs"
+                />
+              </div>
             </div>
           )}
           {/* STEP 1: LEAD CAPTURE FORM (Pre-quiz or Form Node) */}
@@ -818,11 +896,11 @@ export const QuizRunnerPage: React.FC = () => {
           {currentStep?.step_type === 'question' && (
             <div className="space-y-6">
               <div>
-                <h2 className={`text-lg font-bold leading-snug ${isDark ? 'text-white' : 'text-[#131416]'}`}>
+                <h2 className={`text-xl sm:text-2xl font-bold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-[#131416]'}`}>
                   {currentStep.question_text || currentStep.title || 'What is your current preference?'}
                 </h2>
                 {currentStep.help_text && (
-                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>
+                  <p className={`text-xs sm:text-sm mt-1.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>
                     {currentStep.help_text}
                   </p>
                 )}
@@ -831,15 +909,17 @@ export const QuizRunnerPage: React.FC = () => {
               {/* A: SLIDER MODE */}
               {currentStep.input_type === 'slider' ? (
                 <div className="space-y-6 pt-2">
-                  <div className={`p-5 rounded-2xl text-center space-y-4 border transition-colors ${
+                  <div className={`p-6 rounded-2xl text-center space-y-4 border transition-colors ${
                     isDark
                       ? 'bg-slate-800/60 border-slate-700/80 shadow-inner'
                       : 'bg-[#f9fbfc] border-[#e8eaec]'
                   }`}>
-                    <span className="text-3xl font-extrabold text-[var(--brand-color)] tracking-tight block">
-                      {currentStep.slider_config?.unit_prefix || ''}
-                      {sliderVal.toLocaleString()} {currentStep.slider_config?.unit_label || ''}
-                    </span>
+                    <div className="inline-block px-5 py-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 shadow-xs">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-[var(--brand-color)] tracking-tight">
+                        {currentStep.slider_config?.unit_prefix || ''}
+                        {sliderVal.toLocaleString()} {currentStep.slider_config?.unit_label || ''}
+                      </span>
+                    </div>
 
                     <input
                       type="range"
@@ -862,7 +942,7 @@ export const QuizRunnerPage: React.FC = () => {
                   <button
                     onClick={handleSliderSubmit}
                     disabled={stepLoading}
-                    className={`w-full py-3 ${btnStyleClass} text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-50`}
+                    className={`w-full py-3.5 ${btnStyleClass} text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md hover:brightness-105 active:scale-[0.99]`}
                   >
                     {stepLoading ? (
                       <>
@@ -872,14 +952,14 @@ export const QuizRunnerPage: React.FC = () => {
                     ) : (
                       <>
                         <span>{ctaButtonText || 'Continue'}</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4 stroke-[2.5]" />
                       </>
                     )}
                   </button>
                 </div>
               ) : (
                 /* B: MULTIPLE OR SINGLE CHOICE OPTIONS */
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {(currentStep.options || []).map((opt: any, idx: number) => {
                     const optId = String(opt.id || opt.option_key || idx);
                     const isSelected = selectedOptionId === optId;
@@ -891,27 +971,28 @@ export const QuizRunnerPage: React.FC = () => {
                         type="button"
                         onClick={() => handleSelectOption(optId, opt.label)}
                         disabled={stepLoading}
-                        className={`w-full p-4 rounded-xl border text-left transition-[color,background-color,border-color,transform] duration-150 flex items-center justify-between group ${
+                        className={`w-full p-4 rounded-xl border text-left transition-all duration-150 flex items-center justify-between group cursor-pointer active:scale-[0.99] ${
                           isSelected
                             ? (isDark
-                                ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/25 ring-2 ring-[var(--brand-color)]/50 scale-[1.01]'
-                                : 'border-[var(--brand-color)] bg-[#dcf1ff]/60 ring-2 ring-[var(--brand-color)]/30 scale-[1.01]')
+                                ? 'border-[var(--brand-color)] bg-[var(--brand-color)]/20 ring-2 ring-[var(--brand-color)]/50 shadow-md translate-y-[-1px]'
+                                : 'border-[var(--brand-color)] bg-[var(--brand-color)]/10 ring-2 ring-[var(--brand-color)]/30 shadow-md translate-y-[-1px]')
                             : (isDark
-                                ? 'border-slate-800 bg-slate-800/40 hover:border-slate-700 hover:bg-slate-800/70'
-                                : 'border-[#e8eaec] hover:border-[var(--brand-color)]/40 hover:bg-[#f9fbfc]')
+                                ? 'border-slate-800 bg-slate-800/40 hover:border-slate-700 hover:bg-slate-800/80 hover:-translate-y-0.5 hover:shadow-md'
+                                : 'border-[#e8eaec] bg-white/70 hover:border-[var(--brand-color)]/40 hover:bg-[#f9fbfc] hover:-translate-y-0.5 hover:shadow-md')
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-6 h-6 rounded-lg border text-xs font-bold flex items-center justify-center shrink-0 transition-colors ${
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          {/* Letter Badge */}
+                          <span className={`w-7 h-7 rounded-lg border text-xs font-bold flex items-center justify-center shrink-0 transition-colors shadow-2xs ${
                             isSelected
                               ? 'bg-[var(--brand-color)] text-white border-[var(--brand-color)]'
                               : (isDark
-                                  ? 'bg-slate-800 border-slate-700 text-slate-300'
-                                  : 'bg-[#eef1f4] border-[#e8eaec] text-[#131416]')
+                                  ? 'bg-slate-800 border-slate-700 text-slate-300 group-hover:border-slate-600'
+                                  : 'bg-[#f0f2f5] border-[#e8eaec] text-[#131416] group-hover:border-[var(--brand-color)]/30')
                           }`}>
                             {letter}
                           </span>
-                          <span className={`text-xs font-semibold transition-colors ${
+                          <span className={`text-sm font-semibold transition-colors truncate ${
                             isSelected
                               ? (isDark ? 'text-white' : 'text-[var(--brand-color)]')
                               : (isDark ? 'text-slate-200 group-hover:text-white' : 'text-[#131416] group-hover:text-[var(--brand-color)]')
@@ -919,16 +1000,23 @@ export const QuizRunnerPage: React.FC = () => {
                             {opt.label}
                           </span>
                         </div>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-[color,background-color,border-color,transform] shrink-0 ${
-                            isSelected
-                              ? 'border-[var(--brand-color)] bg-[var(--brand-color)] text-white scale-105'
-                              : (isDark ? 'border-slate-700 bg-slate-800/60' : 'border-[#e8eaec]')
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className="w-3.5 h-3.5 stroke-[3] text-white" />
-                          )}
+
+                        {/* Radio Check Indicator with Keyboard Hint */}
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="hidden sm:inline-block text-[10px] font-mono text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Press {letter}
+                          </span>
+                          <div
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                              isSelected
+                                ? 'border-[var(--brand-color)] bg-[var(--brand-color)] text-white scale-110 shadow-xs'
+                                : (isDark ? 'border-slate-700 bg-slate-800/60' : 'border-[#d0d3d8] bg-white')
+                            }`}
+                          >
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 stroke-[3] text-white" />
+                            )}
+                          </div>
                         </div>
                       </button>
                     );
