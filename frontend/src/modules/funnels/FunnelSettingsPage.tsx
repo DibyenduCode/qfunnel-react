@@ -886,17 +886,26 @@ export const FunnelSettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
+            {/* Step Progress Bar Setting Card */}
+            <label className="p-4 rounded-xl border border-[#e8eaec] bg-[#f9fbfc] flex items-center justify-between gap-4 cursor-pointer select-none hover:bg-slate-50 transition">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-[#131416] block">
+                  Display Step Progress Bar & Counter
+                </span>
+                <p className="text-[11px] text-[#5d5f60] leading-relaxed">
+                  Shows the top progress bar and step tracker (e.g. Step 1 of 5 • 20% Completed) in the public quiz runner. Enabled by default for higher completion rates.
+                </p>
+              </div>
+              <div className="relative inline-flex items-center shrink-0">
                 <input
                   type="checkbox"
                   checked={showProgressBar}
                   onChange={(e) => setShowProgressBar(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#1d5fd6] focus:ring-[#1d5fd6]"
+                  className="sr-only peer"
                 />
-                <span className="text-xs text-[#131416] font-semibold">Display Visitor Progress Bar</span>
-              </label>
-            </div>
+                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1d5fd6]"></div>
+              </div>
+            </label>
           </div>
         </div>
 

@@ -16,7 +16,8 @@ import {
   Loader2,
   Keyboard,
   Undo2,
-  Redo2
+  Redo2,
+  Settings
 } from 'lucide-react';
 
 interface BuilderToolbarProps {
@@ -229,6 +230,17 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
+        )}
+
+        {funnel?.id && (
+          <Link
+            to={`/admin/funnels/${funnel.id}/settings`}
+            className="px-2 h-7 rounded-md border border-[#e8eaec] text-xs font-normal text-[#5d5f60] hover:bg-[#f4f6f8] hover:text-[#131416] transition flex items-center gap-1 shrink-0"
+            title="Funnel Settings & Customization"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Settings</span>
+          </Link>
         )}
 
         <button

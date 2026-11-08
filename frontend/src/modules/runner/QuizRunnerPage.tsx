@@ -383,7 +383,15 @@ export const QuizRunnerPage: React.FC = () => {
     }
   };
 
-  const settings = manifest?.settings || {};
+  const settings = {
+    ...(manifest?.settings || {}),
+    ...(currentStep?.settings || {}),
+  };
+  const showProgressBar =
+    settings.show_progress_bar !== false &&
+    settings.show_progress_bar !== 0 &&
+    settings.show_progress_bar !== '0' &&
+    settings.show_progress_bar !== 'false';
   const accent = settings.accent_color || '#1d5fd6';
   const isDark = settings.theme === 'dark';
   const logoPosition = settings.logo_position || 'left';
@@ -662,8 +670,8 @@ export const QuizRunnerPage: React.FC = () => {
             </div>
           )}
 
-          {/* STEP PROGRESS BAR & TRACKER */}
-          {currentStep?.step_type !== 'destination' && (
+          {/* STEP PROGRESS BAR & TRACKER (ON by default, can be toggled OFF in Funnel Settings) */}
+          {showProgressBar && currentStep?.step_type !== 'destination' && (
             <div className="mb-6 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className={`font-semibold tracking-wide flex items-center gap-1.5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
