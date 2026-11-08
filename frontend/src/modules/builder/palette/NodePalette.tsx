@@ -5,6 +5,7 @@ import {
   FileText,
   Video,
   Image as ImageIcon,
+  Layout,
   Flag,
   Calendar,
   Sparkles,
@@ -67,10 +68,10 @@ export const AVAILABLE_NODES: NodeDefinition[] = [
   // 2. Media & Interstitials
   {
     type: 'content',
-    title: 'Content Slide',
-    description: 'Image banner, story, or infographic with next button',
+    title: 'Landing Page / Story',
+    description: 'High-converting intro, pre-sell or advertorial page',
     category: 'media',
-    icon: ImageIcon,
+    icon: Layout,
     color: 'text-[#1d5fd6]',
     bgColor: 'bg-[#dcf1ff]',
     borderColor: 'border-[#b9e6fe]',

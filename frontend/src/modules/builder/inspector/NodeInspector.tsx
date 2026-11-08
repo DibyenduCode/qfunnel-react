@@ -22,7 +22,9 @@ import {
   Sparkles,
   Image as ImageIcon,
   Upload,
-  Loader2
+  Loader2,
+  Star,
+  CheckCircle2
 } from 'lucide-react';
 
 interface NodeInspectorProps {
@@ -187,14 +189,48 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
     data.video_gate?.cta_button_text || data.config?.video_gate?.cta_button_text || data.config?.cta_button_text || 'Continue to Next Step'
   );
 
-  // Content Slide Node
+  // Landing Page / Content Node
+  const [contentBadgeText, setContentBadgeText] = useState(data.content?.badge_text || '');
   const [contentHeadline, setContentHeadline] = useState(data.content?.headline || data.title || 'Key Insight & Overview');
+  const [contentSubheadline, setContentSubheadline] = useState(data.content?.subheadline || '');
   const [contentBody, setContentBody] = useState(data.content?.body_text || data.content?.subtext || '');
+  const [contentMediaType, setContentMediaType] = useState<'none' | 'image' | 'video'>(
+    (data.content?.media_type as any) || (data.content?.image_url ? 'image' : data.content?.video_url ? 'video' : 'image')
+  );
   const [contentImageUrl, setContentImageUrl] = useState(data.content?.image_url || '');
+  const [contentVideoUrl, setContentVideoUrl] = useState(data.content?.video_url || '');
+  const [contentShowBenefits, setContentShowBenefits] = useState(Boolean(data.content?.show_benefits));
+  const [contentBenefits, setContentBenefits] = useState<string[]>(
+    Array.isArray(data.content?.benefits) && data.content.benefits.length > 0
+      ? data.content.benefits
+      : ['100% personalized analysis', 'Instant feedback in under 60 seconds']
+  );
+  const [contentShowSocialProof, setContentShowSocialProof] = useState(Boolean(data.content?.show_social_proof));
+  const [contentSocialProofText, setContentSocialProofText] = useState(data.content?.social_proof_text || 'Rated 4.9/5 by 1,200+ users');
   const [contentButtonText, setContentButtonText] = useState(data.content?.button_text || 'Continue to Next Step');
+  const [contentButtonSubtext, setContentButtonSubtext] = useState(data.content?.button_subtext || 'Takes less than 1 minute • 100% Free');
   const contentFileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingContentImg, setUploadingContentImg] = useState(false);
   const [contentUploadError, setContentUploadError] = useState<string | null>(null);
+
+  const handleAddBenefit = () => {
+    const updated = [...contentBenefits, ''];
+    setContentBenefits(updated);
+    commit({ contentBenefits: updated });
+  };
+
+  const handleUpdateBenefit = (index: number, val: string) => {
+    const updated = [...contentBenefits];
+    updated[index] = val;
+    setContentBenefits(updated);
+    commit({ contentBenefits: updated });
+  };
+
+  const handleRemoveBenefit = (index: number) => {
+    const updated = contentBenefits.filter((_, i) => i !== index);
+    setContentBenefits(updated);
+    commit({ contentBenefits: updated });
+  };
 
   const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -218,7 +254,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
       const uploadedUrl = res.url || res.relative_url || '';
       if (uploadedUrl) {
         setContentImageUrl(uploadedUrl);
-        commit({ contentImageUrl: uploadedUrl });
+        commit({ contentImageUrl: uploadedUrl, contentMediaType: 'image' });
       }
     } catch (err: any) {
       setContentUploadError(err.message || 'Failed to upload image.');
@@ -348,10 +384,25 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
       data.video_gate?.cta_button_text || data.config?.video_gate?.cta_button_text || data.config?.cta_button_text || 'Continue to Next Step'
     );
 
+    setContentBadgeText(data.content?.badge_text || '');
     setContentHeadline(data.content?.headline || data.title || 'Key Insight & Overview');
+    setContentSubheadline(data.content?.subheadline || '');
     setContentBody(data.content?.body_text || data.content?.subtext || '');
+    setContentMediaType(
+      (data.content?.media_type as any) || (data.content?.image_url ? 'image' : data.content?.video_url ? 'video' : 'image')
+    );
     setContentImageUrl(data.content?.image_url || '');
+    setContentVideoUrl(data.content?.video_url || '');
+    setContentShowBenefits(Boolean(data.content?.show_benefits));
+    setContentBenefits(
+      Array.isArray(data.content?.benefits) && data.content.benefits.length > 0
+        ? data.content.benefits
+        : ['100% personalized analysis', 'Instant feedback in under 60 seconds']
+    );
+    setContentShowSocialProof(Boolean(data.content?.show_social_proof));
+    setContentSocialProofText(data.content?.social_proof_text || 'Rated 4.9/5 by 1,200+ users');
     setContentButtonText(data.content?.button_text || 'Continue to Next Step');
+    setContentButtonSubtext(data.content?.button_subtext || 'Takes less than 1 minute • 100% Free');
 
     setLoaderHeadline(data.loader?.headline || data.title || 'Analyzing your responses...');
     setLoaderSubtext(data.loader?.subtext || 'Matching the best options based on your answers...');
@@ -431,10 +482,19 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
       },
       content: {
         ...(data.content || {}),
+        badge_text: overrides.contentBadgeText ?? contentBadgeText,
         headline: overrides.contentHeadline ?? contentHeadline,
+        subheadline: overrides.contentSubheadline ?? contentSubheadline,
         body_text: overrides.contentBody ?? contentBody,
+        media_type: overrides.contentMediaType ?? contentMediaType,
         image_url: overrides.contentImageUrl ?? contentImageUrl,
+        video_url: overrides.contentVideoUrl ?? contentVideoUrl,
+        show_benefits: overrides.contentShowBenefits ?? contentShowBenefits,
+        benefits: overrides.contentBenefits ?? contentBenefits,
+        show_social_proof: overrides.contentShowSocialProof ?? contentShowSocialProof,
+        social_proof_text: overrides.contentSocialProofText ?? contentSocialProofText,
         button_text: overrides.contentButtonText ?? contentButtonText,
+        button_subtext: overrides.contentButtonSubtext ?? contentButtonSubtext,
       },
       video_gate: {
         ...(data.video_gate || {}),
@@ -454,10 +514,19 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         ...(data.config || {}),
         content: {
           ...(data.content || {}),
+          badge_text: overrides.contentBadgeText ?? contentBadgeText,
           headline: overrides.contentHeadline ?? contentHeadline,
+          subheadline: overrides.contentSubheadline ?? contentSubheadline,
           body_text: overrides.contentBody ?? contentBody,
+          media_type: overrides.contentMediaType ?? contentMediaType,
           image_url: overrides.contentImageUrl ?? contentImageUrl,
+          video_url: overrides.contentVideoUrl ?? contentVideoUrl,
+          show_benefits: overrides.contentShowBenefits ?? contentShowBenefits,
+          benefits: overrides.contentBenefits ?? contentBenefits,
+          show_social_proof: overrides.contentShowSocialProof ?? contentShowSocialProof,
+          social_proof_text: overrides.contentSocialProofText ?? contentSocialProofText,
           button_text: overrides.contentButtonText ?? contentButtonText,
+          button_subtext: overrides.contentButtonSubtext ?? contentButtonSubtext,
         },
         video_url: overrides.videoUrl ?? videoUrl,
         playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
@@ -1546,14 +1615,31 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         )}
 
         {/* ========================================================
-            CONTENT SLIDE NODE INSPECTOR
+            LANDING PAGE / STORY NODE INSPECTOR
         ======================================================== */}
         {nodeType === 'content' && (
           <div className="space-y-4">
+            {/* Eyebrow Badge */}
+            <div>
+              <label className="block text-xs font-medium text-[#131416] mb-1">
+                Eyebrow Badge (Optional)
+              </label>
+              <input
+                type="text"
+                value={contentBadgeText}
+                onChange={(e) => {
+                  setContentBadgeText(e.target.value);
+                  commit({ contentBadgeText: e.target.value });
+                }}
+                placeholder="e.g. 🔥 LIMITED TIME ASSESSMENT"
+                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+              />
+            </div>
+
             {/* Headline */}
             <div>
               <label className="block text-xs font-medium text-[#131416] mb-1">
-                Headline / Title *
+                Main Headline *
               </label>
               <input
                 type="text"
@@ -1562,15 +1648,260 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   setContentHeadline(e.target.value);
                   commit({ contentHeadline: e.target.value, title: e.target.value });
                 }}
-                placeholder="e.g. Did you know? 80% of organizations see higher ROI"
+                placeholder="e.g. Why 80% of Marketing Teams Switched to High-Converting Funnels"
+                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs font-semibold text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+              />
+            </div>
+
+            {/* Subheadline */}
+            <div>
+              <label className="block text-xs font-medium text-[#131416] mb-1">
+                Subheadline (Optional)
+              </label>
+              <input
+                type="text"
+                value={contentSubheadline}
+                onChange={(e) => {
+                  setContentSubheadline(e.target.value);
+                  commit({ contentSubheadline: e.target.value });
+                }}
+                placeholder="e.g. A tailored 60-second diagnostic designed for founders & creators"
                 className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
               />
             </div>
 
-            {/* Subtext / Body Copy */}
+            {/* Media Display (None / Image / Video) */}
+            <div className="p-3.5 rounded-[8px] border border-[#e8eaec] bg-[#f4f6f8] space-y-3">
+              <span className="text-xs font-semibold text-[#131416] block">
+                Hero Media Display
+              </span>
+
+              {/* Segmented Buttons for Mode */}
+              <div className="grid grid-cols-3 p-1 rounded-[6px] bg-white border border-[#e8eaec] text-xs gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentMediaType('none');
+                    commit({ contentMediaType: 'none' });
+                  }}
+                  className={`py-1.5 px-2 rounded-[4px] font-medium transition-colors text-center cursor-pointer ${
+                    contentMediaType === 'none'
+                      ? 'bg-[#131416] text-white shadow-xs'
+                      : 'text-[#5d5f60] hover:text-[#131416]'
+                  }`}
+                >
+                  None
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentMediaType('image');
+                    commit({ contentMediaType: 'image' });
+                  }}
+                  className={`py-1.5 px-2 rounded-[4px] font-medium transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+                    contentMediaType === 'image'
+                      ? 'bg-[#131416] text-white shadow-xs'
+                      : 'text-[#5d5f60] hover:text-[#131416]'
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Image</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentMediaType('video');
+                    commit({ contentMediaType: 'video' });
+                  }}
+                  className={`py-1.5 px-2 rounded-[4px] font-medium transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5 ${
+                    contentMediaType === 'video'
+                      ? 'bg-[#131416] text-white shadow-xs'
+                      : 'text-[#5d5f60] hover:text-[#131416]'
+                  }`}
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span>Video</span>
+                </button>
+              </div>
+
+              {/* Image Mode */}
+              {contentMediaType === 'image' && (
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-[#5d5f60]">Upload or paste image URL:</span>
+                    {contentImageUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveContentImage}
+                        className="text-[11px] text-rose-600 hover:text-rose-700 font-medium inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Hidden File Input */}
+                  <input
+                    ref={contentFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+                    className="hidden"
+                    onChange={handleContentImageUpload}
+                    disabled={uploadingContentImg}
+                  />
+
+                  {/* Upload Button */}
+                  <button
+                    type="button"
+                    onClick={() => contentFileInputRef.current?.click()}
+                    disabled={uploadingContentImg}
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#1b6c80]/50 bg-white hover:bg-[#1b6c80]/5 text-xs font-medium text-[#1b6c80] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {uploadingContentImg ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1b6c80]" />
+                        <span>Uploading image...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5 text-[#1b6c80]" />
+                        <span>{contentImageUrl ? 'Upload Different Image' : 'Upload Image File'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  {contentUploadError && (
+                    <div className="p-2 rounded-[6px] bg-red-50 border border-red-200 text-[11px] text-red-600">
+                      {contentUploadError}
+                    </div>
+                  )}
+
+                  <input
+                    type="url"
+                    value={contentImageUrl}
+                    onChange={(e) => {
+                      setContentImageUrl(e.target.value);
+                      commit({ contentImageUrl: e.target.value });
+                    }}
+                    placeholder="Or enter Image URL: https://..."
+                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                  />
+
+                  {contentImageUrl && (
+                    <div className="rounded-lg overflow-hidden border border-[#e8eaec] max-h-40 bg-white relative group">
+                      <img
+                        src={resolveMediaUrl(contentImageUrl)}
+                        alt="Content Preview"
+                        className="w-full h-32 object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute top-1.5 right-1.5 flex gap-1 bg-black/60 backdrop-blur-xs p-1 rounded-md">
+                        <button
+                          type="button"
+                          onClick={() => contentFileInputRef.current?.click()}
+                          title="Change image file"
+                          className="p-1 rounded text-white hover:bg-white/20 transition cursor-pointer"
+                        >
+                          <Upload className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemoveContentImage}
+                          title="Remove image"
+                          className="p-1 rounded text-rose-300 hover:text-white hover:bg-rose-600/60 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Video Mode */}
+              {contentMediaType === 'video' && (
+                <div className="space-y-2 pt-1">
+                  <label className="block text-[11px] text-[#5d5f60]">
+                    Video Embed URL (YouTube, Vimeo, MP4):
+                  </label>
+                  <input
+                    type="url"
+                    value={contentVideoUrl}
+                    onChange={(e) => {
+                      setContentVideoUrl(e.target.value);
+                      commit({ contentVideoUrl: e.target.value });
+                    }}
+                    placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                  />
+                  <p className="text-[10px] text-[#5d5f60]">
+                    Supports YouTube, Vimeo or direct MP4/WebM video links.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Key Benefits Card */}
+            <div className="p-3.5 rounded-[8px] border border-[#e8eaec] bg-[#f9fbfc] space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#131416] flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Highlight Key Benefits</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={contentShowBenefits}
+                  onChange={(e) => {
+                    setContentShowBenefits(e.target.checked);
+                    commit({ contentShowBenefits: e.target.checked });
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-[#1b6c80] focus:ring-[#1b6c80] cursor-pointer"
+                />
+              </div>
+
+              {contentShowBenefits && (
+                <div className="space-y-2 pt-1">
+                  {contentBenefits.map((b, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-[10px] font-bold">
+                        ✓
+                      </div>
+                      <input
+                        type="text"
+                        value={b}
+                        onChange={(e) => handleUpdateBenefit(idx, e.target.value)}
+                        placeholder="e.g. 100% personalized assessment based on your answers"
+                        className="flex-1 px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#1b6c80] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBenefit(idx)}
+                        className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 cursor-pointer"
+                        title="Remove point"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleAddBenefit}
+                    className="w-full py-1.5 px-3 rounded-[6px] border border-dashed border-[#1b6c80]/40 text-[#1b6c80] hover:bg-[#1b6c80]/5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Benefit Point</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Editorial Story / Body Copy */}
             <div>
               <label className="block text-xs font-medium text-[#131416] mb-1">
-                Body Copy / Story Text
+                Body Copy / Editorial Story (Optional)
               </label>
               <textarea
                 rows={3}
@@ -1584,129 +1915,84 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               />
             </div>
 
-            {/* Image / Graphic Media */}
-            <div className="p-3 rounded-[8px] border border-[#e8eaec] bg-[#f9fbfc] space-y-2.5">
+            {/* Social Proof Card */}
+            <div className="p-3.5 rounded-[8px] border border-[#e8eaec] bg-[#f9fbfc] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs text-[#131416] flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-[#1b6c80]" />
-                  <span>Story Image / Infographic</span>
+                <span className="text-xs font-semibold text-[#131416] flex items-center gap-1.5">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span>Social Proof & Trust Badge</span>
                 </span>
-                {contentImageUrl && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveContentImage}
-                    className="text-[11px] text-rose-600 hover:text-rose-700 font-medium inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Remove
-                  </button>
-                )}
-              </div>
-
-              {/* Hidden File Input */}
-              <input
-                ref={contentFileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
-                className="hidden"
-                onChange={handleContentImageUpload}
-                disabled={uploadingContentImg}
-              />
-
-              {/* Upload Button */}
-              <button
-                type="button"
-                onClick={() => contentFileInputRef.current?.click()}
-                disabled={uploadingContentImg}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#1b6c80]/50 bg-[#1b6c80]/5 hover:bg-[#1b6c80]/10 text-xs font-medium text-[#1b6c80] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {uploadingContentImg ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1b6c80]" />
-                    <span>Uploading image...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-3.5 h-3.5 text-[#1b6c80]" />
-                    <span>{contentImageUrl ? 'Upload Different Image' : 'Upload Image File'}</span>
-                  </>
-                )}
-              </button>
-
-              {contentUploadError && (
-                <div className="p-2 rounded-[6px] bg-red-50 border border-red-200 text-[11px] text-red-600">
-                  {contentUploadError}
-                </div>
-              )}
-
-              {/* URL Input */}
-              <div>
-                <label className="block text-[11px] text-[#5d5f60] mb-1">
-                  Or enter Image URL:
-                </label>
                 <input
-                  type="url"
-                  value={contentImageUrl}
+                  type="checkbox"
+                  checked={contentShowSocialProof}
                   onChange={(e) => {
-                    setContentImageUrl(e.target.value);
-                    commit({ contentImageUrl: e.target.value });
+                    setContentShowSocialProof(e.target.checked);
+                    commit({ contentShowSocialProof: e.target.checked });
                   }}
-                  placeholder="https://images.unsplash.com/... or /uploads/..."
-                  className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                  className="w-4 h-4 rounded border-gray-300 text-[#1b6c80] focus:ring-[#1b6c80] cursor-pointer"
                 />
               </div>
 
-              {/* Live Preview */}
-              {contentImageUrl && (
-                <div className="rounded-lg overflow-hidden border border-[#e8eaec] max-h-40 bg-white relative group">
-                  <img
-                    src={resolveMediaUrl(contentImageUrl)}
-                    alt="Content Preview"
-                    className="w-full h-32 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute top-1.5 right-1.5 flex gap-1 bg-black/60 backdrop-blur-xs p-1 rounded-md">
-                    <button
-                      type="button"
-                      onClick={() => contentFileInputRef.current?.click()}
-                      title="Change image file"
-                      className="p-1 rounded text-white hover:bg-white/20 transition cursor-pointer"
-                    >
-                      <Upload className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleRemoveContentImage}
-                      title="Remove image"
-                      className="p-1 rounded text-rose-300 hover:text-white hover:bg-rose-600/60 transition cursor-pointer"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+              {contentShowSocialProof && (
+                <div className="space-y-2 pt-1">
+                  <div>
+                    <label className="block text-[11px] text-[#5d5f60] mb-1">
+                      Trust / Rating Copy
+                    </label>
+                    <input
+                      type="text"
+                      value={contentSocialProofText}
+                      onChange={(e) => {
+                        setContentSocialProofText(e.target.value);
+                        commit({ contentSocialProofText: e.target.value });
+                      }}
+                      placeholder="e.g. Rated 4.9/5 by 1,200+ marketing leaders"
+                      className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#1b6c80] outline-none"
+                    />
+                  </div>
+                  <div className="p-2 rounded bg-amber-50/70 border border-amber-200/60 flex items-center gap-1.5 text-xs text-amber-900 font-medium">
+                    <span className="text-amber-500 tracking-tight font-bold">★★★★★</span>
+                    <span className="truncate">{contentSocialProofText || 'Rated 4.9/5 by 1,200+ users'}</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Action Button Label */}
-            <div>
-              <label className="block text-xs font-medium text-[#131416] mb-1">
-                Advance Button Text *
-              </label>
-              <input
-                type="text"
-                value={contentButtonText}
-                onChange={(e) => {
-                  setContentButtonText(e.target.value);
-                  commit({ contentButtonText: e.target.value });
-                }}
-                placeholder="Continue to Next Step"
-                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416]"
-              />
-              <p className="text-[10px] text-[#5d5f60] mt-1">
-                Visitors click this button to proceed to the next connected step in your funnel.
-              </p>
+            {/* Action CTA Button & Subtext */}
+            <div className="space-y-2.5">
+              <div>
+                <label className="block text-xs font-medium text-[#131416] mb-1">
+                  Advance Button Text *
+                </label>
+                <input
+                  type="text"
+                  value={contentButtonText}
+                  onChange={(e) => {
+                    setContentButtonText(e.target.value);
+                    commit({ contentButtonText: e.target.value });
+                  }}
+                  placeholder="Continue to Next Step"
+                  className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#131416] mb-1">
+                  CTA Subtext / Trust Note (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={contentButtonSubtext}
+                  onChange={(e) => {
+                    setContentButtonSubtext(e.target.value);
+                    commit({ contentButtonSubtext: e.target.value });
+                  }}
+                  placeholder="e.g. Takes less than 1 minute • 100% Free"
+                  className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416]"
+                />
+                <p className="text-[10px] text-[#5d5f60] mt-1">
+                  Appears directly below the CTA button in the runner to build confidence.
+                </p>
+              </div>
             </div>
           </div>
         )}

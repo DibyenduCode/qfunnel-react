@@ -212,10 +212,19 @@ class FunnelGraphService
             } elseif ($node['node_type'] === 'content') {
                 $content = !empty($nodeConfig['content']) ? $nodeConfig['content'] : $nodeConfig;
                 $node['content'] = [
+                    'badge_text' => $content['badge_text'] ?? '',
                     'headline' => $content['headline'] ?? ($node['title'] ?? 'Key Insight & Overview'),
+                    'subheadline' => $content['subheadline'] ?? '',
                     'body_text' => $content['body_text'] ?? ($content['subtext'] ?? ''),
+                    'media_type' => $content['media_type'] ?? (!empty($content['image_url']) ? 'image' : 'none'),
                     'image_url' => $content['image_url'] ?? '',
-                    'button_text' => $content['button_text'] ?? 'Continue to Next Step',
+                    'video_url' => $content['video_url'] ?? '',
+                    'show_benefits' => isset($content['show_benefits']) ? (bool)$content['show_benefits'] : (!empty($content['benefits'])),
+                    'benefits' => is_array($content['benefits'] ?? null) ? $content['benefits'] : [],
+                    'show_social_proof' => isset($content['show_social_proof']) ? (bool)$content['show_social_proof'] : (!empty($content['social_proof_text'])),
+                    'social_proof_text' => $content['social_proof_text'] ?? '',
+                    'button_text' => $content['button_text'] ?? 'Continue to Next Step ➔',
+                    'button_subtext' => $content['button_subtext'] ?? '',
                 ];
             }
             $enrichedNodes[] = $node;

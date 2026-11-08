@@ -314,6 +314,40 @@ export const QuizRunnerPage: React.FC = () => {
     }
   };
 
+  const renderLandingPageVideo = (url: string) => {
+    if (!url) return null;
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    if (ytMatch) {
+      return (
+        <iframe
+          src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=0&controls=1&rel=0`}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+    const vimMatch = url.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/i);
+    if (vimMatch) {
+      return (
+        <iframe
+          src={`https://player.vimeo.com/video/${vimMatch[1]}?autoplay=0&controls=1`}
+          className="w-full h-full"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+    return (
+      <video
+        src={resolveMediaUrl(url)}
+        controls
+        className="w-full h-full object-cover"
+        playsInline
+      />
+    );
+  };
+
   const handleBack = async () => {
     if (!sessionToken) return;
     try {
@@ -650,47 +684,116 @@ export const QuizRunnerPage: React.FC = () => {
             />
           )}
 
-          {/* STEP: CONTENT SLIDE (STANDALONE INTERSTITIAL / STORY) */}
+          {/* STEP: LANDING PAGE / BRIDGE PAGE / INTERSTITIAL STORY */}
           {currentStep?.step_type === 'content' && (
             <div className="space-y-6 animate-fadeIn">
-              {/* Optional Top Media / Image */}
-              {currentStep.content?.image_url && (
-                <div className="w-full max-h-[340px] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-sm flex items-center justify-center">
-                  <img
-                    src={resolveMediaUrl(currentStep.content.image_url)}
-                    alt={currentStep.content?.headline || 'Content media'}
-                    className="w-full h-full object-cover max-h-[340px]"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
+              {/* Optional Eyebrow Badge */}
+              {currentStep.content?.badge_text && (
+                <div className="flex justify-start">
+                  <span
+                    style={{ borderColor: `${accent}40`, color: accent, backgroundColor: `${accent}10` }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{currentStep.content.badge_text}</span>
+                  </span>
                 </div>
               )}
 
-              {/* Content Text: Headline & Body */}
-              <div className="space-y-3">
-                <h2 className={`text-2xl font-bold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-[#131416]'}`}>
+              {/* Headline & Subheadline */}
+              <div className="space-y-2">
+                <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight leading-snug ${isDark ? 'text-white' : 'text-[#131416]'}`}>
                   {currentStep.content?.headline || currentStep.title || 'Key Information'}
                 </h2>
-                {currentStep.content?.body_text && (
-                  <div
-                    className={`text-sm sm:text-base leading-relaxed whitespace-pre-line ${
-                      isDark ? 'text-slate-300' : 'text-[#5d5f60]'
-                    }`}
-                  >
-                    {currentStep.content.body_text}
-                  </div>
+                {currentStep.content?.subheadline && (
+                  <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#5d5f60]'}`}>
+                    {currentStep.content.subheadline}
+                  </p>
                 )}
               </div>
 
-              {/* Action: Continue CTA Button */}
-              <div className="pt-2">
+              {/* Hero Media: Image or Video */}
+              {currentStep.content?.media_type !== 'none' && (
+                <>
+                  {currentStep.content?.media_type === 'video' && currentStep.content?.video_url ? (
+                    <div className="w-full rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-black shadow-md aspect-video select-none">
+                      {renderLandingPageVideo(currentStep.content.video_url)}
+                    </div>
+                  ) : currentStep.content?.image_url ? (
+                    <div className="w-full max-h-[360px] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-sm flex items-center justify-center">
+                      <img
+                        src={resolveMediaUrl(currentStep.content.image_url)}
+                        alt={currentStep.content?.headline || 'Landing media'}
+                        className="w-full h-full object-cover max-h-[360px]"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </>
+              )}
+
+              {/* Key Benefits Checklist */}
+              {currentStep.content?.show_benefits &&
+                Array.isArray(currentStep.content?.benefits) &&
+                currentStep.content.benefits.filter(Boolean).length > 0 && (
+                  <div
+                    className={`p-4 sm:p-5 rounded-2xl border ${
+                      isDark ? 'bg-slate-800/60 border-slate-700/60' : 'bg-slate-50/80 border-slate-200/80'
+                    }`}
+                  >
+                    <ul className="space-y-2.5">
+                      {currentStep.content.benefits.filter(Boolean).map((benefit: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2.5">
+                          <div
+                            style={{ backgroundColor: `${accent}15`, color: accent }}
+                            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                          <span
+                            className={`text-sm sm:text-base font-medium leading-normal ${
+                              isDark ? 'text-slate-200' : 'text-slate-800'
+                            }`}
+                          >
+                            {benefit}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+              {/* Long Copy / Body Text */}
+              {currentStep.content?.body_text && (
+                <div
+                  className={`text-sm sm:text-base leading-relaxed whitespace-pre-line ${
+                    isDark ? 'text-slate-300' : 'text-[#5d5f60]'
+                  }`}
+                >
+                  {currentStep.content.body_text}
+                </div>
+              )}
+
+              {/* Social Proof Star Strip */}
+              {currentStep.content?.show_social_proof && currentStep.content?.social_proof_text && (
+                <div className="flex items-center gap-2 pt-1 text-sm">
+                  <span className="text-amber-400 font-bold tracking-tight">★★★★★</span>
+                  <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    {currentStep.content.social_proof_text}
+                  </span>
+                </div>
+              )}
+
+              {/* Primary Call to Action Button & Subtext */}
+              <div className="pt-2 space-y-2 text-center">
                 <button
                   type="button"
                   onClick={handleContentAdvance}
                   disabled={stepLoading}
                   style={{ backgroundColor: accent }}
-                  className={`w-full py-3.5 px-6 text-white font-semibold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 ${buttonRadius}`}
+                  className={`w-full py-3.5 px-6 text-white font-semibold text-sm shadow-md hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer ${buttonRadius}`}
                 >
                   {stepLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -701,6 +804,12 @@ export const QuizRunnerPage: React.FC = () => {
                     </>
                   )}
                 </button>
+
+                {currentStep.content?.button_subtext && (
+                  <p className={`text-xs flex items-center justify-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <span>{currentStep.content.button_subtext}</span>
+                  </p>
+                )}
               </div>
             </div>
           )}
