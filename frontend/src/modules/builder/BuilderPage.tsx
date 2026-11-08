@@ -741,8 +741,15 @@ const BuilderInner: React.FC = () => {
       setTimeout(() => {
         setBannerMsg((current) => (current?.text === 'Canvas saved successfully.' ? null : current));
       }, 2600);
+      return true;
     } catch (err: any) {
-      setBannerMsg({ type: 'error', text: err.message || 'Failed to save graph.' });
+      const errMsg = err.message || 'Failed to save graph.';
+      const isNetwork = errMsg.toLowerCase().includes('fetch') || errMsg.toLowerCase().includes('network');
+      setBannerMsg({ 
+        type: 'error', 
+        text: isNetwork ? `Connection error: Unable to reach server (${errMsg}).` : errMsg 
+      });
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -755,7 +762,8 @@ const BuilderInner: React.FC = () => {
       setBannerMsg(null);
 
       if (isDirty) {
-        await handleSaveGraph();
+        const saved = await handleSaveGraph();
+        if (!saved) return;
       }
 
       const res = await api.post(`/api/funnels/${id}/publish`);
@@ -766,10 +774,26 @@ const BuilderInner: React.FC = () => {
       });
       setTimeout(() => setBannerMsg(null), 4000);
     } catch (err: any) {
-      if (err.data && Array.isArray(err.data)) {
+      const errMsg = err.message || '';
+      const isNetworkOrServerErr =
+        errMsg.toLowerCase().includes('fetch') ||
+        errMsg.toLowerCase().includes('network') ||
+        (err.status && err.status >= 500);
+
+      if (isNetworkOrServerErr) {
+        setBannerMsg({
+          type: 'error',
+          text: `Network connection issue (${errMsg || 'Failed to fetch'}). Please ensure your local server is running and try again.`,
+        });
+      } else if (err.data && Array.isArray(err.data)) {
         setValidationErrors(err.data.map((item: any) => item.message || String(item)));
+      } else if (err.code === 'VALIDATION_FAILED' || err.data?.unconnected_nodes) {
+        setValidationErrors([errMsg || 'Validation failed. Ensure all paths have next steps.']);
       } else {
-        setValidationErrors([err.message || 'Validation failed. Ensure all paths have next steps.']);
+        setBannerMsg({
+          type: 'error',
+          text: errMsg || 'Failed to publish funnel.',
+        });
       }
     } finally {
       setIsPublishing(false);
