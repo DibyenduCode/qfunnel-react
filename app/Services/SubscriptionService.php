@@ -24,6 +24,39 @@ class SubscriptionService
     }
 
     /**
+     * Assign or upgrade subscription plan for a tenant workspace.
+     */
+    public static function assignPlan(int $tenantId, int $planId, int $durationDays = 30, int $adminUserId = 1, string $notes = ''): bool
+    {
+        $tenant = Database::fetchOne("SELECT * FROM tenants WHERE id = ?", [$tenantId]);
+        $plan = Database::fetchOne("SELECT * FROM plans WHERE id = ?", [$planId]);
+
+        if (!$tenant || !$plan) {
+            return false;
+        }
+
+        // Deactivate previous active / trial subscriptions
+        Database::execute(
+            "UPDATE tenant_subscriptions SET status = 'cancelled' WHERE tenant_id = ? AND status IN ('active', 'trial')",
+            [$tenantId]
+        );
+
+        $amount = (float)($plan['price'] ?? 0);
+        $currency = $plan['currency'] ?? 'INR';
+        $interval = $plan['billing_cycle'] ?? 'monthly';
+
+        Database::execute(
+            "INSERT INTO tenant_subscriptions 
+             (tenant_id, plan_id, status, billing_interval, starts_at, current_period_start, ends_at, current_period_end, amount, currency, provider, provider_subscription_id) 
+             VALUES (?, ?, 'active', ?, NOW(), NOW(), DATE_ADD(NOW(), INTERVAL ? DAY), DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?, 'self_service', ?)",
+            [$tenantId, $planId, $interval, $durationDays, $durationDays, $amount, $currency, 'sub_upgrade_' . time()]
+        );
+
+        Logger::info("Plan #{$planId} assigned to Tenant #{$tenantId} by User #{$adminUserId}. Notes: {$notes}");
+        return true;
+    }
+
+    /**
      * Get comprehensive billing summary for a tenant.
      */
     public static function getBillingSummary(int $tenantId): array
