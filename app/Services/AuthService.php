@@ -47,7 +47,7 @@ class AuthService
         return ['success' => true, 'user' => $user];
     }
 
-    public static function register(string $name, string $email, string $password, string $workspaceName): array
+    public static function register(string $name, string $email, string $password, string $workspaceName, bool $autoVerify = false): array
     {
         $name = trim($name);
         $email = trim(strtolower($email));
@@ -85,11 +85,12 @@ class AuthService
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-        return Database::transaction(function () use ($name, $email, $passwordHash, $workspaceName, $slug) {
+        return Database::transaction(function () use ($name, $email, $passwordHash, $workspaceName, $slug, $autoVerify) {
             // 1. Create User
+            $verifiedAt = $autoVerify ? date('Y-m-d H:i:s') : null;
             Database::execute(
-                "INSERT INTO users (name, email, password_hash, is_platform_admin, status) VALUES (?, ?, ?, 0, 'active')",
-                [$name, $email, $passwordHash]
+                "INSERT INTO users (name, email, password_hash, is_platform_admin, status, email_verified_at) VALUES (?, ?, ?, 0, 'active', ?)",
+                [$name, $email, $passwordHash, $verifiedAt]
             );
             $userId = (int) Database::lastInsertId();
 
@@ -123,13 +124,25 @@ class AuthService
                 'email' => $email,
                 'is_platform_admin' => 0,
                 'status' => 'active',
+                'email_verified_at' => $verifiedAt,
             ];
             Session::set('user', $user);
             TenantContextService::setActiveTenant($tenantId, $userId);
 
+            $otpData = null;
+            if (!$autoVerify) {
+                $otpData = EmailVerificationService::generateOtp($userId, $email, $name);
+            }
+
             Logger::info("New tenant registered: {$workspaceName} ({$email})");
 
-            return ['success' => true, 'user' => $user, 'tenant_id' => $tenantId];
+            return [
+                'success' => true,
+                'user' => $user,
+                'tenant_id' => $tenantId,
+                'requires_verification' => !$autoVerify,
+                'otp_data' => $otpData,
+            ];
         });
     }
 

@@ -10,6 +10,19 @@ class TenantMiddleware
 {
     public function handle(Request $request): ?Response
     {
+        $user = current_user();
+
+        // Enforce Email Verification OTP before entering workspace dashboard
+        if ($user && empty($user['is_platform_admin']) && empty($user['email_verified_at'])) {
+            if ($request->isAjax()) {
+                return Response::error("Please verify your email address with the 6-digit OTP code before proceeding.", "EMAIL_UNVERIFIED", [
+                    'requires_verification' => true,
+                    'email' => $user['email']
+                ], 403);
+            }
+            return Response::redirect(url('/verify-email'));
+        }
+
         $tenant = TenantContextService::getActiveTenant();
         if (!$tenant) {
             $user = current_user();

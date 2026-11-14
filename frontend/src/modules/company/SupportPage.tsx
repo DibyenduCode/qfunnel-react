@@ -38,7 +38,7 @@ export const SupportPage: React.FC = () => {
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dcf1ff] border border-[#b9e6fe] text-xs font-semibold text-[#0a3a80]">
           <HelpCircle className="w-3.5 h-3.5 text-[#1d5fd6]" />
-          <span>QFunnel Help Center & Support</span>
+          <span>LeadCollector Help Center & Support</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#131416]">
           We are here to help your funnels <span className="text-[#1d5fd6]">convert</span>
@@ -214,7 +214,7 @@ export const SupportPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-semibold block text-[#131416]">Email Support</span>
-                  <span className="font-mono text-[#5d5f60] text-[11px]">support@qfunnel.local</span>
+                  <span className="font-mono text-[#5d5f60] text-[11px]">support@leadcollector.in</span>
                 </div>
               </div>
 

@@ -21,13 +21,13 @@ export const AboutPage: React.FC = () => {
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dcf1ff] border border-[#b9e6fe] text-xs font-semibold text-[#0a3a80]">
           <HeartHandshake className="w-3.5 h-3.5 text-[#1d5fd6]" />
-          <span>About QFunnel</span>
+          <span>About LeadCollector</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#131416]">
           Transforming static forms into <span className="text-[#1d5fd6]">intelligent conversations</span>
         </h1>
         <p className="text-sm sm:text-base text-[#5d5f60] leading-relaxed">
-          We founded QFunnel with a simple conviction: traditional 10-field web forms are broken. Buyers demand immediate value, transparency, and personal recommendations before handing over their contact information.
+          We founded LeadCollector with a simple conviction: traditional 10-field web forms are broken. Buyers demand immediate value, transparency, and personal recommendations before handing over their contact information.
         </p>
       </div>
 
@@ -68,10 +68,10 @@ export const AboutPage: React.FC = () => {
 
         <div className="p-6 sm:p-8 rounded-2xl bg-[#dcf1ff]/30 border border-[#b9e6fe] space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
-            <span className="text-xs font-bold text-[#1d5fd6]">The QFunnel Solution</span>
+            <span className="text-xs font-bold text-[#1d5fd6]">The LeadCollector Solution</span>
             <h2 className="text-xl font-bold text-[#0a3a80]">Interactive diagnostic journeys with instant value</h2>
             <p className="text-xs sm:text-sm text-[#0a3a80]/80 leading-relaxed">
-              QFunnel replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
+              LeadCollector replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
             </p>
           </div>
           <div className="p-4 rounded-xl bg-white border border-[#b9e6fe] text-xs text-[#0a3a80]">
@@ -126,7 +126,7 @@ export const AboutPage: React.FC = () => {
           Ready to scale your lead generation?
         </h2>
         <p className="text-xs sm:text-sm text-[#5d5f60] max-w-xl mx-auto">
-          Join thousands of agencies, clinics, and service businesses already building interactive funnels with QFunnel.
+          Join thousands of agencies, clinics, and service businesses already building interactive funnels with LeadCollector.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link

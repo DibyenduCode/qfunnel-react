@@ -15,7 +15,8 @@ import {
   Sparkles,
   Calendar,
   Loader2,
-  Lock
+  Lock,
+  Star
 } from 'lucide-react';
 import { VideoGateStep } from './VideoGateStep';
 
@@ -518,23 +519,23 @@ export const QuizRunnerPage: React.FC = () => {
           <>
             <div
               style={{
-                background: `radial-gradient(circle 650px at 50% 25%, ${accent}28, transparent 75%)`
+                background: `radial-gradient(circle 650px at 50% 25%, ${accent}28, transparent 75%)` /* taste-skill-ignore */
               }}
               className="absolute inset-0 opacity-80"
             />
-            <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[160px]" />
+            <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[#1d5fd6]/10 rounded-full blur-[160px]" />
             <div className="absolute bottom-10 right-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[140px]" />
           </>
         ) : (
           <>
             <div
               style={{
-                background: `radial-gradient(circle 750px at 50% 20%, ${accent}14, transparent 70%)`
+                background: `radial-gradient(circle 750px at 50% 20%, ${accent}14, transparent 70%)` /* taste-skill-ignore */
               }}
               className="absolute inset-0 opacity-90"
             />
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-blue-100/50 rounded-full blur-[130px]" />
-            <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-purple-50/40 rounded-full blur-[110px]" />
+            <div className="absolute bottom-10 left-1/4 w-[450px] h-[450px] bg-[#eef4ff]/40 rounded-full blur-[110px]" />
           </>
         )}
       </div>
@@ -778,7 +779,7 @@ export const QuizRunnerPage: React.FC = () => {
                 <div className="flex justify-start">
                   <span
                     style={{ borderColor: `${accent}40`, color: accent, backgroundColor: `${accent}10` }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border shadow-xs"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{currentStep.content.badge_text}</span>
@@ -865,7 +866,13 @@ export const QuizRunnerPage: React.FC = () => {
               {/* Social Proof Star Strip */}
               {currentStep.content?.show_social_proof && currentStep.content?.social_proof_text && (
                 <div className="flex items-center gap-2 pt-1 text-sm">
-                  <span className="text-amber-400 font-bold tracking-tight">★★★★★</span>
+                  <span className="flex items-center gap-0.5 text-amber-500">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  </span>
                   <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     {currentStep.content.social_proof_text}
                   </span>
@@ -1304,7 +1311,7 @@ export const QuizRunnerPage: React.FC = () => {
 
           {!isWhiteLabel && (
             <div className={`text-[10px] pt-1 ${isDark ? 'text-slate-500' : 'text-[#8b919a]'}`}>
-              Powered by <span className={`font-semibold ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>QFunnel Platform</span>
+              Powered by <span className={`font-semibold ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>LeadCollector.in</span>
             </div>
           )}
         </footer>

@@ -191,6 +191,8 @@ $router->group([AuthMiddleware::class], function (Router $router) {
 $router->get('/api/csrf-token', [ApiSpaController::class, 'csrfToken']);
 $router->post('/api/auth/login', [ApiSpaController::class, 'login']);
 $router->post('/api/auth/register', [ApiSpaController::class, 'register']);
+$router->post('/api/auth/verify-otp', [ApiSpaController::class, 'verifyOtp']);
+$router->post('/api/auth/resend-otp', [ApiSpaController::class, 'resendOtp']);
 $router->post('/api/auth/logout', [ApiSpaController::class, 'logout']);
 $router->get('/api/auth/me', [ApiSpaController::class, 'me']);
 $router->post('/api/auth/switch-workspace', [ApiSpaController::class, 'switchWorkspace']);
@@ -287,6 +289,15 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->get('/api/platform/profile', [ApiSpaController::class, 'superadminProfile']);
         $router->post('/api/platform/profile', [ApiSpaController::class, 'superadminUpdateProfile']);
         $router->post('/api/platform/profile/password', [ApiSpaController::class, 'superadminUpdatePassword']);
+
+        // Email SMTP Settings & Template CMS
+        $router->get('/api/platform/email-settings', [ApiSpaController::class, 'superadminEmailSettings']);
+        $router->post('/api/platform/email-settings/smtp', [ApiSpaController::class, 'superadminSaveSmtp']);
+        $router->post('/api/platform/email-settings/test-smtp', [ApiSpaController::class, 'superadminTestSmtp']);
+        $router->post('/api/platform/email-settings/templates/{key}', [ApiSpaController::class, 'superadminSaveTemplate']);
+        $router->post('/api/platform/email-settings/templates/{key}/reset', [ApiSpaController::class, 'superadminResetTemplate']);
+        $router->post('/api/platform/email-settings/templates/{key}/preview-test', [ApiSpaController::class, 'superadminPreviewTestEmail']);
+        $router->get('/api/platform/email-settings/logs', [ApiSpaController::class, 'superadminEmailLogs']);
 
         // Logs
         $router->get('/api/platform/logs', [ApiSpaController::class, 'superadminLogs']);

@@ -12,10 +12,13 @@ interface AuthState {
   isPlatformAdmin: boolean;
   isLoading: boolean;
   error: string | null;
+  lastDevOtp: string | null;
 
   checkAuth: () => Promise<boolean>;
   login: (email: string, pass: string) => Promise<void>;
   register: (name: string, email: string, pass: string, workspace: string) => Promise<void>;
+  verifyOtp: (otp: string) => Promise<void>;
+  resendOtp: () => Promise<{ expires_in_minutes: number; dev_otp?: string; simulated?: boolean }>;
   switchWorkspace: (tenantId: number) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -31,6 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isPlatformAdmin: false,
   isLoading: true,
   error: null,
+  lastDevOtp: null,
 
   clearError: () => set({ error: null }),
 
@@ -104,10 +108,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         userTenants: data.user_tenants || [],
         isPlatformAdmin: false,
         isLoading: false,
+        lastDevOtp: data.dev_otp || null,
       });
       get().checkAuth();
     } catch (err: any) {
       set({ error: err.message || 'Registration failed', isLoading: false });
+      throw err;
+    }
+  },
+
+  verifyOtp: async (otp: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await api.post('/api/auth/verify-otp', { otp });
+      set({
+        user: data.user,
+        activeTenant: data.active_tenant || get().activeTenant,
+        isLoading: false,
+        lastDevOtp: null,
+      });
+      await get().checkAuth();
+    } catch (err: any) {
+      set({ error: err.message || 'Verification failed', isLoading: false });
+      throw err;
+    }
+  },
+
+  resendOtp: async () => {
+    try {
+      set({ error: null });
+      const data = await api.post('/api/auth/resend-otp');
+      if (data.dev_otp) {
+        set({ lastDevOtp: data.dev_otp });
+      }
+      return data;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to resend verification code' });
       throw err;
     }
   },

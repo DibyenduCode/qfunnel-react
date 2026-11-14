@@ -23,6 +23,8 @@ use App\Services\PlatformSettingService;
 use App\Services\AuditLogService;
 use App\Services\WebhookService;
 use App\Services\LegalPageService;
+use App\Services\MailService;
+use App\Services\EmailVerificationService;
 
 class ApiSpaController
 {
@@ -88,7 +90,63 @@ class ApiSpaController
             'role' => $role,
             'user_tenants' => $userTenants,
             'csrf_token' => csrf_token(),
-        ], "Registration successful.", 201);
+            'requires_verification' => empty($user['email_verified_at']),
+            'email_verified' => !empty($user['email_verified_at']),
+            'dev_otp' => $result['otp_data']['otp'] ?? null,
+            'expires_in_minutes' => $result['otp_data']['expires_in_minutes'] ?? 15,
+        ], "Registration successful. Please verify your email with the 6-digit code.", 201);
+    }
+
+    public function verifyOtp(Request $request): Response
+    {
+        $user = current_user();
+        if (!$user) {
+            return Response::error("Unauthenticated.", "UNAUTHENTICATED", null, 401);
+        }
+
+        $otp = trim((string)$request->input('otp', ''));
+        if (empty($otp)) {
+            return Response::error("Please enter the 6-digit verification code.", "VALIDATION_FAILED", null, 422);
+        }
+
+        $result = EmailVerificationService::verifyOtp((int)$user['id'], $otp);
+        if (!$result['success']) {
+            return Response::error($result['error'], "VERIFICATION_FAILED", null, 400);
+        }
+
+        $freshUser = current_user();
+        $tenant = TenantContextService::getActiveTenant();
+        $role = TenantContextService::getCurrentRole();
+        $userTenants = TenantContextService::getUserTenants((int)$freshUser['id']);
+
+        return Response::success([
+            'user' => $freshUser,
+            'active_tenant' => $tenant,
+            'role' => $role,
+            'user_tenants' => $userTenants,
+            'email_verified' => true,
+        ], $result['message']);
+    }
+
+    public function resendOtp(Request $request): Response
+    {
+        $user = current_user();
+        if (!$user) {
+            return Response::error("Unauthenticated.", "UNAUTHENTICATED", null, 401);
+        }
+
+        $result = EmailVerificationService::resend((int)$user['id']);
+        if (!$result['success']) {
+            return Response::error($result['error'], "RESEND_FAILED", [
+                'retry_after' => $result['retry_after'] ?? null
+            ], 429);
+        }
+
+        return Response::success([
+            'expires_in_minutes' => $result['expires_in_minutes'] ?? 15,
+            'dev_otp' => $result['otp'] ?? null,
+            'simulated' => $result['simulated'] ?? false,
+        ], $result['message']);
     }
 
     public function me(Request $request): Response
@@ -1988,6 +2046,200 @@ class ApiSpaController
              ORDER BY al.id DESC LIMIT 150"
         );
 
+        return Response::success($logs);
+    }
+
+    // ==========================================
+    // SUPER ADMIN EMAIL & SMTP MANAGEMENT
+    // ==========================================
+
+    public function superadminEmailSettings(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $smtp = MailService::getSmtpSettings();
+        // Hide actual password string for security, return mask indicator
+        $smtpSafe = $smtp;
+        $smtpSafe['has_password'] = !empty($smtp['password']);
+        $smtpSafe['password'] = '';
+
+        $templates = MailService::getTemplates();
+        foreach ($templates as &$tpl) {
+            if (!empty($tpl['available_tags']) && is_string($tpl['available_tags'])) {
+                $tpl['available_tags'] = json_decode($tpl['available_tags'], true) ?: [];
+            }
+        }
+        unset($tpl);
+
+        $recentLogs = MailService::getRecentLogs(30);
+
+        // Stats summary
+        $totalSent = (int)(Database::fetchOne("SELECT COUNT(*) as c FROM email_logs WHERE status = 'sent'")['c'] ?? 0);
+        $totalSimulated = (int)(Database::fetchOne("SELECT COUNT(*) as c FROM email_logs WHERE status = 'simulated'")['c'] ?? 0);
+        $totalFailed = (int)(Database::fetchOne("SELECT COUNT(*) as c FROM email_logs WHERE status = 'failed'")['c'] ?? 0);
+
+        return Response::success([
+            'smtp' => $smtpSafe,
+            'templates' => $templates,
+            'logs' => $recentLogs,
+            'stats' => [
+                'total_sent' => $totalSent,
+                'total_simulated' => $totalSimulated,
+                'total_failed' => $totalFailed,
+                'active_templates' => count($templates),
+            ]
+        ]);
+    }
+
+    public function superadminSaveSmtp(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $admin = current_user();
+        $input = [
+            'enabled' => (bool)$request->input('enabled', false),
+            'host' => trim((string)$request->input('host', '')),
+            'port' => (int)$request->input('port', 587),
+            'encryption' => (string)$request->input('encryption', 'tls'),
+            'username' => trim((string)$request->input('username', '')),
+            'password' => (string)$request->input('password', ''),
+            'from_email' => trim((string)$request->input('from_email', '')),
+            'from_name' => trim((string)$request->input('from_name', '')),
+            'reply_to' => trim((string)$request->input('reply_to', '')),
+        ];
+
+        if (empty($input['host']) && $input['enabled']) {
+            return Response::error("SMTP Host is required when enabling outbound email.", "VALIDATION_FAILED", null, 422);
+        }
+
+        MailService::saveSmtpSettings($input);
+        AuditLogService::log(null, (int)$admin['id'], 'update_smtp_settings', 'platform_settings', null, [
+            'enabled' => $input['enabled'],
+            'host' => $input['host'],
+            'port' => $input['port'],
+            'encryption' => $input['encryption'],
+            'from_email' => $input['from_email'],
+        ]);
+
+        return Response::success(null, "Global SMTP configuration saved successfully.");
+    }
+
+    public function superadminTestSmtp(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $email = trim((string)$request->input('email', ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return Response::error("Please provide a valid recipient email address for testing.", "VALIDATION_FAILED", null, 422);
+        }
+
+        $result = MailService::testSmtpConnection($email);
+        if (!$result['success']) {
+            return Response::error($result['message'], "SMTP_TEST_FAILED", null, 400);
+        }
+
+        return Response::success($result, $result['message']);
+    }
+
+    public function superadminSaveTemplate(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $key = (string)$request->param('key');
+        $admin = current_user();
+
+        $data = [
+            'name' => (string)$request->input('name', ''),
+            'description' => (string)$request->input('description', ''),
+            'subject' => (string)$request->input('subject', ''),
+            'preheader' => (string)$request->input('preheader', ''),
+            'body_html' => (string)$request->input('body_html', ''),
+            'body_text' => (string)$request->input('body_text', ''),
+            'is_active' => (int)$request->input('is_active', 1),
+        ];
+
+        if (empty($data['subject']) || empty($data['body_html'])) {
+            return Response::error("Subject and HTML body content are required.", "VALIDATION_FAILED", null, 422);
+        }
+
+        $saved = MailService::saveTemplate($key, $data);
+        if (!$saved) {
+            return Response::error("Template '{$key}' not found.", "NOT_FOUND", null, 404);
+        }
+
+        AuditLogService::log(null, (int)$admin['id'], 'update_email_template', 'email_templates', null, [
+            'template_key' => $key,
+            'subject' => $data['subject']
+        ]);
+
+        return Response::success(null, "Email template '{$key}' updated successfully.");
+    }
+
+    public function superadminResetTemplate(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $key = (string)$request->param('key');
+        $reset = MailService::resetTemplateToDefault($key);
+        if (!$reset) {
+            return Response::error("Could not reset template '{$key}'.", "NOT_FOUND", null, 404);
+        }
+
+        return Response::success(null, "Template '{$key}' restored to system defaults.");
+    }
+
+    public function superadminPreviewTestEmail(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $key = (string)$request->param('key');
+        $email = trim((string)$request->input('email', ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return Response::error("Please provide a valid recipient email address.", "VALIDATION_FAILED", null, 422);
+        }
+
+        $sampleTags = [
+            'user_name' => 'John Doe',
+            'user_email' => $email,
+            'otp_code' => '749102',
+            'otp_expiry_minutes' => 15,
+            'tenant_name' => 'Acme Growth Labs',
+            'workspace_slug' => 'acme-labs',
+            'invoice_number' => 'INV-2026-0042',
+            'plan_name' => 'Pro Unlimited',
+            'amount' => '4,999.00',
+            'currency_symbol' => '₹',
+            'payment_method' => 'Razorpay / UPI',
+            'billing_interval' => 'monthly',
+            'paid_at' => date('Y-m-d H:i:s'),
+            'due_date' => date('Y-m-d', strtotime('+7 days')),
+            'suspension_reason' => 'Overdue subscription renewal past 7-day grace period',
+        ];
+
+        $result = MailService::sendTemplate($key, $email, 'Administrator Preview', $sampleTags);
+        return Response::success($result, $result['message']);
+    }
+
+    public function superadminEmailLogs(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $limit = min(200, max(10, (int)$request->input('limit', 100)));
+        $logs = MailService::getRecentLogs($limit);
         return Response::success($logs);
     }
 }

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { BrandLogo } from '../components/BrandLogo';
 import {
   ShieldCheck,
   LayoutDashboard,
   Users,
   Layers,
   CreditCard,
+  Mail,
   FileText,
   LogOut,
   Menu,
@@ -29,6 +31,7 @@ export const SuperAdminLayout: React.FC = () => {
     { name: 'Customers & Workspaces', href: '/admin/platform/customers', icon: Users, chip: 'bg-[#dcfae5] text-[#2f7a45]' },
     { name: 'Plans & Feature Quotas', href: '/admin/platform/plans', icon: Layers, chip: 'bg-[#fef3c7] text-[#b45309]' },
     { name: 'Payment Gateways', href: '/admin/platform/payment-gateways', icon: CreditCard, chip: 'bg-[#e0e7ff] text-[#3730a3]' },
+    { name: 'Email & Global SMTP', href: '/admin/platform/email-settings', icon: Mail, chip: 'bg-[#ffedd5] text-[#c2410c]' },
     { name: 'Compliance & Legal CMS', href: '/admin/platform/legal-pages', icon: Scale, chip: 'bg-[#fce7f3] text-[#9d174d]' },
     { name: 'Developer & API Docs', href: '/admin/platform/docs', icon: Code2, chip: 'bg-[#ede9fe] text-[#5b21b6]' },
     { name: 'System Audit Logs', href: '/admin/platform/logs', icon: FileText, chip: 'bg-[#ccfbf1] text-[#0f766e]' },
@@ -58,19 +61,11 @@ export const SuperAdminLayout: React.FC = () => {
         <div className="flex flex-col h-full overflow-hidden">
           {/* Brand Header */}
           <div className="h-14 flex items-center px-4 border-b border-[#e2e5e9] bg-white shrink-0 justify-between">
-            <Link to="/admin/platform" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-xs text-[#131416] tracking-tight">QFunnel</span>
-                  <span className="text-[10px] font-bold text-[#1d5fd6] bg-[#dcf1ff] px-1.5 py-0.5 rounded border border-[#b9e6fe]">
-                    Super Admin
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#5d5f60] block truncate">Platform Console</span>
-              </div>
+            <Link to="/admin/platform" className="flex items-center gap-2">
+              <BrandLogo size="xs" showDomain={false} />
+              <span className="text-[10px] font-bold text-[#1d5fd6] bg-[#dcf1ff] px-1.5 py-0.5 rounded border border-[#b9e6fe]">
+                Admin
+              </span>
             </Link>
 
             <button

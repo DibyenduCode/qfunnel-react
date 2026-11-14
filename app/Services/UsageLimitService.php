@@ -16,7 +16,7 @@ class UsageLimitService
                 'name' => 'Complete White-Labeling',
                 'category' => 'Branding & Customization',
                 'is_premium' => true,
-                'description' => 'Remove "Powered by QFunnel" badge and all platform watermarks from live quizzes.',
+                'description' => 'Remove "Powered by LeadCollector" badge and all platform watermarks from live quizzes.',
             ],
             'calculator_mode' => [
                 'name' => 'Calculator & Quote Engine',

@@ -16,6 +16,7 @@ import { CookiePolicyPage } from '../modules/legal/CookiePolicyPage';
 
 import { LoginPage } from '../modules/auth/LoginPage';
 import { RegisterPage } from '../modules/auth/RegisterPage';
+import { EmailVerificationPage } from '../modules/auth/EmailVerificationPage';
 
 import { DashboardPage } from '../modules/dashboard/DashboardPage';
 import { FunnelsListPage } from '../modules/funnels/FunnelsListPage';
@@ -38,6 +39,7 @@ import { SuperadminGateways } from '../modules/platform/SuperadminGateways';
 import { SuperadminLegalPages } from '../modules/platform/SuperadminLegalPages';
 import { SuperadminDocs } from '../modules/platform/SuperadminDocs';
 import { SuperadminProfile } from '../modules/platform/SuperadminProfile';
+import { SuperadminEmailSettings } from '../modules/platform/SuperadminEmailSettings';
 import { SuperadminLogs } from '../modules/platform/SuperadminLogs';
 
 import { QuizRunnerPage } from '../modules/runner/QuizRunnerPage';
@@ -74,6 +76,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
 
       {/* Fullscreen Visual Builder */}
       <Route
@@ -118,6 +121,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/admin/platform/customers" element={<SuperadminCustomers />} />
         <Route path="/admin/platform/plans" element={<SuperadminPlans />} />
         <Route path="/admin/platform/payment-gateways" element={<SuperadminGateways />} />
+        <Route path="/admin/platform/email-settings" element={<SuperadminEmailSettings />} />
         <Route path="/admin/platform/legal-pages" element={<SuperadminLegalPages />} />
         <Route path="/admin/platform/docs" element={<SuperadminDocs />} />
         <Route path="/admin/platform/profile" element={<SuperadminProfile />} />

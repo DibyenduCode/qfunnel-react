@@ -80,7 +80,7 @@ export const AdminLayout: React.FC = () => {
               className="flex items-center gap-2.5 text-left w-full hover:bg-[#f8fafc] p-1.5 rounded-xl transition"
             >
               <div className="w-8 h-8 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                {activeTenant?.name?.charAt(0) || 'Q'}
+                {activeTenant?.name?.charAt(0) || 'L'}
               </div>
               <div className="flex-1 min-w-0">
                 <span className="block text-xs font-bold text-[#131416] truncate">

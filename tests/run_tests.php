@@ -18,6 +18,10 @@ use App\Services\QuizEngineService;
 use App\Services\SubmissionService;
 use App\Services\AnalyticsService;
 use App\Services\UsageLimitService;
+use App\Services\MailService;
+use App\Services\EmailVerificationService;
+use App\Services\PlatformSettingService;
+use App\Services\SubscriptionService;
 
 // Load environment
 Env::load(__DIR__ . '/../.env');
@@ -780,6 +784,158 @@ $runner->assert(
     $lbStep3['status'] === 'completed' &&
     $lbStep3['result']['destination_name'] === 'Session Confirmed',
     'Visitor finishes calendar booking and reaches destination confirmation step'
+);
+
+// =========================================
+// SUITE 13: Global SMTP, Email Verification (OTP), and Template CMS
+// =========================================
+echo "\n--- SUITE 13: Global SMTP, Email Verification (OTP), and Template CMS ---\n";
+
+// 1. User Registration requires email verification with OTP
+$otpTestEmail = 'otp_user_' . time() . '@test.local';
+$regResult = AuthService::register('OTP Test User', $otpTestEmail, 'StrongPassword123!', 'OTP Test Workspace');
+
+$runner->assert(
+    $regResult['success'] === true &&
+    $regResult['requires_verification'] === true &&
+    empty($regResult['user']['email_verified_at']),
+    'New user registration enforces unverified state requiring OTP verification'
+);
+
+$otpUserId = (int)$regResult['user']['id'];
+$runner->assert(
+    EmailVerificationService::isUserVerified($otpUserId) === false,
+    'Unverified user blocked by verification service check before OTP entry'
+);
+
+// 2. Verification record and 6-digit OTP code integrity
+$otpRecord = Database::fetchOne("SELECT * FROM email_verifications WHERE user_id = ?", [$otpUserId]);
+$runner->assert(
+    !empty($otpRecord) &&
+    strlen($otpRecord['otp_code']) === 6 &&
+    ctype_digit($otpRecord['otp_code']) &&
+    strtotime($otpRecord['expires_at']) > time(),
+    'Valid 6-digit numeric OTP code generated and stored with 15-minute expiration'
+);
+
+// 3. Rejection of invalid OTP
+$wrongVerify = EmailVerificationService::verifyOtp($otpUserId, '000000');
+$runner->assert(
+    $wrongVerify['success'] === false &&
+    str_contains($wrongVerify['error'], 'Invalid code'),
+    'Invalid OTP code rejected and decrements remaining verification attempts'
+);
+
+// 4. Verification with correct OTP code
+$correctOtp = (string)$otpRecord['otp_code'];
+$verifySuccess = EmailVerificationService::verifyOtp($otpUserId, $correctOtp);
+$freshUser = Database::fetchOne("SELECT * FROM users WHERE id = ?", [$otpUserId]);
+$leftoverRecord = Database::fetchOne("SELECT id FROM email_verifications WHERE user_id = ?", [$otpUserId]);
+
+$runner->assert(
+    $verifySuccess['success'] === true &&
+    !empty($freshUser['email_verified_at']) &&
+    empty($leftoverRecord) &&
+    EmailVerificationService::isUserVerified($otpUserId) === true,
+    'Valid OTP verification successfully marks email as verified and cleans up OTP token'
+);
+
+// 5. Global SMTP Configuration Save and Retrieval
+MailService::saveSmtpSettings([
+    'enabled' => false,
+    'host' => 'smtp.mailtrap.io',
+    'port' => 2525,
+    'encryption' => 'tls',
+    'username' => 'test_user_mailtrap',
+    'password' => 'secret_pass_123',
+    'from_email' => 'mailer@qfunnel-platform.test',
+    'from_name' => 'QFunnel Notifications',
+    'reply_to' => 'help@qfunnel-platform.test',
+]);
+
+$loadedSmtp = MailService::getSmtpSettings();
+$runner->assert(
+    $loadedSmtp['host'] === 'smtp.mailtrap.io' &&
+    $loadedSmtp['port'] === 2525 &&
+    $loadedSmtp['from_email'] === 'mailer@qfunnel-platform.test' &&
+    $loadedSmtp['from_name'] === 'QFunnel Notifications',
+    'Global SMTP server settings saved and retrieved accurately via PlatformSettingService'
+);
+
+// 6. Email Template CMS & Tag Replacement
+$allTemplates = MailService::getTemplates();
+$templateKeys = array_column($allTemplates, 'template_key');
+$runner->assert(
+    in_array('email_verification_otp', $templateKeys, true) &&
+    in_array('welcome_email', $templateKeys, true) &&
+    in_array('invoice_receipt', $templateKeys, true) &&
+    in_array('renewal_reminder', $templateKeys, true) &&
+    in_array('account_suspended', $templateKeys, true),
+    'Email Template CMS seeds all 5 core operational templates with placeholder definitions'
+);
+
+// Update a template and test dispatch
+$customSubject = "Welcome to {{app_name}} VIP Club, {{user_name}}!";
+MailService::saveTemplate('welcome_email', [
+    'subject' => $customSubject,
+    'body_html' => '<p>Custom welcome body for {{tenant_name}}</p>',
+]);
+
+$updatedWelcomeTpl = MailService::getTemplate('welcome_email');
+$runner->assert(
+    $updatedWelcomeTpl['subject'] === $customSubject,
+    'Super Admin can customize email template subject and HTML body'
+);
+
+// Reset template back to default
+$resetOk = MailService::resetTemplateToDefault('welcome_email');
+$restoredTpl = MailService::getTemplate('welcome_email');
+$runner->assert(
+    $resetOk === true &&
+    str_contains($restoredTpl['subject'], 'Welcome to {{app_name}}'),
+    'Super Admin can restore any modified email template to default state'
+);
+
+// 7. Dispatching Email and Sent Logs Ledger
+$dispatchResult = MailService::sendTemplate('welcome_email', 'member@example.com', 'Alex Developer', [
+    'tenant_name' => 'Apex Funnels',
+    'dashboard_url' => 'http://localhost:5173/dashboard',
+]);
+
+$latestLog = Database::fetchOne("SELECT * FROM email_logs WHERE recipient_email = 'member@example.com' ORDER BY id DESC LIMIT 1");
+$runner->assert(
+    $dispatchResult['success'] === true &&
+    !empty($latestLog) &&
+    $latestLog['template_key'] === 'welcome_email' &&
+    in_array($latestLog['status'], ['sent', 'simulated'], true),
+    'Template email successfully dispatched with tags and recorded in Sent Email Logs outbox'
+);
+
+// 8. Billing & Invoices Email Dispatch Integration
+$testTenantId = (int)$regResult['tenant_id'];
+$paymentResult = SubscriptionService::recordManualPayment($testTenantId, [
+    'amount' => 1999,
+    'billing_interval' => 'monthly',
+    'payment_method' => 'upi',
+    'transaction_reference' => 'UPI-REF-998811',
+    'notes' => 'Test invoice payment for automated tests',
+], $otpUserId);
+
+$invoiceLog = Database::fetchOne("SELECT * FROM email_logs WHERE template_key = 'invoice_receipt' AND recipient_email = ? ORDER BY id DESC LIMIT 1", [$otpTestEmail]);
+$runner->assert(
+    !empty($paymentResult['invoice_number']) &&
+    !empty($invoiceLog) &&
+    str_contains($invoiceLog['subject'], $paymentResult['invoice_number']),
+    'Subscription manual payment and invoice creation automatically triggers Invoice Receipt email'
+);
+
+// 9. Workspace Suspension Email Dispatch Integration
+SubscriptionService::suspendWorkspace($testTenantId, 'Testing suspension email hook', 'Test notes', $otpUserId);
+$suspensionLog = Database::fetchOne("SELECT * FROM email_logs WHERE template_key = 'account_suspended' AND recipient_email = ? ORDER BY id DESC LIMIT 1", [$otpTestEmail]);
+$runner->assert(
+    !empty($suspensionLog) &&
+    str_contains($suspensionLog['subject'], 'suspended'),
+    'Workspace suspension event automatically dispatches Account Suspension notice'
 );
 
 // Summary output

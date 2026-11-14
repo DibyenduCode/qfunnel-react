@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { BrandLogo } from '../components/BrandLogo';
 import {
   GitFork,
   ArrowRight,
@@ -117,12 +118,7 @@ export const PublicLayout: React.FC = () => {
           <div className="flex items-center gap-8">
             {/* Logo */}
             <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold shadow-xs group-hover:bg-[#1853bf] transition">
-                <GitFork className="w-4 h-4 stroke-[2.2]" />
-              </div>
-              <span className="font-bold text-[17px] tracking-tight text-[#0f172a]">
-                QFunnel
-              </span>
+              <BrandLogo size="md" />
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -297,10 +293,7 @@ export const PublicLayout: React.FC = () => {
             {/* Col 1 & 2: Brand & Mission */}
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold">
-                  <GitFork className="w-3.5 h-3.5" />
-                </div>
-                <span className="font-bold text-base text-[#131416] tracking-tight">QFunnel</span>
+                <BrandLogo size="md" />
                 <span className="text-[10px] font-semibold text-[#1d5fd6] bg-[#dcf1ff] px-1.5 py-0.5 rounded border border-[#b9e6fe]">
                   v2.4
                 </span>
@@ -390,7 +383,7 @@ export const PublicLayout: React.FC = () => {
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#131416]">Company & Legal</h4>
               <ul className="space-y-2 text-xs">
-                <li><Link to="/about" className="hover:text-[#1d5fd6] transition">About QFunnel</Link></li>
+                <li><Link to="/about" className="hover:text-[#1d5fd6] transition">About LeadCollector</Link></li>
                 <li><Link to="/support" className="hover:text-[#1d5fd6] transition">Help Center & Support</Link></li>
                 <li><Link to="/privacy" className="hover:text-[#1d5fd6] transition">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="hover:text-[#1d5fd6] transition">Terms of Service</Link></li>
@@ -405,7 +398,7 @@ export const PublicLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-[#2f7a45]" />
               <span>All systems fully operational</span>
               <span>•</span>
-              <span>&copy; {new Date().getFullYear()} QFunnel Inc. All rights reserved.</span>
+              <span>&copy; {new Date().getFullYear()} LeadCollector.in. All rights reserved.</span>
             </div>
 
             <div className="flex items-center gap-5">

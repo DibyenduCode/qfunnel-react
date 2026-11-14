@@ -28,21 +28,21 @@ export const TermsPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">1. Acceptance of Terms</h2>
           <p>
-            By registering for an account, accessing, or using QFunnel ("the Service", provided by QFunnel Inc.), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a company, organization, or other legal entity, you represent that you possess the authority to bind such entity to these terms.
+            By registering for an account, accessing, or using LeadCollector ("the Service", provided by LeadCollector Technologies Pvt Ltd / LeadCollector.in), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a company, organization, or other legal entity, you represent that you possess the authority to bind such entity to these terms.
           </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">2. Account Registration & Tenant Security</h2>
           <p>
-            To use QFunnel, you must provide valid credentials during account creation. You are solely responsible for safeguarding the credentials associated with your workspace and all actions taken under your account. You must notify QFunnel immediately if you discover any unauthorized use or security compromise.
+            To use LeadCollector, you must provide valid credentials during account creation. You are solely responsible for safeguarding the credentials associated with your workspace and all actions taken under your account. You must notify LeadCollector immediately if you discover any unauthorized use or security compromise.
           </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">3. Acceptable Use Policy</h2>
           <p>
-            You agree not to misuse the platform. Specifically, you agree that you will not use QFunnel to:
+            You agree not to misuse the platform. Specifically, you agree that you will not use LeadCollector to:
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Collect personal credit card numbers, national identification numbers, or HIPAA-restricted patient health data directly into unsecured form input fields without approved compliance add-ons.</li>
@@ -71,7 +71,7 @@ export const TermsPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">5. Data Ownership & Customer Intellectual Property</h2>
           <p>
-            You retain all ownership rights, title, and interest in and to all question structures, funnel configurations, branding assets, formulas, and submission data you create or collect using QFunnel. QFunnel retains all rights, title, and interest in the software platform, runtime engine, visual canvas components, and documentation.
+            You retain all ownership rights, title, and interest in and to all question structures, funnel configurations, branding assets, formulas, and submission data you create or collect using LeadCollector. LeadCollector retains all rights, title, and interest in the software platform, runtime engine, visual canvas components, and documentation.
           </p>
         </section>
 
@@ -85,7 +85,7 @@ export const TermsPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">7. Limitation of Liability</h2>
           <p>
-            To the maximum extent permitted by applicable law, in no event shall QFunnel, its affiliates, directors, or employees be liable for any indirect, incidental, special, consequential, or punitive damages, or loss of profits or revenues arising out of or related to your use of the Service.
+            To the maximum extent permitted by applicable law, in no event shall LeadCollector, its affiliates, directors, or employees be liable for any indirect, incidental, special, consequential, or punitive damages, or loss of profits or revenues arising out of or related to your use of the Service.
           </p>
         </section>
 
@@ -96,7 +96,7 @@ export const TermsPage: React.FC = () => {
           </p>
           <p>
             For questions regarding these Terms of Service, contact our legal team at{' '}
-            <span className="font-mono text-[#1d5fd6]">legal@qfunnel.local</span>.
+            <span className="font-mono text-[#1d5fd6]">legal@leadcollector.in</span>.
           </p>
         </section>
       </div>

@@ -28,7 +28,7 @@ export const PrivacyPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">1. Overview & Commitment</h2>
           <p>
-            At QFunnel ("we", "our", or "us"), we prioritize the privacy and confidentiality of our customers, website visitors, and end-users who interact with interactive quizzes and calculators created through our software platform. This Privacy Policy details how we collect, store, isolate, and safeguard your data.
+            At LeadCollector ("we", "our", or "us", accessible via leadcollector.in), we prioritize the privacy and confidentiality of our customers, website visitors, and end-users who interact with interactive quizzes and calculators created through our software platform. This Privacy Policy details how we collect, store, isolate, and safeguard your data.
           </p>
         </section>
 
@@ -37,7 +37,7 @@ export const PrivacyPage: React.FC = () => {
           <div className="space-y-2">
             <h3 className="font-semibold text-[#131416]">A. Workspace Customer Account Data</h3>
             <p>
-              When you register for a QFunnel account, we collect your name, business email address, company name, workspace subdomains, and encrypted password credentials.
+              When you register for a LeadCollector account, we collect your name, business email address, company name, workspace subdomains, and encrypted password credentials.
             </p>
             <h3 className="font-semibold text-[#131416] pt-1">B. End-User Lead Submission Data</h3>
             <p>
@@ -49,12 +49,12 @@ export const PrivacyPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">3. Multi-Tenant Data Isolation & Security</h2>
           <p>
-            QFunnel is architected with strict multi-tenancy boundaries. Customer workspace data and lead submissions are strictly isolated by unique tenant identifiers. One workspace tenant cannot access, query, or view data belonging to another workspace.
+            LeadCollector is architected with strict multi-tenancy boundaries. Customer workspace data and lead submissions are strictly isolated by unique tenant identifiers. One workspace tenant cannot access, query, or view data belonging to another workspace.
           </p>
           <div className="p-4 rounded-xl bg-[#dcf1ff]/30 border border-[#b9e6fe] text-xs text-[#0a3a80] space-y-1">
             <span className="font-bold block">Encryption Standards</span>
             <p>
-              All data transmitted between your visitors and QFunnel is protected via TLS 1.3 / 256-Bit SSL encryption. Sensitive authentication secrets and webhook tokens are hashed using industry-standard algorithms.
+              All data transmitted between your visitors and LeadCollector is protected via TLS 1.3 / 256-Bit SSL encryption. Sensitive authentication secrets and webhook tokens are hashed using industry-standard algorithms.
             </p>
           </div>
         </section>
@@ -72,7 +72,7 @@ export const PrivacyPage: React.FC = () => {
         <section className="space-y-3">
           <h2 className="text-base font-bold text-[#131416]">5. GDPR & Data Subject Rights</h2>
           <p>
-            Under GDPR, CCPA, and applicable global privacy laws, you and your visitors have the right to access, rectify, export, or permanently delete personal data. You can delete lead submissions or workspaces directly from the QFunnel dashboard or by emailing <span className="font-mono text-[#1d5fd6]">privacy@qfunnel.local</span>.
+            Under GDPR, CCPA, and applicable global privacy laws, you and your visitors have the right to access, rectify, export, or permanently delete personal data. You can delete lead submissions or workspaces directly from the LeadCollector dashboard or by emailing <span className="font-mono text-[#1d5fd6]">privacy@leadcollector.in</span>.
           </p>
         </section>
 
@@ -82,9 +82,9 @@ export const PrivacyPage: React.FC = () => {
             If you have questions regarding this Privacy Policy or our security practices, contact us at:
           </p>
           <div className="font-mono text-xs bg-[#f4f6f8] p-3 rounded-lg border border-[#e2e5e9]">
-            QFunnel Data Protection Officer<br />
-            Email: privacy@qfunnel.local<br />
-            Address: 450 Mission St, Suite 800, San Francisco, CA 94105
+            LeadCollector Data Protection Officer<br />
+            Email: privacy@leadcollector.in<br />
+            Domain: leadcollector.in
           </div>
         </section>
       </div>

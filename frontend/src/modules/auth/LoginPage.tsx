@@ -53,7 +53,7 @@ export const LoginPage: React.FC = () => {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="owner@qfunnel.local"
+          placeholder="owner@leadcollector.in"
           className="w-full px-3 py-2 rounded-lg border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80]"
         />
       </div>

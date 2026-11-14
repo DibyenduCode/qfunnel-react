@@ -251,6 +251,32 @@ class SubscriptionService
             'period_end' => $periodEnd
         ]);
 
+        // Dispatch Invoice Receipt Email via Global SMTP
+        try {
+            $owner = Database::fetchOne(
+                "SELECT u.name, u.email 
+                 FROM tenant_memberships tm 
+                 JOIN users u ON tm.user_id = u.id 
+                 WHERE tm.tenant_id = ? AND tm.role = 'owner' 
+                 LIMIT 1",
+                [$tenantId]
+            );
+            if ($owner && !empty($owner['email'])) {
+                MailService::sendTemplate('invoice_receipt', $owner['email'], $owner['name'], [
+                    'tenant_name' => $tenant['name'],
+                    'invoice_number' => $invoiceNumber,
+                    'plan_name' => $plan['name'] ?? 'Custom Plan',
+                    'amount' => number_format((float)$amount, 2),
+                    'currency_symbol' => PlatformSettingService::getCurrencySymbol(),
+                    'payment_method' => str_replace('_', ' ', $paymentMethod),
+                    'billing_interval' => $interval,
+                    'paid_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Logger::error("Failed to send invoice receipt email: " . $e->getMessage());
+        }
+
         return [
             'invoice_id' => $invoiceId,
             'invoice_number' => $invoiceNumber,
@@ -289,6 +315,27 @@ class SubscriptionService
         ]);
 
         Logger::info("Tenant suspended: #{$tenantId} - {$tenant['name']}. Reason: {$reason}");
+
+        // Dispatch account_suspended email to workspace owner
+        try {
+            $owner = Database::fetchOne(
+                "SELECT u.name, u.email 
+                 FROM tenant_memberships tm 
+                 JOIN users u ON tm.user_id = u.id 
+                 WHERE tm.tenant_id = ? AND tm.role = 'owner' 
+                 LIMIT 1",
+                [$tenantId]
+            );
+            if ($owner && !empty($owner['email'])) {
+                MailService::sendTemplate('account_suspended', $owner['email'], $owner['name'], [
+                    'tenant_name' => $tenant['name'],
+                    'suspension_reason' => $reason,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Logger::error("Failed to send suspension email: " . $e->getMessage());
+        }
+
         return true;
     }
 
@@ -495,9 +542,43 @@ class SubscriptionService
             $flaggedDueCount++;
         }
 
+        // 3. Find active subscriptions due for renewal within the next 3 days
+        $upcomingRenewals = Database::query(
+            "SELECT ts.*, t.name as tenant_name, p.name as plan_name, p.price as plan_price,
+                    u.name as owner_name, u.email as owner_email
+             FROM tenant_subscriptions ts
+             JOIN tenants t ON ts.tenant_id = t.id
+             LEFT JOIN plans p ON ts.plan_id = p.id
+             JOIN tenant_memberships tm ON tm.tenant_id = t.id AND tm.role = 'owner'
+             JOIN users u ON tm.user_id = u.id
+             WHERE t.status = 'active'
+               AND ts.current_period_end IS NOT NULL
+               AND ts.current_period_end BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 DAY)"
+        );
+
+        $reminderCount = 0;
+        foreach ($upcomingRenewals as $ren) {
+            if (!empty($ren['owner_email'])) {
+                try {
+                    MailService::sendTemplate('renewal_reminder', $ren['owner_email'], $ren['owner_name'], [
+                        'tenant_name' => $ren['tenant_name'],
+                        'plan_name' => $ren['plan_name'] ?? 'Subscription Plan',
+                        'amount' => number_format((float)($ren['plan_price'] ?? 0), 2),
+                        'currency_symbol' => PlatformSettingService::getCurrencySymbol(),
+                        'due_date' => date('Y-m-d', strtotime($ren['current_period_end'])),
+                        'billing_interval' => $ren['billing_interval'] ?? 'monthly',
+                    ]);
+                    $reminderCount++;
+                } catch (\Throwable $e) {
+                    Logger::error("Failed to send renewal reminder to {$ren['owner_email']}: " . $e->getMessage());
+                }
+            }
+        }
+
         return [
             'suspended_count' => $suspendedCount,
             'flagged_due_count' => $flaggedDueCount,
+            'renewal_reminders_sent' => $reminderCount,
             'evaluated_at' => $now,
         ];
     }

@@ -85,7 +85,7 @@ export const CookiePolicyPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-[#dcf1ff]/40 border border-[#b9e6fe] text-xs text-[#0a3a80] space-y-1">
             <span className="font-bold block">Important Note</span>
             <p>
-              If you configure your browser to block essential cookies, you will not be able to log in to the QFunnel workspace, and respondents might encounter errors during multi-step quiz calculations.
+              If you configure your browser to block essential cookies, you will not be able to log in to the LeadCollector workspace, and respondents might encounter errors during multi-step quiz calculations.
             </p>
           </div>
         </section>
@@ -97,7 +97,7 @@ export const CookiePolicyPage: React.FC = () => {
           </p>
           <p>
             For inquiries regarding our use of cookies, reach us at{' '}
-            <span className="font-mono text-[#1d5fd6]">privacy@qfunnel.local</span>.
+            <span className="font-mono text-[#1d5fd6]">privacy@leadcollector.in</span>.
           </p>
         </section>
       </div>

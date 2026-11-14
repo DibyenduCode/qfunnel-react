@@ -434,7 +434,7 @@ export const SuperadminGateways: React.FC = () => {
                 type="text"
                 value={bankAccountHolder}
                 onChange={(e) => setBankAccountHolder(e.target.value)}
-                placeholder="e.g. QFunnel Platforms Private Limited"
+                placeholder="e.g. LeadCollector Technologies Pvt Ltd"
                 className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416]"
               />
             </div>
@@ -467,7 +467,7 @@ export const SuperadminGateways: React.FC = () => {
                 rows={2}
                 value={bankInstructions}
                 onChange={(e) => setBankInstructions(e.target.value)}
-                placeholder="e.g. Please put your workspace slug or registered email in NEFT remarks and email proof to billing@qfunnel.local"
+                placeholder="e.g. Please put your workspace slug or registered email in NEFT remarks and email proof to billing@leadcollector.in"
                 className="w-full p-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416]"
               />
             </div>

@@ -208,11 +208,11 @@ export const FunnelSettingsPage: React.FC = () => {
     let snippet = '';
 
     if (mode === 'inline') {
-      snippet = `<!-- QFunnel Inline Embed -->\n<div data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="inline" data-qfunnel-height="720px"></div>\n<script src="${host}/assets/js/embed.js" async></script>`;
+      snippet = `<!-- LeadCollector Inline Embed -->\n<div data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="inline" data-qfunnel-height="720px"></div>\n<script src="${host}/assets/js/embed.js" async></script>`;
     } else if (mode === 'popup') {
-      snippet = `<!-- QFunnel Modal Button -->\n<button data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="popup">Start Assessment</button>\n<script src="${host}/assets/js/embed.js" async></script>`;
+      snippet = `<!-- LeadCollector Modal Button -->\n<button data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="popup">Start Assessment</button>\n<script src="${host}/assets/js/embed.js" async></script>`;
     } else {
-      snippet = `<!-- QFunnel Floating Trigger Button -->\n<div data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="floating"></div>\n<script src="${host}/assets/js/embed.js" async></script>`;
+      snippet = `<!-- LeadCollector Floating Trigger Button -->\n<div data-qfunnel-embed="${slug}" data-qfunnel-host="${host}" data-qfunnel-mode="floating"></div>\n<script src="${host}/assets/js/embed.js" async></script>`;
     }
 
     navigator.clipboard.writeText(snippet);
@@ -809,7 +809,7 @@ export const FunnelSettingsPage: React.FC = () => {
                   Enable 100% White-Labeling
                 </div>
                 <p className="text-[#5d5f60] mt-0.5 leading-relaxed">
-                  Completely removes all "Powered by QFunnel" watermarks, badges, and platform links from public quiz and calculator funnels.
+                  Completely removes all "Powered by LeadCollector" watermarks, badges, and platform links from public quiz and calculator funnels.
                 </p>
                 {!hasWhiteLabel && (
                   <p className="text-[#92400e] font-semibold mt-1.5 flex items-center gap-1.5">
@@ -819,7 +819,7 @@ export const FunnelSettingsPage: React.FC = () => {
                       onClick={() => {
                         setUpgradeFeature({
                           name: '100% Complete White-Labeling',
-                          desc: 'Completely remove all "Powered by QFunnel" watermarks, platform badges, and footer links from your public quizzes.',
+                          desc: 'Completely remove all "Powered by LeadCollector" watermarks, platform badges, and footer links from your public quizzes.',
                           plan: 'Pro',
                         });
                         setUpgradeModalOpen(true);

@@ -261,7 +261,7 @@ export const SuperadminDocs: React.FC = () => {
 
             <div className="space-y-2 text-xs text-[#5d5f60]">
               <p>
-                Each outbound webhook contains an HMAC-SHA256 signature in the <code className="bg-[#f4f6f8] px-1 py-0.5 rounded text-[#131416]">X-QFunnel-Signature</code> header so you can verify authenticity.
+                Each outbound webhook contains an HMAC-SHA256 signature in the <code className="bg-[#f4f6f8] px-1 py-0.5 rounded text-[#131416]">X-LeadCollector-Signature</code> header (also mirrored to <code className="bg-[#f4f6f8] px-1 py-0.5 rounded text-[#131416]">X-QFunnel-Signature</code>) so you can verify authenticity.
               </p>
             </div>
 

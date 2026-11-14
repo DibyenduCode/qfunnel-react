@@ -481,8 +481,8 @@ const BuilderInner: React.FC = () => {
       } else if (type === 'content') {
         initialData.title = 'Mini Landing Page / Story';
         initialData.content = {
-          badge_text: '🔥 LIMITED TIME ASSESSMENT',
-          headline: 'Discover Why Top Teams Scale Conversions with QFunnel',
+          badge_text: 'LIMITED TIME ASSESSMENT',
+          headline: 'Discover Why Top Teams Scale Conversions with LeadCollector',
           subheadline: 'A customized 60-second diagnostic designed for high-growth businesses',
           body_text: 'Explore this visual breakdown before reviewing your customized recommendations.',
           media_type: 'image',
@@ -495,8 +495,8 @@ const BuilderInner: React.FC = () => {
           ],
           show_social_proof: true,
           social_proof_text: 'Rated 4.9/5 by 1,200+ users',
-          button_text: 'Start Your Free Assessment ➔',
-          button_subtext: '🔒 Takes less than 1 minute • 100% Free',
+          button_text: 'Start Your Free Assessment',
+          button_subtext: 'Takes less than 1 minute • Free assessment',
         };
         initialData.config = initialData.content;
       }

@@ -4,8 +4,48 @@ export interface User {
   email: string;
   is_platform_admin: number | boolean;
   status: 'active' | 'disabled';
+  email_verified_at?: string | null;
   last_login_at?: string;
   created_at?: string;
+}
+
+export interface SmtpSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  encryption: 'tls' | 'ssl' | 'none';
+  username: string;
+  password?: string;
+  has_password?: boolean;
+  from_email: string;
+  from_name: string;
+  reply_to: string;
+}
+
+export interface EmailTemplate {
+  id: number;
+  template_key: string;
+  name: string;
+  description: string;
+  subject: string;
+  preheader: string;
+  body_html: string;
+  body_text: string;
+  available_tags: string[];
+  is_active: number | boolean;
+  updated_at?: string;
+}
+
+export interface EmailLog {
+  id: number;
+  recipient_email: string;
+  recipient_name?: string;
+  template_key?: string;
+  template_name?: string;
+  subject: string;
+  status: 'sent' | 'failed' | 'simulated';
+  error_message?: string;
+  sent_at: string;
 }
 
 export interface Tenant {

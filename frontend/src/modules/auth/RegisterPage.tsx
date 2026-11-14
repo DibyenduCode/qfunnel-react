@@ -21,7 +21,7 @@ export const RegisterPage: React.FC = () => {
 
     try {
       await register(name, email, password, workspace);
-      navigate('/admin/dashboard');
+      navigate('/verify-email');
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration failed. Please check inputs.');
     } finally {
