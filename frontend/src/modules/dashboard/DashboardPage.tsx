@@ -26,6 +26,7 @@ import {
   TrendingUp,
   PieChart
 } from 'lucide-react';
+import { SeoHelmet } from '../../components/SeoHelmet';
 
 // Register Chart.js components
 ChartJS.register(
@@ -217,6 +218,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <SeoHelmet title="Dashboard" noindex />
       {/* Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

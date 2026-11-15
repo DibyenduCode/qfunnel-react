@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { UserPlus, AlertCircle, Loader2 } from 'lucide-react';
+import { SeoHelmet } from '../../components/SeoHelmet';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -31,6 +32,11 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <SeoHelmet
+        title="Create Account — LeadCollector.in"
+        description="Sign up for LeadCollector and start creating high-converting interactive visual quiz funnels and quote calculators."
+        noindex
+      />
       <div>
         <h2 className="text-base font-bold text-[#131416]">Create your workspace</h2>
         <p className="text-xs text-[#5d5f60] mt-1">Start building branching logic assessments</p>

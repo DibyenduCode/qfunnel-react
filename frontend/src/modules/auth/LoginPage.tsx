@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { SeoHelmet } from '../../components/SeoHelmet';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -34,6 +35,11 @@ export const LoginPage: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <SeoHelmet
+        title="Sign In — LeadCollector.in"
+        description="Sign in to your LeadCollector account to access workspaces and visual funnel analytics."
+        noindex
+      />
       <div>
         <h2 className="text-base font-bold text-[#131416]">Sign in to your account</h2>
         <p className="text-xs text-[#5d5f60] mt-1">Access your workspaces and funnel analytics</p>

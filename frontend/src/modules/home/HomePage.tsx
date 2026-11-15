@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { SeoHelmet } from '../../components/SeoHelmet';
 import {
   GitFork,
   Calculator,
@@ -80,6 +81,10 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-24 sm:space-y-32 pb-20">
+      <SeoHelmet
+        title="LeadCollector.in — Visual Interactive Quiz Funnels & Lead Generation Platform"
+        description="Replace static web forms with interactive visual quiz funnels, calculator flows, and multi-step lead capture. Automate lead qualification with WhatsApp and email OTP."
+      />
       {/* 1. Hero Section */}
       <section className="pt-12 sm:pt-20 px-4 sm:px-8 max-w-6xl mx-auto text-center space-y-8">
         {/* Eyebrow Badge */}

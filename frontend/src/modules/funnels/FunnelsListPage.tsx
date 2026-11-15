@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Funnel } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { SeoHelmet } from '../../components/SeoHelmet';
 import {
   GitFork,
   Plus,
@@ -114,6 +115,7 @@ export const FunnelsListPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <SeoHelmet title="Quiz Funnels" noindex />
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

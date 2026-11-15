@@ -28,6 +28,7 @@ import { BookingNode } from './nodes/BookingNode';
 import { ConditionNode } from './nodes/ConditionNode';
 import { NodeInspector } from './inspector/NodeInspector';
 import { BuilderToolbar } from './toolbar/BuilderToolbar';
+import { SeoHelmet } from '../../components/SeoHelmet';
 import { NodePalette, AVAILABLE_NODES } from './palette/NodePalette';
 import {
   X,
@@ -1082,6 +1083,10 @@ const BuilderInner: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f9fbfc]">
+      <SeoHelmet
+        title={funnel?.name ? `${funnel.name} — Builder` : 'Visual Funnel Builder'}
+        noindex
+      />
       {/* 44px Top Toolbar */}
       <BuilderToolbar
         funnel={funnel}

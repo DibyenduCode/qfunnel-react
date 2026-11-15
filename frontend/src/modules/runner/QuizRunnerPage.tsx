@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api, resolveMediaUrl } from '../../api/client';
+import { SeoHelmet } from '../../components/SeoHelmet';
 import {
   ArrowLeft,
   ArrowRight,
@@ -508,11 +509,26 @@ export const QuizRunnerPage: React.FC = () => {
     );
   }
 
+  const quizTitle = manifest?.name
+    ? `${manifest.name} | ${manifest.tenant_name || manifest.settings?.company_name || 'Quiz'}`
+    : 'Interactive Assessment & Quiz';
+  const quizDesc =
+    manifest?.description ||
+    'Complete this interactive quiz to get instant personalized recommendations and estimates.';
+  const quizImage = manifest?.settings?.logo_url ? resolveMediaUrl(manifest.settings.logo_url) : undefined;
+
   return (
     <div
       className={`min-h-screen relative overflow-hidden flex flex-col justify-between ${fontClass} ${bgClass} ${isEmbedded ? '!p-2' : 'p-4 sm:p-6 lg:p-10'}`}
       style={{ '--brand-color': accent } as any}
     >
+      <SeoHelmet
+        title={quizTitle}
+        description={quizDesc}
+        image={quizImage}
+        siteName={manifest?.tenant_name || manifest?.settings?.company_name}
+        type="article"
+      />
       {/* Ambient Background Aura Lights for Depth */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10 select-none">
         {isDark ? (

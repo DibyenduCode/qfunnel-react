@@ -1,10 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Eye, FileText, ArrowLeft } from 'lucide-react';
+import { SeoHelmet } from '../../components/SeoHelmet';
 
 export const PrivacyPage: React.FC = () => {
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-8 max-w-4xl mx-auto space-y-8">
+      <SeoHelmet
+        title="Privacy Policy — LeadCollector.in"
+        description="Learn how LeadCollector collects, stores, and safeguards your data and user assessment submissions."
+      />
       {/* Header */}
       <div className="space-y-3">
         <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-[#5d5f60] hover:text-[#1d5fd6] transition">
