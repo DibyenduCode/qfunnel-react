@@ -946,6 +946,70 @@ $runner->assert(
     'Workspace suspension event automatically dispatches Account Suspension notice'
 );
 
+// --- SUITE 14: Dynamic Server-Side SEO, Social Previews & Sitemap Engine ---
+echo "\n--- SUITE 14: Dynamic Server-Side SEO, Social Previews & Sitemap Engine ---\n";
+
+// 1. Root route SEO metadata resolution
+$rootMeta = \App\Services\SeoService::resolveMetadata('/');
+$runner->assert(
+    !empty($rootMeta['title']) &&
+    !empty($rootMeta['description']) &&
+    !empty($rootMeta['image']) &&
+    $rootMeta['noindex'] === false,
+    'Root platform metadata resolved with valid title, description, canonical, and open graph image'
+);
+
+// 2. Published quiz metadata resolution
+$quizMeta = \App\Services\SeoService::resolveMetadata('/quiz/' . $calcFunnel['slug']);
+$runner->assert(
+    !empty($quizMeta['title']) &&
+    str_contains($quizMeta['title'], $calcFunnel['name']) &&
+    $quizMeta['type'] === 'article' &&
+    $quizMeta['noindex'] === false,
+    'Published quiz funnel route resolves dedicated title, tenant attribution, and article OG type'
+);
+
+// 3. Sensitive / Auth routes protected from crawler indexing
+$loginMeta = \App\Services\SeoService::resolveMetadata('/login');
+$adminMeta = \App\Services\SeoService::resolveMetadata('/admin/funnels');
+$runner->assert(
+    $loginMeta['noindex'] === true && $adminMeta['noindex'] === true,
+    'Auth and Admin workspace routes enforce noindex to protect private views and preserve crawl budget'
+);
+
+// 4. Server-side HTML metadata injection
+$mockHtml = '<!DOCTYPE html><html><head><title>Old Title</title></head><body><div id="root"></div></body></html>';
+$injectedHtml = \App\Services\SeoService::injectMetadataIntoHtml($mockHtml, '/quiz/' . $calcFunnel['slug']);
+$runner->assert(
+    str_contains($injectedHtml, '<meta property="og:title"') &&
+    str_contains($injectedHtml, '<meta property="og:image"') &&
+    str_contains($injectedHtml, '<meta name="twitter:card"') &&
+    str_contains($injectedHtml, '<link rel="canonical"') &&
+    str_contains($injectedHtml, '<div id="root"></div>') &&
+    !str_contains($injectedHtml, 'Old Title'),
+    'Server-side HTML injection successfully injects complete Open Graph/Twitter tags and preserves React mount point'
+);
+
+// 5. Dynamic robots.txt generation
+$robotsTxt = \App\Services\SeoService::generateRobotsTxt();
+$runner->assert(
+    str_contains($robotsTxt, 'Allow: /quiz/') &&
+    str_contains($robotsTxt, 'Disallow: /admin/') &&
+    str_contains($robotsTxt, 'Disallow: /api/') &&
+    str_contains($robotsTxt, 'Sitemap:'),
+    'Dynamic robots.txt directives properly allow public funnel indexing while shielding admin and api routes'
+);
+
+// 6. Dynamic XML Sitemap generation
+$sitemapXml = \App\Services\SeoService::generateSitemapXml();
+$runner->assert(
+    str_starts_with(trim($sitemapXml), '<?xml') &&
+    str_contains($sitemapXml, '<urlset') &&
+    str_contains($sitemapXml, '<loc>') &&
+    str_contains($sitemapXml, '/quiz/'),
+    'Dynamic XML Sitemap outputs valid urlset with published funnels, priorities, and ISO timestamps'
+);
+
 // Summary output
 $code = $runner->summary();
 exit($code);

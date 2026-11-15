@@ -253,8 +253,12 @@ const BuilderInner: React.FC = () => {
 
       // Smoothly fit view with maxZoom cap to avoid over-zooming on single node
       setTimeout(() => {
-        fitView({ padding: 0.35, maxZoom: 0.85, duration: 250 });
-      }, 50);
+        if (rfNodes.length <= 1) {
+          fitView({ padding: 0.55, maxZoom: 0.75, duration: 250 });
+        } else {
+          fitView({ padding: 0.25, maxZoom: 0.85, duration: 250 });
+        }
+      }, 60);
     } catch (err) {
       console.error(err);
     } finally {

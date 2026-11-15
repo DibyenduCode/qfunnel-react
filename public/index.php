@@ -83,16 +83,32 @@ Session::start();
 $request = new Request();
 View::setRequest($request);
 
-// 8. Serve React Single Page Application (SPA) for all non-API web routes
+// 8. Serve React Single Page Application (SPA), Dynamic SEO, Robots & Sitemap
 $path = $request->path();
 $isApiRoute = str_starts_with($path, '/api') || str_starts_with($path, '/qfunnel2/api');
 
 if (!$isApiRoute) {
+    // Dynamic XML Sitemap
+    if ($path === '/sitemap.xml' || $path === '/qfunnel2/sitemap.xml') {
+        header('Content-Type: application/xml; charset=UTF-8');
+        header('X-Robots-Tag: noindex');
+        echo \App\Services\SeoService::generateSitemapXml();
+        exit;
+    }
+
+    // Dynamic Robots.txt
+    if ($path === '/robots.txt' || $path === '/qfunnel2/robots.txt') {
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo \App\Services\SeoService::generateRobotsTxt();
+        exit;
+    }
+
     $spaIndex = __DIR__ . '/dist/index.html';
     if (file_exists($spaIndex)) {
         header('Content-Type: text/html; charset=UTF-8');
         header('X-Frame-Options: SAMEORIGIN');
-        readfile($spaIndex);
+        $html = (string) file_get_contents($spaIndex);
+        echo \App\Services\SeoService::injectMetadataIntoHtml($html, $path);
         exit;
     }
 }
