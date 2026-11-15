@@ -993,21 +993,24 @@ $runner->assert(
 // 5. Dynamic robots.txt generation
 $robotsTxt = \App\Services\SeoService::generateRobotsTxt();
 $runner->assert(
-    str_contains($robotsTxt, 'Allow: /quiz/') &&
+    str_contains($robotsTxt, 'Allow: /') &&
+    str_contains($robotsTxt, 'Allow: /pricing') &&
     str_contains($robotsTxt, 'Disallow: /admin/') &&
     str_contains($robotsTxt, 'Disallow: /api/') &&
     str_contains($robotsTxt, 'Sitemap:'),
-    'Dynamic robots.txt directives properly allow public funnel indexing while shielding admin and api routes'
+    'Dynamic robots.txt directives properly allow public platform indexing while shielding admin and api routes'
 );
 
-// 6. Dynamic XML Sitemap generation
+// 6. Dynamic XML Sitemap generation (Platform marketing & legal URLs only)
 $sitemapXml = \App\Services\SeoService::generateSitemapXml();
 $runner->assert(
     str_starts_with(trim($sitemapXml), '<?xml') &&
     str_contains($sitemapXml, '<urlset') &&
     str_contains($sitemapXml, '<loc>') &&
-    str_contains($sitemapXml, '/quiz/'),
-    'Dynamic XML Sitemap outputs valid urlset with published funnels, priorities, and ISO timestamps'
+    str_contains($sitemapXml, '/pricing') &&
+    str_contains($sitemapXml, '/terms') &&
+    !str_contains($sitemapXml, '/quiz/'),
+    'Dynamic XML Sitemap outputs clean urlset with platform pages only, strictly excluding customer funnels'
 );
 
 // Summary output

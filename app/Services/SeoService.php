@@ -264,7 +264,8 @@ class SeoService
     }
 
     /**
-     * Generates dynamic XML sitemap listing all published funnels and public static pages.
+     * Generates dynamic XML sitemap containing only the platform's official public pages.
+     * Funnel/quiz pages are excluded to keep customer campaigns private and focused on direct traffic.
      */
     public static function generateSitemapXml(): string
     {
@@ -279,30 +280,6 @@ class SeoService
             ['loc' => $baseUrl . '/refund-policy', 'priority' => '0.3', 'changefreq' => 'monthly', 'lastmod' => $nowIso],
             ['loc' => $baseUrl . '/cookie-policy', 'priority' => '0.3', 'changefreq' => 'monthly', 'lastmod' => $nowIso],
         ];
-
-        // Fetch published funnels
-        $funnelUrls = [];
-        try {
-            $funnels = Database::query(
-                "SELECT f.slug, f.updated_at
-                 FROM funnels f
-                 JOIN tenants t ON t.id = f.tenant_id
-                 WHERE f.status = 'published' AND t.status = 'active'
-                 ORDER BY f.updated_at DESC"
-            );
-
-            foreach ($funnels as $f) {
-                $lastmod = !empty($f['updated_at']) ? date('c', strtotime($f['updated_at'])) : $nowIso;
-                $funnelUrls[] = [
-                    'loc' => $baseUrl . '/quiz/' . rawurlencode($f['slug']),
-                    'priority' => '0.9',
-                    'changefreq' => 'daily',
-                    'lastmod' => $lastmod,
-                ];
-            }
-        } catch (Throwable $e) {
-            // Graceful fallback
-        }
 
         // Fetch published legal pages from DB if any
         try {
@@ -330,11 +307,9 @@ class SeoService
             // Graceful fallback
         }
 
-        $allUrls = array_merge($staticUrls, $funnelUrls);
-
         $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         $xml .= "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n";
-        foreach ($allUrls as $u) {
+        foreach ($staticUrls as $u) {
             $loc = htmlspecialchars($u['loc'], ENT_XML1, 'UTF-8');
             $xml .= "  <url>\n";
             $xml .= "    <loc>{$loc}</loc>\n";
@@ -357,8 +332,6 @@ class SeoService
 
         return "User-agent: *\n" .
                "Allow: /\n" .
-               "Allow: /quiz/\n" .
-               "Allow: /funnel/\n" .
                "Allow: /pricing\n" .
                "Allow: /terms\n" .
                "Allow: /privacy\n" .
