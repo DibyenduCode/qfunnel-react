@@ -41,6 +41,12 @@ class WebhookService
         $url = $endpoint['target_url'];
         $secret = $endpoint['secret'] ?? '';
 
+        // OWASP A10: SSRF Protection
+        if (!self::isSafeUrl($url)) {
+            Logger::error("SSRF Block: Webhook dispatch aborted for unsafe destination: {$url}");
+            return false;
+        }
+
         $body = [
             'event' => $eventType,
             'timestamp' => date('c'),
@@ -71,7 +77,8 @@ class WebhookService
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_TIMEOUT, 6);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For local/dev testing
+        $isProd = \App\Core\Env::get('APP_ENV') === 'production';
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $isProd);
 
         $responseBody = curl_exec($ch);
         $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -138,5 +145,32 @@ class WebhookService
         ];
 
         return self::deliverPayload($endpoint, 'test.ping', $testPayload);
+    }
+
+    /**
+     * Validate target webhook destination to prevent Server-Side Request Forgery (OWASP A10: SSRF).
+     */
+    public static function isSafeUrl(string $url): bool
+    {
+        $parsed = parse_url($url);
+        if (!$parsed || empty($parsed['scheme']) || empty($parsed['host'])) {
+            return false;
+        }
+
+        $scheme = strtolower($parsed['scheme']);
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        // In production, strictly reject private, reserved, and loopback IP addresses
+        if (\App\Core\Env::get('APP_ENV') === 'production') {
+            $host = $parsed['host'];
+            $ip = gethostbyname($host);
+            if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

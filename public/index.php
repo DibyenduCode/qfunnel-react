@@ -107,6 +107,10 @@ if (!$isApiRoute) {
     if (file_exists($spaIndex)) {
         header('Content-Type: text/html; charset=UTF-8');
         header('X-Frame-Options: SAMEORIGIN');
+        header('X-Content-Type-Options: nosniff');
+        header('X-XSS-Protection: 1; mode=block');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+        header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
         $html = (string) file_get_contents($spaIndex);
         echo \App\Services\SeoService::injectMetadataIntoHtml($html, $path);
         exit;
