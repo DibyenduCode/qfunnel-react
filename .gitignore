@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+DEMO_CREDENTIALS.md
+demo_credentials.md
+*credentials*.md
 
 # Frontend Dependencies & Builds
 node_modules/
