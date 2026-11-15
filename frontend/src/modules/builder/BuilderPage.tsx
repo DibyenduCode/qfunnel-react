@@ -250,6 +250,11 @@ const BuilderInner: React.FC = () => {
       setNodes(rfNodes);
       setEdges(rfEdges);
       setIsDirty(false);
+
+      // Smoothly fit view with maxZoom cap to avoid over-zooming on single node
+      setTimeout(() => {
+        fitView({ padding: 0.35, maxZoom: 0.85, duration: 250 });
+      }, 50);
     } catch (err) {
       console.error(err);
     } finally {
@@ -1035,7 +1040,7 @@ const BuilderInner: React.FC = () => {
       // 9. Fit View: F
       if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        fitView({ duration: 300, padding: 0.2 });
+        fitView({ duration: 300, padding: 0.35, maxZoom: 0.85 });
         return;
       }
 
@@ -1183,9 +1188,19 @@ const BuilderInner: React.FC = () => {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{
+              padding: 0.35,
+              maxZoom: 0.85,
+            }}
+            minZoom={0.2}
+            maxZoom={1.5}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
             proOptions={{ hideAttribution: true }}
           >
-            <Controls className="!bg-white !border !border-[#e8eaec] !rounded-[8px] !shadow-none" />
+            <Controls
+              fitViewOptions={{ padding: 0.35, maxZoom: 0.85 }}
+              className="!bg-white !border !border-[#e8eaec] !rounded-[8px] !shadow-none"
+            />
             <MiniMap
               className="!bg-white !border !border-[#e8eaec] !rounded-[8px] !shadow-none overflow-hidden"
               nodeColor={(n) => {
