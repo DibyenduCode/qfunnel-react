@@ -54,6 +54,13 @@ class PlatformSettingService
                 'key_id' => '',
                 'key_secret' => '',
             ],
+            'cashfree' => [
+                'enabled' => false,
+                'mode' => 'sandbox',
+                'app_id' => '',
+                'secret_key' => '',
+                'api_version' => '2023-08-01',
+            ],
             'bank_transfer' => [
                 'enabled' => false,
                 'bank_name' => 'HDFC Bank / State Bank of India',

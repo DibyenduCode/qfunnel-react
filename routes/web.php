@@ -195,6 +195,7 @@ $router->post('/api/auth/register', [ApiSpaController::class, 'register']);
 $router->post('/api/auth/verify-otp', [ApiSpaController::class, 'verifyOtp']);
 $router->post('/api/auth/resend-otp', [ApiSpaController::class, 'resendOtp']);
 $router->post('/api/auth/logout', [ApiSpaController::class, 'logout']);
+$router->post('/api/webhook/cashfree', [ApiSpaController::class, 'cashfreeWebhook']);
 $router->get('/api/auth/me', [ApiSpaController::class, 'me']);
 $router->post('/api/auth/switch-workspace', [ApiSpaController::class, 'switchWorkspace']);
 $router->get('/api/quiz/{slug}/manifest', [ApiSpaController::class, 'quizManifest']);
@@ -242,6 +243,8 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         // Billing
         $router->get('/api/billing', [ApiSpaController::class, 'billing']);
         $router->post('/api/billing/upgrade', [ApiSpaController::class, 'upgradePlan']);
+        $router->post('/api/billing/cashfree/create-order', [ApiSpaController::class, 'createCashfreeOrder']);
+        $router->post('/api/billing/cashfree/verify', [ApiSpaController::class, 'verifyCashfreePayment']);
 
         // Settings & Profile Avatars
         $router->post('/api/settings/workspace', [ApiSpaController::class, 'updateWorkspace']);

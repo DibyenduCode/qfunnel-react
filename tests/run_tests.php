@@ -355,16 +355,20 @@ $runner->assert($canCreateOnPro['allowed'] === true, 'Pro tier allows unlimited 
     'stripe' => ['enabled' => true, 'mode' => 'test', 'publishable_key' => 'pk_test_123', 'secret_key' => 'sk_test_123'],
     'paypal' => ['enabled' => false, 'mode' => 'sandbox'],
     'razorpay' => ['enabled' => false],
+    'cashfree' => ['enabled' => true, 'mode' => 'sandbox', 'app_id' => 'CF_APP_TEST_123', 'secret_key' => 'CF_SEC_TEST_123', 'api_version' => '2023-08-01'],
     'bank_transfer' => ['enabled' => true, 'bank_name' => 'Demo Bank', 'account_number' => '987654321', 'instructions' => 'Send wire ref QF123'],
     'manual_custom' => ['enabled' => true, 'title' => 'Offline Cheque', 'instructions' => 'Mail cheque to HQ', 'qr_code_url' => '/uploads/gateways/demo_qr.png']
 ]);
 $savedGateways = \App\Services\PlatformSettingService::getPaymentGateways();
 $runner->assert(
     !empty($savedGateways['stripe']['enabled']) &&
+    !empty($savedGateways['cashfree']['enabled']) &&
+    $savedGateways['cashfree']['app_id'] === 'CF_APP_TEST_123' &&
+    \App\Services\CashfreeService::isConfigured() === true &&
     !empty($savedGateways['bank_transfer']['enabled']) &&
     $savedGateways['bank_transfer']['bank_name'] === 'Demo Bank' &&
     $savedGateways['manual_custom']['qr_code_url'] === '/uploads/gateways/demo_qr.png',
-    'Payment gateway settings properly stores and retrieves both Auto and Manual configurations'
+    'Payment gateway settings properly stores and retrieves both Auto (including Cashfree) and Manual configurations'
 );
 
 // --- SUITE 8: CALCULATOR & QUOTE FUNNEL ENGINE ---

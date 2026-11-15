@@ -25,6 +25,7 @@ use App\Services\WebhookService;
 use App\Services\LegalPageService;
 use App\Services\MailService;
 use App\Services\EmailVerificationService;
+use App\Services\CashfreeService;
 
 class ApiSpaController
 {
@@ -955,6 +956,100 @@ class ApiSpaController
         }
 
         return Response::success(['plan_name' => $plan['name']], "Successfully upgraded to {$plan['name']}!");
+    }
+
+    public function createCashfreeOrder(Request $request): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
+
+        $user = current_user();
+        if (!$user) {
+            return Response::error("Authentication required.", "UNAUTHENTICATED", null, 401);
+        }
+
+        $planId = (int)$request->input('plan_id');
+        $plan = Database::fetchOne("SELECT * FROM plans WHERE id = ? AND is_active = 1", [$planId]);
+        if (!$plan) {
+            return Response::error("Selected subscription plan not found.", "NOT_FOUND", null, 404);
+        }
+
+        // If plan is completely free (0.00), handle immediate upgrade without checkout
+        if ((float)$plan['price'] <= 0) {
+            SubscriptionService::assignPlan($tenantId, $planId, 30, (int)$user['id'], 'Free Plan Selection');
+            return Response::success([
+                'free_plan' => true,
+                'plan_name' => $plan['name'],
+            ], "Successfully updated to {$plan['name']}!");
+        }
+
+        $returnUrl = (string)$request->input('return_url', '');
+
+        try {
+            $orderData = CashfreeService::createOrder($tenantId, $user, $plan, !empty($returnUrl) ? $returnUrl : null);
+            return Response::success($orderData, "Cashfree order initialized successfully.");
+        } catch (\Throwable $e) {
+            return Response::error("Cashfree order creation failed: " . $e->getMessage(), "CASHFREE_ERROR", null, 400);
+        }
+    }
+
+    public function verifyCashfreePayment(Request $request): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
+
+        $user = current_user();
+        if (!$user) {
+            return Response::error("Authentication required.", "UNAUTHENTICATED", null, 401);
+        }
+
+        $orderId = trim((string)$request->input('order_id', ''));
+        $planId = (int)$request->input('plan_id');
+
+        if (empty($orderId) || $planId <= 0) {
+            return Response::error("Order ID and Plan ID are required for verification.", "VALIDATION_FAILED", null, 400);
+        }
+
+        try {
+            $result = CashfreeService::verifyAndActivate($tenantId, $planId, $orderId, (int)$user['id']);
+            return Response::success($result, "Payment successfully verified! Your subscription is active.");
+        } catch (\Throwable $e) {
+            return Response::error("Payment verification failed: " . $e->getMessage(), "VERIFICATION_FAILED", null, 400);
+        }
+    }
+
+    public function cashfreeWebhook(Request $request): Response
+    {
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+
+        if (!$payload || !is_array($payload)) {
+            return Response::success(null, "Ignored empty payload.");
+        }
+
+        // Handle Cashfree standard event
+        $data = $payload['data'] ?? $payload;
+        $order = $data['order'] ?? $data;
+        $orderId = (string)($order['order_id'] ?? '');
+
+        if (!empty($orderId)) {
+            // Check if order format is cf_t{tenantId}_p{planId}_...
+            if (preg_match('/^cf_t(\d+)_p(\d+)_/', $orderId, $matches)) {
+                $tenantId = (int)$matches[1];
+                $planId = (int)$matches[2];
+                try {
+                    CashfreeService::verifyAndActivate($tenantId, $planId, $orderId, 1);
+                } catch (\Throwable $e) {
+                    \App\Core\Logger::error("Cashfree webhook activation failed: " . $e->getMessage());
+                }
+            }
+        }
+
+        return Response::success(null, "Webhook processed.");
     }
 
     // ==========================================
@@ -1894,6 +1989,13 @@ class ApiSpaController
                     'key_id' => trim((string)$request->input('razorpay_key_id', '')),
                     'key_secret' => trim((string)$request->input('razorpay_key_secret', '')),
                 ],
+                'cashfree' => [
+                    'enabled' => !empty($request->input('cashfree_enabled')),
+                    'mode' => (string)$request->input('cashfree_mode', 'sandbox'),
+                    'app_id' => trim((string)$request->input('cashfree_app_id', '')),
+                    'secret_key' => trim((string)$request->input('cashfree_secret_key', '')),
+                    'api_version' => '2023-08-01',
+                ],
                 'bank_transfer' => [
                     'enabled' => !empty($request->input('bank_enabled')),
                     'bank_name' => trim((string)$request->input('bank_name', '')),
@@ -1916,6 +2018,9 @@ class ApiSpaController
             }
             if (!empty($payload['razorpay']['enabled']) && (empty($payload['razorpay']['key_id']) || empty($payload['razorpay']['key_secret']))) {
                 $warnings[] = "Razorpay is enabled without complete credentials.";
+            }
+            if (!empty($payload['cashfree']['enabled']) && (empty($payload['cashfree']['app_id']) || empty($payload['cashfree']['secret_key']))) {
+                $warnings[] = "Cashfree is enabled without complete App ID or Secret Key.";
             }
             if (!empty($payload['paypal']['enabled']) && empty($payload['paypal']['client_id'])) {
                 $warnings[] = "PayPal is enabled without Client ID.";

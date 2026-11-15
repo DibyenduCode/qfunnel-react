@@ -27,6 +27,12 @@ export const SuperadminGateways: React.FC = () => {
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [razorpayKeySecret, setRazorpayKeySecret] = useState('');
 
+  // Cashfree State
+  const [cashfreeEnabled, setCashfreeEnabled] = useState(false);
+  const [cashfreeMode, setCashfreeMode] = useState('sandbox');
+  const [cashfreeAppId, setCashfreeAppId] = useState('');
+  const [cashfreeSecretKey, setCashfreeSecretKey] = useState('');
+
   // Bank Transfer State
   const [bankEnabled, setBankEnabled] = useState(false);
   const [bankName, setBankName] = useState('');
@@ -100,6 +106,12 @@ export const SuperadminGateways: React.FC = () => {
       setRazorpayKeyId(gw.razorpay?.key_id || '');
       setRazorpayKeySecret(gw.razorpay?.key_secret || '');
 
+      // Cashfree
+      setCashfreeEnabled(Boolean(gw.cashfree?.enabled));
+      setCashfreeMode(gw.cashfree?.mode || 'sandbox');
+      setCashfreeAppId(gw.cashfree?.app_id || '');
+      setCashfreeSecretKey(gw.cashfree?.secret_key || '');
+
       // Bank Transfer
       setBankEnabled(Boolean(gw.bank_transfer?.enabled));
       setBankName(gw.bank_transfer?.bank_name || '');
@@ -142,6 +154,11 @@ export const SuperadminGateways: React.FC = () => {
         razorpay_enabled: razorpayEnabled,
         razorpay_key_id: razorpayKeyId,
         razorpay_key_secret: razorpayKeySecret,
+
+        cashfree_enabled: cashfreeEnabled,
+        cashfree_mode: cashfreeMode,
+        cashfree_app_id: cashfreeAppId,
+        cashfree_secret_key: cashfreeSecretKey,
 
         bank_enabled: bankEnabled,
         bank_name: bankName,
@@ -390,6 +407,85 @@ export const SuperadminGateways: React.FC = () => {
                 className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs font-mono text-[#131416]"
               />
             </div>
+          </div>
+        </div>
+
+        {/* 4. Cashfree Payments */}
+        <div className="p-6 rounded-2xl bg-white border border-[#e2e5e9] space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#edf0f3]">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-[#131416]">Cashfree Payments</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#dcf1ff] text-[#1d5fd6] border border-[#b9e6fe]">
+                  UPI / Cards / NetBanking
+                </span>
+              </div>
+              <p className="text-xs text-[#5d5f60] mt-0.5">
+                India payments with Google Pay, PhonePe, Paytm, BHIM UPI, Cards, NetBanking, and Instant Settlements.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer self-start sm:self-center">
+              <input
+                type="checkbox"
+                checked={cashfreeEnabled}
+                onChange={(e) => setCashfreeEnabled(e.target.checked)}
+                className="w-4 h-4 rounded border-[#e2e5e9] text-[#1d5fd6] focus:ring-0"
+              />
+              <span className="text-xs font-semibold text-[#131416]">Enable Cashfree</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[#131416] mb-1">Environment Mode</label>
+              <select
+                value={cashfreeMode}
+                onChange={(e) => setCashfreeMode(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416]"
+              >
+                <option value="sandbox">Sandbox (Testing / Demo)</option>
+                <option value="production">Production (Live Payments)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#131416] mb-1">Cashfree App ID (Client ID)</label>
+              <input
+                type="text"
+                value={cashfreeAppId}
+                onChange={(e) => setCashfreeAppId(e.target.value)}
+                placeholder="CF_APP_ID..."
+                className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs font-mono text-[#131416]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#131416] mb-1">Cashfree Secret Key</label>
+              <input
+                type="password"
+                value={cashfreeSecretKey}
+                onChange={(e) => setCashfreeSecretKey(e.target.value)}
+                placeholder="CF_SECRET_KEY..."
+                className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs font-mono text-[#131416]"
+              />
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#f8fafc] border border-[#e2e5e9] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="text-[11px] text-[#5d5f60]">
+              <span className="font-semibold text-[#131416]">Webhook Endpoint:</span> Add this to your Cashfree Merchant Dashboard:
+              <code className="ml-1.5 px-2 py-0.5 rounded bg-white border border-[#e2e5e9] font-mono text-[10px] text-[#131416]">
+                {window.location.origin}/api/webhook/cashfree
+              </code>
+            </div>
+            <a
+              href="https://www.cashfree.com/docs/payments/introduction"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#1d5fd6] font-semibold hover:underline shrink-0 text-xs"
+            >
+              Cashfree Docs
+            </a>
           </div>
         </div>
 

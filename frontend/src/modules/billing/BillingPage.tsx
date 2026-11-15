@@ -1,6 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { api, resolveMediaUrl } from '../../api/client';
-import { CreditCard, Check, Sparkles, Shield, ArrowUpRight, Loader2, QrCode, Landmark } from 'lucide-react';
+import { CreditCard, Check, Sparkles, Shield, ArrowUpRight, Loader2, QrCode, Landmark, CheckCircle2, AlertTriangle } from 'lucide-react';
+
+const loadCashfreeSdk = (): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    if ((window as any).Cashfree) {
+      resolve((window as any).Cashfree);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+    script.async = true;
+    script.onload = () => resolve((window as any).Cashfree);
+    script.onerror = () => reject(new Error('Failed to load Cashfree payment SDK.'));
+    document.body.appendChild(script);
+  });
+};
 
 const formatInterval = (interval?: string) => {
   switch (interval) {
@@ -21,9 +36,19 @@ export const BillingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [upgradingPlanId, setUpgradingPlanId] = useState<number | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<string>('all');
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
 
   useEffect(() => {
     loadBilling();
+
+    // Check if returning from Cashfree redirect checkout
+    const params = new URLSearchParams(window.location.search);
+    const cfOrderId = params.get('cashfree_order_id');
+    const planId = Number(params.get('plan_id')) || 0;
+    if (cfOrderId && planId > 0) {
+      verifyCashfreePayment(cfOrderId, planId);
+    }
   }, []);
 
   const loadBilling = async () => {
@@ -38,14 +63,81 @@ export const BillingPage: React.FC = () => {
     }
   };
 
-  const handleUpgrade = async (planId: number) => {
+  const verifyCashfreePayment = async (orderId: string, planId: number) => {
     try {
       setUpgradingPlanId(planId);
+      setMsg('');
+      setErr('');
+      const res = await api.post('/api/billing/cashfree/verify', {
+        order_id: orderId,
+        plan_id: planId,
+      });
+      setMsg(res.message || 'Payment successfully verified! Your subscription is now active.');
+      // Remove query parameters from URL cleanly
+      window.history.replaceState({}, document.title, window.location.pathname);
+      await loadBilling();
+    } catch (e: any) {
+      setErr(e.message || 'Failed to verify Cashfree payment.');
+    } finally {
+      setUpgradingPlanId(null);
+    }
+  };
+
+  const handleUpgrade = async (plan: any) => {
+    const planId = plan.id;
+    try {
+      setUpgradingPlanId(planId);
+      setMsg('');
+      setErr('');
+
+      // If plan is free (₹0.00), upgrade directly
+      if (Number(plan.price) <= 0) {
+        await api.post('/api/billing/upgrade', { plan_id: planId });
+        setMsg(`Subscription plan updated successfully to ${plan.name}!`);
+        await loadBilling();
+        return;
+      }
+
+      // If Cashfree gateway is enabled, use Cashfree checkout
+      const isCashfree = Boolean(billingData?.gateways?.cashfree?.enabled);
+      if (isCashfree) {
+        const orderRes = await api.post('/api/billing/cashfree/create-order', {
+          plan_id: planId,
+          return_url: `${window.location.origin}/admin/billing?cashfree_order_id={order_id}&plan_id=${planId}`,
+        });
+
+        if (orderRes.free_plan) {
+          setMsg(orderRes.message || `Switched to ${plan.name}`);
+          await loadBilling();
+          return;
+        }
+
+        if (orderRes.payment_session_id) {
+          const CashfreeFactory = await loadCashfreeSdk();
+          const cashfree = CashfreeFactory({
+            mode: orderRes.mode === 'production' ? 'production' : 'sandbox',
+          });
+
+          cashfree.checkout({
+            paymentSessionId: orderRes.payment_session_id,
+            redirectTarget: '_modal',
+          }).then(async (result: any) => {
+            if (result.error) {
+              setErr(result.error.message || 'Cashfree payment was cancelled or failed.');
+            } else if (result.paymentDetails) {
+              await verifyCashfreePayment(orderRes.order_id, planId);
+            }
+          });
+          return;
+        }
+      }
+
+      // Fallback direct upgrade
       await api.post('/api/billing/upgrade', { plan_id: planId });
-      alert('Subscription plan updated successfully!');
-      loadBilling();
-    } catch (err: any) {
-      alert(err.message || 'Upgrade failed');
+      setMsg(`Subscription plan updated successfully to ${plan.name}!`);
+      await loadBilling();
+    } catch (e: any) {
+      setErr(e.message || 'Subscription update failed.');
     } finally {
       setUpgradingPlanId(null);
     }
@@ -99,6 +191,30 @@ export const BillingPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {msg && (
+        <div className="p-3.5 rounded-xl bg-[#dcfae5] border border-[#bbf7d0] text-[#2f7a45] text-xs flex items-center justify-between gap-2 shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{msg}</span>
+          </div>
+          <button onClick={() => setMsg('')} className="text-xs font-bold opacity-75 hover:opacity-100 p-1">
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {err && (
+        <div className="p-3.5 rounded-xl bg-[#fee2e2] border border-[#fecaca] text-[#991b1b] text-xs flex items-center justify-between gap-2 shadow-xs">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{err}</span>
+          </div>
+          <button onClick={() => setErr('')} className="text-xs font-bold opacity-75 hover:opacity-100 p-1">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Current Plan Overview Card */}
       <div className="bg-white border border-[#e8eaec] rounded-[12px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -262,20 +378,31 @@ export const BillingPage: React.FC = () => {
                       Current Plan
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleUpgrade(p.id)}
-                      disabled={upgradingPlanId !== null}
-                      className="w-full py-2 rounded-xl bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
-                    >
-                      {upgradingPlanId === p.id ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                          <span>Updating Plan...</span>
-                        </>
-                      ) : (
-                        <span>Switch to {p.name}</span>
+                    <div className="space-y-1.5">
+                      <button
+                        onClick={() => handleUpgrade(p)}
+                        disabled={upgradingPlanId !== null}
+                        className="w-full py-2 rounded-xl bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+                      >
+                        {upgradingPlanId === p.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <span>
+                            {Number(p.price) > 0 && billingData?.gateways?.cashfree?.enabled
+                              ? `Pay via Cashfree • ₹${Number(p.price).toLocaleString('en-IN')}`
+                              : `Switch to ${p.name}`}
+                          </span>
+                        )}
+                      </button>
+                      {Number(p.price) > 0 && billingData?.gateways?.cashfree?.enabled && (
+                        <p className="text-[10px] text-center text-[#5d5f60]">
+                          Instant UPI, Cards & NetBanking via Cashfree
+                        </p>
                       )}
-                    </button>
+                    </div>
                   )}
                 </div>
               </div>
