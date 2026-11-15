@@ -26,6 +26,8 @@ use App\Services\LegalPageService;
 use App\Services\MailService;
 use App\Services\EmailVerificationService;
 use App\Services\CashfreeService;
+use App\Services\FunnelGraphService;
+use App\Services\QuizEngineService;
 
 class ApiSpaController
 {
@@ -642,6 +644,84 @@ class ApiSpaController
         }
     }
 
+    public function getFunnelGraph(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+
+        try {
+            $graph = FunnelGraphService::getGraph($tenantId, (int)$id);
+            return Response::success($graph);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'GRAPH_ERROR', null, 404);
+        }
+    }
+
+    public function saveFunnelGraph(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied.", "FORBIDDEN", null, 403);
+        }
+
+        $tenantId = TenantContextService::getActiveTenantId();
+        $user = current_user();
+        $payload = $request->all();
+
+        try {
+            $savedGraph = FunnelGraphService::saveGraph($tenantId, (int)$id, $payload, (int)$user['id']);
+            return Response::success($savedGraph, 'Graph saved successfully.');
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'SAVE_ERROR', null, 400);
+        }
+    }
+
+    public function validateFunnelGraph(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+
+        try {
+            $validation = FunnelGraphService::validateGraph($tenantId, (int)$id);
+            return Response::success($validation);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'VALIDATION_ERROR', null, 400);
+        }
+    }
+
+    public function updateFunnelMode(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        $user = current_user();
+        $mode = $request->input('funnel_mode');
+
+        if (!in_array($mode, ['quiz', 'calculator'], true)) {
+            return Response::error('Invalid funnel mode.', 'INVALID_MODE', null, 400);
+        }
+
+        if ($mode === 'calculator' && !UsageLimitService::hasFeature($tenantId, 'calculator_mode') && !AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Calculator & Quote Mode is not included in your current subscription plan. Please upgrade to unlock.", "FEATURE_LOCKED", null, 403);
+        }
+
+        try {
+            FunnelService::updateFunnel($tenantId, (int)$id, ['funnel_mode' => $mode], (int)$user['id']);
+            return Response::success(['funnel_mode' => $mode], "Funnel mode updated to '{$mode}'.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'UPDATE_ERROR', null, 400);
+        }
+    }
+
+    public function saveFunnelFormFields(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        $user = current_user();
+        $fields = $request->input('fields', []);
+
+        try {
+            $saved = FormSchemaService::saveFormFields($tenantId, (int)$id, $fields, (int)$user['id']);
+            return Response::success($saved, 'Pre-quiz form fields saved successfully.');
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'SAVE_ERROR', null, 400);
+        }
+    }
+
     // ==========================================
     // SUBMISSIONS & LEADS CRM
     // ==========================================
@@ -941,21 +1021,141 @@ class ApiSpaController
     public function upgradePlan(Request $request): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
+
         $user = current_user();
+        if (!$user) {
+            return Response::error("Authentication required.", "UNAUTHENTICATED", null, 401);
+        }
+
+        $role = TenantContextService::getCurrentRole();
+        if (!in_array($role, ['owner', 'admin'], true) && !AuthorizationService::isPlatformAdmin()) {
+            return Response::error("You need owner or admin permission to modify subscription plans.", "FORBIDDEN", null, 403);
+        }
+
         $planId = (int)$request->input('plan_id');
+        $interval = (string)$request->input('billing_interval', 'monthly');
+        $paymentMethod = (string)$request->input('payment_method', 'direct_activation');
+        $txnRef = trim((string)$request->input('transaction_reference', ''));
 
-        $plan = Database::fetchOne("SELECT * FROM plans WHERE id = ? AND is_active = 1", [$planId]);
-        if (!$plan) {
-            return Response::error("Selected plan not found.", "NOT_FOUND", null, 404);
+        $sub = SubscriptionService::getActiveSubscription($tenantId);
+        $currentPlanId = $sub['plan_id'] ?? 0;
+        $targetPlan = Database::fetchOne("SELECT * FROM plans WHERE id = ? AND is_active = 1 AND (is_visible = 1 OR id = ?)", [$planId, $currentPlanId]);
+        if (!$targetPlan) {
+            return Response::error("Selected plan is invalid or currently inactive.", "INVALID_PLAN", null, 404);
         }
 
-        // Direct upgrade assignment
-        $assigned = SubscriptionService::assignPlan($tenantId, $planId, 30, (int)$user['id'], 'Online Self-Service');
-        if (!$assigned) {
-            return Response::error("Failed to upgrade subscription.", "UPGRADE_FAILED", null, 500);
+        // Enforce Upgrade-Only Policy (Downgrades and re-selecting current tier are prohibited)
+        $existingSub = SubscriptionService::getActiveSubscription($tenantId);
+        $currentPlanPrice = 0.0;
+        if ($existingSub && !empty($existingSub['plan_id'])) {
+            $currentPlan = Database::fetchOne("SELECT price FROM plans WHERE id = ?", [$existingSub['plan_id']]);
+            if ($currentPlan) {
+                $currentPlanPrice = (float)$currentPlan['price'];
+            }
         }
 
-        return Response::success(['plan_name' => $plan['name']], "Successfully upgraded to {$plan['name']}!");
+        $targetPrice = (float)$targetPlan['price'];
+
+        if ($existingSub && !empty($existingSub['plan_id'])) {
+            $isTenantSuspended = false;
+            $tenantRow = Database::fetchOne("SELECT status FROM tenants WHERE id = ?", [$tenantId]);
+            if ($tenantRow && $tenantRow['status'] === 'suspended') {
+                $isTenantSuspended = true;
+            }
+
+            if (!$isTenantSuspended && (int)$targetPlan['id'] === (int)$existingSub['plan_id']) {
+                return Response::error("You are already active on the '{$targetPlan['name']}' plan. You can only upgrade to a higher tier plan.", "PLAN_ALREADY_ACTIVE", null, 400);
+            }
+
+            if ($targetPrice < $currentPlanPrice) {
+                return Response::error("Downgrading to a lower tier plan is not permitted. You can only upgrade to a higher tier plan.", "DOWNGRADE_NOT_PERMITTED", null, 400);
+            }
+        }
+
+        $price = $targetPrice;
+        if ($interval === 'yearly') {
+            $amount = $price * 12 * 0.85; // 15% discount for annual billing
+            $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+1 year'));
+        } elseif ($interval === 'semi_annual') {
+            $amount = $price * 6 * 0.90;
+            $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+6 months'));
+        } elseif ($interval === 'quarterly') {
+            $amount = $price * 3 * 0.95;
+            $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+3 months'));
+        } else {
+            $amount = $price;
+            $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+1 month'));
+        }
+
+        try {
+            $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad((string)$tenantId, 4, '0', STR_PAD_LEFT) . '-' . strtoupper(bin2hex(random_bytes(2)));
+            $periodStart = date('Y-m-d');
+            $periodEnd = date('Y-m-d', strtotime($currentPeriodEnd));
+
+            Database::execute(
+                "INSERT INTO tenant_invoices 
+                 (tenant_id, invoice_number, amount, currency, status, billing_interval, period_start, period_end, payment_method, transaction_reference, notes, paid_at)
+                 VALUES (?, ?, ?, 'INR', 'paid', ?, ?, ?, ?, ?, ?, NOW())",
+                [
+                    $tenantId,
+                    $invoiceNumber,
+                    $amount,
+                    $interval,
+                    $periodStart,
+                    $periodEnd,
+                    $paymentMethod,
+                    $txnRef ?: 'Self-Service Customer Upgrade',
+                    "Upgraded to {$targetPlan['name']} plan by {$user['name']} ({$user['email']})"
+                ]
+            );
+
+            if ($existingSub) {
+                Database::execute(
+                    "UPDATE tenant_subscriptions 
+                     SET plan_id = ?, status = 'active', billing_interval = ?, current_period_start = NOW(), 
+                         current_period_end = ?, ends_at = ?, next_billing_date = ?, amount = ?, currency = 'INR', provider = ?
+                     WHERE id = ?",
+                    [
+                        $planId, $interval, $currentPeriodEnd, $currentPeriodEnd, $currentPeriodEnd, 
+                        $amount, $paymentMethod, $existingSub['id']
+                    ]
+                );
+            } else {
+                Database::execute(
+                    "INSERT INTO tenant_subscriptions 
+                     (tenant_id, plan_id, status, billing_interval, starts_at, ends_at, current_period_start, current_period_end, next_billing_date, amount, currency, provider)
+                     VALUES (?, ?, 'active', ?, NOW(), ?, NOW(), ?, ?, ?, 'INR', ?)",
+                    [
+                        $tenantId, $planId, $interval, $currentPeriodEnd, $currentPeriodEnd, $currentPeriodEnd, $amount, $paymentMethod
+                    ]
+                );
+            }
+
+            // Unsuspend workspace if suspended
+            $tenant = Database::fetchOne("SELECT status FROM tenants WHERE id = ?", [$tenantId]);
+            if ($tenant && $tenant['status'] === 'suspended') {
+                SubscriptionService::unsuspendWorkspace($tenantId, $currentPeriodEnd, (int)$user['id']);
+            }
+
+            AuditLogService::log($tenantId, (int)$user['id'], 'upgrade_subscription_plan', 'tenant_subscription', $planId, [
+                'plan_name' => $targetPlan['name'],
+                'interval' => $interval,
+                'amount' => $amount,
+                'invoice_number' => $invoiceNumber
+            ]);
+
+            return Response::success([
+                'plan_name' => $targetPlan['name'],
+                'invoice_number' => $invoiceNumber,
+                'amount' => $amount,
+                'billing_interval' => $interval,
+            ], "Successfully upgraded to {$targetPlan['name']}!");
+        } catch (\Throwable $e) {
+            return Response::error("Failed to process plan upgrade: " . $e->getMessage(), "UPGRADE_FAILED", null, 500);
+        }
     }
 
     public function createCashfreeOrder(Request $request): Response
@@ -1300,6 +1500,153 @@ class ApiSpaController
                 'meta_description' => $settings['meta_description'] ?? '',
             ]
         ]);
+    }
+
+    public function quizInit(Request $request, string $slug): Response
+    {
+        $funnel = FunnelService::getPublishedFunnelBySlug($slug);
+        if ($funnel && ($funnel['tenant_status'] ?? 'active') === 'suspended') {
+            return Response::error("This quiz is temporarily paused by the organizer.", 'QUIZ_PAUSED', null, 503);
+        }
+
+        if ($funnel) {
+            $quotaCheck = UsageLimitService::checkCanAcceptSubmission((int)$funnel['tenant_id']);
+            if (!$quotaCheck['allowed']) {
+                return Response::error($quotaCheck['message'], 'LEAD_QUOTA_EXHAUSTED', null, 429);
+            }
+        }
+
+        try {
+            $data = QuizEngineService::initializeSession($slug);
+            return Response::success($data);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'INIT_FAILED', null, 400);
+        }
+    }
+
+    public function quizStep(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->query('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        try {
+            $step = QuizEngineService::getCurrentStep($token);
+            return Response::success($step);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'STEP_ERROR', null, 400);
+        }
+    }
+
+    public function quizSubmitForm(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        $formData = $request->input('form_data', []);
+
+        try {
+            $res = QuizEngineService::submitForm($token, $formData);
+            if (isset($res['success']) && $res['success'] === false) {
+                return Response::error("Form validation failed", "VALIDATION_FAILED", $res['errors'] ?? [], 422);
+            }
+            return Response::success($res, 'Form submitted successfully.');
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'FORM_ERROR', null, 400);
+        }
+    }
+
+    public function quizSubmitAnswer(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        $nodeId = (int)$request->input('node_id');
+        $answer = $request->input('answer', []);
+
+        try {
+            $step = QuizEngineService::submitAnswer($token, $nodeId, $answer);
+            return Response::success($step);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'ANSWER_ERROR', null, 400);
+        }
+    }
+
+    public function quizBack(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        try {
+            $step = QuizEngineService::navigateBack($token);
+            return Response::success($step);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'BACK_ERROR', null, 400);
+        }
+    }
+
+    public function quizVideoEvent(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        $nodeId = (int)$request->input('node_id');
+        $eventType = (string)$request->input('event_type');
+        $eventData = $request->input('event_data', []);
+
+        try {
+            $res = QuizEngineService::recordVideoEvent($token, $nodeId, $eventType, $eventData);
+            return Response::success($res);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'VIDEO_EVENT_ERROR', null, 400);
+        }
+    }
+
+    public function quizSubmitVideoGate(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        $nodeId = (int)$request->input('node_id');
+        $payload = $request->all();
+
+        try {
+            $res = QuizEngineService::submitVideoGate($token, $nodeId, $payload);
+            if (isset($res['success']) && $res['success'] === false) {
+                return Response::error($res['error'] ?? 'Validation failed', 'VALIDATION_FAILED', $res['errors'] ?? [], 422);
+            }
+            return Response::success($res);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'VIDEO_GATE_ERROR', null, 400);
+        }
+    }
+
+    public function quizVideoAdvance(Request $request): Response
+    {
+        $token = $request->header('x-quiz-session') ?? $request->input('session_token');
+        if (empty($token)) {
+            return Response::error("Missing quiz session token.", "UNAUTHORIZED", null, 401);
+        }
+
+        $nodeId = (int)$request->input('node_id');
+
+        try {
+            $step = QuizEngineService::advanceVideoStep($token, $nodeId);
+            return Response::success($step);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), 'VIDEO_ADVANCE_ERROR', null, 400);
+        }
     }
 
     // ==========================================

@@ -9,7 +9,7 @@ use App\Core\Database;
 use App\Services\SubscriptionService;
 use App\Services\UsageLimitService;
 use App\Services\TenantContextService;
-use App\Controllers\BillingController;
+use App\Controllers\ApiSpaController;
 use App\Core\Request;
 
 echo "\n====================================================\n";
@@ -76,7 +76,7 @@ testAssert($initialLimits['max_funnels'] == 5, "Starter max funnels is 5");
 $proPlan = Database::fetchOne("SELECT * FROM plans WHERE slug = 'pro' OR slug = 'enterprise' ORDER BY id DESC LIMIT 1");
 testAssert(!empty($proPlan), "Target upgrade plan (Pro/Enterprise) found with ID #{$proPlan['id']}");
 
-// 4. Simulate Customer Upgrading via BillingController::upgrade
+// 4. Simulate Customer Upgrading via ApiSpaController::upgradePlan
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_POST = [
     'plan_id' => $proPlan['id'],
@@ -85,8 +85,8 @@ $_POST = [
     'transaction_reference' => 'UPI-UTR-99887766'
 ];
 
-$controller = new BillingController();
-$response = $controller->upgrade(new Request());
+$controller = new ApiSpaController();
+$response = $controller->upgradePlan(new Request());
 
 // 5. Verify Subscription Updated
 $subAfterUpgrade = SubscriptionService::getActiveSubscription($tenantId);
@@ -119,7 +119,7 @@ $_POST = [
     'payment_method' => 'direct_activation',
     'transaction_reference' => 'AUTOREACTIVATE'
 ];
-$controller->upgrade(new Request());
+$controller->upgradePlan(new Request());
 
 $reactivatedTenant = Database::fetchOne("SELECT status FROM tenants WHERE id = ?", [$tenantId]);
 testAssert($reactivatedTenant['status'] === 'active', "Upgrading / renewing immediately unsuspends the tenant to 'active'");
@@ -132,9 +132,8 @@ $_POST = [
     'payment_method' => 'direct_activation',
     'transaction_reference' => 'ILLEGAL_DOWNGRADE'
 ];
-$controller->upgrade(new Request());
-$flashError = \App\Core\Session::getFlash('error');
-testAssert(str_contains($flashError ?? '', 'Downgrading to a lower tier plan is not permitted'), "Downgrade attempt to Starter is strictly blocked");
+$resDowngrade = $controller->upgradePlan(new Request());
+testAssert($resDowngrade->getStatusCode() === 400 && str_contains($resDowngrade->getContent(), 'Downgrading to a lower tier plan is not permitted'), "Downgrade attempt to Starter is strictly blocked");
 
 // Attempt to re-select same plan while active
 $_POST = [
@@ -143,9 +142,8 @@ $_POST = [
     'payment_method' => 'direct_activation',
     'transaction_reference' => 'SAME_PLAN'
 ];
-$controller->upgrade(new Request());
-$flashErrorSame = \App\Core\Session::getFlash('error');
-testAssert(str_contains($flashErrorSame ?? '', 'already active'), "Selecting current plan while active is rejected with informative notice");
+$resSame = $controller->upgradePlan(new Request());
+testAssert($resSame->getStatusCode() === 400 && str_contains($resSame->getContent(), 'already active'), "Selecting current plan while active is rejected with informative notice");
 
 // Attempt to downgrade to Free plan (0.00)
 $freePlan = Database::fetchOne("SELECT * FROM plans WHERE slug = 'free'");
@@ -156,9 +154,8 @@ if ($freePlan) {
         'payment_method' => 'direct_activation',
         'transaction_reference' => 'FREE_DOWNGRADE'
     ];
-    $controller->upgrade(new Request());
-    $flashErrorFree = \App\Core\Session::getFlash('error');
-    testAssert(str_contains($flashErrorFree ?? '', 'Downgrading to a lower tier plan is not permitted'), "Downgrade attempt to Free plan is strictly blocked");
+    $resFree = $controller->upgradePlan(new Request());
+    testAssert($resFree->getStatusCode() === 400 && str_contains($resFree->getContent(), 'Downgrading to a lower tier plan is not permitted'), "Downgrade attempt to Free plan is strictly blocked");
 }
 
 // 10. Verify UPGRADE TO EVEN HIGHER TIER IS ALLOWED (Pro -> Enterprise)
@@ -170,7 +167,7 @@ if ($enterprisePlan && (int)$proPlan['id'] !== (int)$enterprisePlan['id']) {
         'payment_method' => 'direct_activation',
         'transaction_reference' => 'ENTERPRISE_UPGRADE'
     ];
-    $controller->upgrade(new Request());
+    $controller->upgradePlan(new Request());
     $subAfterEnterprise = SubscriptionService::getActiveSubscription($tenantId);
     testAssert((int)$subAfterEnterprise['plan_id'] === (int)$enterprisePlan['id'], "Legitimate higher-tier upgrade (Pro -> Enterprise) is permitted");
 }

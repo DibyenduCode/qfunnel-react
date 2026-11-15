@@ -99,10 +99,15 @@ class Router
             }
         }
 
-        if ($request->isAjax()) {
-            return Response::error("Endpoint not found", "RESOURCE_NOT_FOUND", null, 404);
+        if ($request->isAjax() || str_starts_with($path, '/api') || str_starts_with($path, '/qfunnel2/api')) {
+            return Response::error("API endpoint '{$path}' not found", "NOT_FOUND", null, 404);
         }
 
-        return View::render('errors.404', ['title' => 'Page Not Found', 'path' => $path], 'auth');
+        $spaIndex = dirname(__DIR__, 2) . '/public/dist/index.html';
+        if (file_exists($spaIndex)) {
+            return Response::html((string)file_get_contents($spaIndex), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
+
+        return Response::html("<h1>404 Not Found</h1><p>The requested URL was not found.</p>", 404);
     }
 }

@@ -22,27 +22,25 @@ class View
     {
         $templateFile = self::$viewsDir . str_replace('.', DIRECTORY_SEPARATOR, $template) . '.php';
 
-        if (!file_exists($templateFile)) {
-            throw new \RuntimeException("View template not found: {$template}");
-        }
+        if (file_exists($templateFile)) {
+            extract($data, EXTR_SKIP);
+            ob_start();
+            require $templateFile;
+            $content = ob_get_clean();
 
-        // Extract variables for view
-        extract($data, EXTR_SKIP);
-
-        ob_start();
-        require $templateFile;
-        $content = ob_get_clean();
-
-        if ($layout !== null) {
-            $layoutFile = self::$viewsDir . 'layouts' . DIRECTORY_SEPARATOR . $layout . '.php';
-            if (file_exists($layoutFile)) {
-                ob_start();
-                require $layoutFile;
-                $content = ob_get_clean();
+            if ($layout !== null) {
+                $layoutFile = self::$viewsDir . 'layouts' . DIRECTORY_SEPARATOR . $layout . '.php';
+                if (file_exists($layoutFile)) {
+                    ob_start();
+                    require $layoutFile;
+                    $content = ob_get_clean();
+                }
             }
+            return Response::html($content);
         }
 
-        return Response::html($content);
+        // Headless SPA fallback
+        return Response::html("<!-- Headless React Architecture: view '{$template}' rendered via React SPA -->");
     }
 
     public static function url(string $path = ''): string

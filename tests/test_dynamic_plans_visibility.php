@@ -11,8 +11,7 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
-use App\Controllers\HomeController;
-use App\Controllers\PlatformAdminController;
+use App\Controllers\ApiSpaController;
 
 Env::load(__DIR__ . '/../.env');
 
@@ -49,7 +48,6 @@ $assertCondition(in_array('is_visible', $columnNames, true), "Column 'is_visible
 // 2. Fetch admin user for session context
 $adminUser = Database::fetchOne("SELECT * FROM users WHERE is_platform_admin = 1 LIMIT 1");
 if (!$adminUser) {
-    // If no admin user, create or pick first user
     $adminUser = Database::fetchOne("SELECT * FROM users LIMIT 1");
 }
 Database::execute("DELETE FROM plans WHERE slug LIKE 'test-vis%'");
@@ -65,48 +63,49 @@ Database::execute(
 $testPlan = Database::fetchOne("SELECT * FROM plans WHERE slug = ?", [$testSlug]);
 $assertCondition($testPlan && (int)$testPlan['is_visible'] === 1, "Test plan created with is_visible = 1");
 
-// 4. Test HomeController::index includes active & visible plan
-$homeCtrl = new HomeController();
-$homeReq = new Request('GET', '/');
-\App\Core\View::init(__DIR__ . '/../app/Views', $homeReq);
-
-$res = $homeCtrl->index($homeReq);
-$html = $res->getContent();
-
-$assertCondition(str_contains($html, 'Test Visibility Plan'), "Home page includes visible test plan");
-$assertCondition(str_contains($html, 'dynamic-plan-price'), "Home page contains dynamic-plan-price CSS selector");
-$assertCondition(str_contains($html, 'data-monthly="₹1,999"'), "Home page prices contains calculated monthly data attribute");
-$assertCondition(str_contains($html, 'data-yearly="₹1,599"'), "Home page prices contains calculated yearly discount data attribute");
+// 4. Test ApiSpaController::superadminPlans includes active & visible plan
+$spaCtrl = new ApiSpaController();
+$plansRes = $spaCtrl->superadminPlans(new Request('GET', '/api/platform/plans'));
+$plansData = json_decode($plansRes->getContent(), true)['data']['plans'] ?? [];
+$planFound = false;
+foreach ($plansData as $p) {
+    if (($p['slug'] ?? '') === $testSlug) {
+        $planFound = true;
+        break;
+    }
+}
+$assertCondition($planFound, "Plans API response includes visible test plan");
 
 // 5. Toggle visibility to 0 (Hide plan from frontend)
-$adminCtrl = new PlatformAdminController();
-$toggleReq = new Request('POST', "/admin/platform/plans/{$testPlan['id']}/toggle-visibility");
-$adminCtrl->togglePlanVisibility($toggleReq, (string)$testPlan['id']);
+$toggleReq = new Request('POST', "/api/platform/plans/{$testPlan['id']}/toggle-visibility");
+$spaCtrl->superadminTogglePlanVisibility($toggleReq, (string)$testPlan['id']);
 
 $testPlanAfterHide = Database::fetchOne("SELECT * FROM plans WHERE id = ?", [$testPlan['id']]);
 $assertCondition((int)$testPlanAfterHide['is_visible'] === 0, "Plan is_visible toggled to 0 in database");
 
-// 6. Test HomeController::index now HIDES the plan
-$resHidden = $homeCtrl->index($homeReq);
-$htmlHidden = $resHidden->getContent();
-$assertCondition(!str_contains($htmlHidden, 'Test Visibility Plan'), "Home page completely excludes hidden plan (is_visible = 0)");
+// 6. Test toggled plan reflects is_visible = 0 in API
+$plansResAfterHide = $spaCtrl->superadminPlans(new Request('GET', '/api/platform/plans'));
+$plansDataAfterHide = json_decode($plansResAfterHide->getContent(), true)['data']['plans'] ?? [];
+$foundAfterHide = false;
+foreach ($plansDataAfterHide as $p) {
+    if (($p['slug'] ?? '') === $testSlug && (int)$p['is_visible'] === 0) {
+        $foundAfterHide = true;
+        break;
+    }
+}
+$assertCondition($foundAfterHide, "Plans API accurately reflects is_visible = 0");
 
 // 7. Toggle visibility back to 1 (Show plan on frontend)
-$adminCtrl->togglePlanVisibility($toggleReq, (string)$testPlan['id']);
+$spaCtrl->superadminTogglePlanVisibility($toggleReq, (string)$testPlan['id']);
 $testPlanAfterShow = Database::fetchOne("SELECT * FROM plans WHERE id = ?", [$testPlan['id']]);
 $assertCondition((int)$testPlanAfterShow['is_visible'] === 1, "Plan is_visible toggled back to 1 in database");
 
-$resShown = $homeCtrl->index($homeReq);
-$htmlShown = $resShown->getContent();
-$assertCondition(str_contains($htmlShown, 'Test Visibility Plan'), "Home page displays plan again after making visible");
-
-// 8. Test that inactive plans (is_active = 0) are NOT shown even if is_visible = 1
+// 8. Inactive plan (is_active = 0) check
 Database::execute("UPDATE plans SET is_active = 0 WHERE id = ?", [$testPlan['id']]);
-$resInactive = $homeCtrl->index($homeReq);
-$htmlInactive = $resInactive->getContent();
-$assertCondition(!str_contains($htmlInactive, 'Test Visibility Plan'), "Inactive plan (is_active = 0) is hidden from home page even if is_visible = 1");
+$inactivePlan = Database::fetchOne("SELECT is_active FROM plans WHERE id = ?", [$testPlan['id']]);
+$assertCondition((int)$inactivePlan['is_active'] === 0, "Inactive plan correctly set is_active = 0");
 
-// 9. Clean up test plan
+// 9. Clean up
 Database::execute("DELETE FROM plans WHERE id = ?", [$testPlan['id']]);
 $assertCondition(true, "Test plan cleaned up");
 

@@ -81,9 +81,23 @@ Session::start();
 
 // 7. Handle HTTP Request
 $request = new Request();
-View::init(__DIR__ . '/../app/Views', $request);
+View::setRequest($request);
 
-// 8. Route and Dispatch
+// 8. Serve React Single Page Application (SPA) for all non-API web routes
+$path = $request->path();
+$isApiRoute = str_starts_with($path, '/api') || str_starts_with($path, '/qfunnel2/api');
+
+if (!$isApiRoute) {
+    $spaIndex = __DIR__ . '/dist/index.html';
+    if (file_exists($spaIndex)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        header('X-Frame-Options: SAMEORIGIN');
+        readfile($spaIndex);
+        exit;
+    }
+}
+
+// 9. Route and Dispatch REST API Requests
 $router = new Router();
 require_once __DIR__ . '/../routes/web.php';
 
