@@ -2,9 +2,14 @@
 .env
 .env.*
 !.env.example
+!.env.production
 DEMO_CREDENTIALS.md
 demo_credentials.md
 *credentials*.md
+
+# Deployment archives
+*.zip
+cpanel_ready_deploy.zip
 
 # Frontend Dependencies & Builds
 node_modules/
