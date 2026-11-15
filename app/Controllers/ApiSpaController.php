@@ -156,6 +156,13 @@ class ApiSpaController
             return Response::error("Unauthenticated.", "UNAUTHENTICATED", null, 401);
         }
 
+        // Keep user fresh in session with avatar_url
+        $freshUser = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status, email_verified_at, created_at FROM users WHERE id = ?", [(int)$user['id']]);
+        if ($freshUser) {
+            $user = array_merge($user, $freshUser);
+            Session::set('user', $user);
+        }
+
         $tenant = TenantContextService::getActiveTenant();
         $role = TenantContextService::getCurrentRole();
         $userTenants = TenantContextService::getUserTenants((int)$user['id']);
@@ -957,19 +964,91 @@ class ApiSpaController
     public function updateWorkspace(Request $request): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
-        $name = trim((string)$request->input('name'));
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
 
+        $name = trim((string)$request->input('name'));
         if (empty($name)) {
             return Response::error("Workspace name cannot be empty.", "VALIDATION_FAILED", null, 400);
         }
 
-        Database::execute("UPDATE tenants SET name = ? WHERE id = ?", [$name, $tenantId]);
-        return Response::success(['name' => $name], "Workspace updated.");
+        if ($request->input('remove_logo')) {
+            Database::execute("UPDATE tenants SET name = ?, logo_url = NULL WHERE id = ?", [$name, $tenantId]);
+        } elseif ($request->has('logo_url')) {
+            $logoUrl = trim((string)$request->input('logo_url')) ?: null;
+            Database::execute("UPDATE tenants SET name = ?, logo_url = ? WHERE id = ?", [$name, $logoUrl, $tenantId]);
+        } else {
+            Database::execute("UPDATE tenants SET name = ? WHERE id = ?", [$name, $tenantId]);
+        }
+
+        $updated = Database::fetchOne("SELECT id, name, slug, logo_url, status FROM tenants WHERE id = ?", [$tenantId]);
+        return Response::success($updated, "Workspace updated successfully.");
+    }
+
+    public function uploadWorkspaceLogo(Request $request): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
+
+        $uploaded = $_FILES['logo'] ?? $_FILES['file'] ?? null;
+        if (!$uploaded || $uploaded['error'] !== UPLOAD_ERR_OK) {
+            return Response::error("No logo file uploaded or upload error occurred.", "NO_FILE", null, 400);
+        }
+
+        $maxBytes = 5 * 1024 * 1024; // 5MB
+        if ($uploaded['size'] > $maxBytes) {
+            return Response::error("File exceeds 5MB limit.", "FILE_TOO_LARGE", null, 400);
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $uploaded['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+        ];
+
+        if (!isset($allowed[$mime])) {
+            return Response::error("Only PNG, JPG, WebP, or SVG images are allowed.", "INVALID_MIME", null, 400);
+        }
+
+        $ext = $allowed[$mime];
+        $targetDir = realpath(__DIR__ . '/../../public') . '/uploads/workspaces';
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $fileName = 'ws_' . $tenantId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $targetPath = $targetDir . '/' . $fileName;
+
+        $saved = is_uploaded_file($uploaded['tmp_name'])
+            ? @move_uploaded_file($uploaded['tmp_name'], $targetPath)
+            : @copy($uploaded['tmp_name'], $targetPath);
+
+        if (!$saved) {
+            return Response::error("Failed to save workspace logo.", "UPLOAD_FAILED", null, 500);
+        }
+
+        $logoUrl = url('/uploads/workspaces/' . $fileName);
+        Database::execute("UPDATE tenants SET logo_url = ? WHERE id = ?", [$logoUrl, $tenantId]);
+
+        return Response::success(['logo_url' => $logoUrl], "Workspace logo updated successfully.");
     }
 
     public function updateProfile(Request $request): Response
     {
         $user = current_user();
+        if (!$user) {
+            return Response::error("Unauthenticated.", "UNAUTHENTICATED", null, 401);
+        }
+        $userId = (int)$user['id'];
+
         $name = trim((string)$request->input('name', ''));
         $email = trim(strtolower((string)$request->input('email', '')));
         $password = (string)$request->input('password', '');
@@ -979,9 +1058,19 @@ class ApiSpaController
         }
 
         // Check email uniqueness
-        $existing = Database::fetchOne("SELECT id FROM users WHERE email = ? AND id != ?", [$email, (int)$user['id']]);
+        $existing = Database::fetchOne("SELECT id FROM users WHERE email = ? AND id != ?", [$email, $userId]);
         if ($existing) {
             return Response::error("Email already in use.", "EMAIL_TAKEN", null, 400);
+        }
+
+        $avatarUpdate = '';
+        $params = [$name, $email];
+        if ($request->input('remove_avatar')) {
+            $avatarUpdate = ', avatar_url = NULL';
+        } elseif ($request->has('avatar_url')) {
+            $avatarUrl = trim((string)$request->input('avatar_url')) ?: null;
+            $avatarUpdate = ', avatar_url = ?';
+            $params[] = $avatarUrl;
         }
 
         if (!empty($password)) {
@@ -989,15 +1078,76 @@ class ApiSpaController
                 return Response::error("Password must be at least 6 characters.", "PASSWORD_TOO_SHORT", null, 400);
             }
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            Database::execute("UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?", [$name, $email, $hash, (int)$user['id']]);
+            $params[] = $hash;
+            $params[] = $userId;
+            Database::execute("UPDATE users SET name = ?, email = ?{$avatarUpdate}, password_hash = ? WHERE id = ?", $params);
         } else {
-            Database::execute("UPDATE users SET name = ?, email = ? WHERE id = ?", [$name, $email, (int)$user['id']]);
+            $params[] = $userId;
+            Database::execute("UPDATE users SET name = ?, email = ?{$avatarUpdate} WHERE id = ?", $params);
         }
 
-        $updatedUser = Database::fetchOne("SELECT id, name, email, is_platform_admin, status FROM users WHERE id = ?", [(int)$user['id']]);
+        $updatedUser = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status FROM users WHERE id = ?", [$userId]);
         Session::set('user', $updatedUser);
 
         return Response::success($updatedUser, "Profile updated successfully.");
+    }
+
+    public function uploadUserAvatar(Request $request): Response
+    {
+        $user = current_user();
+        if (!$user) {
+            return Response::error("Unauthenticated.", "UNAUTHENTICATED", null, 401);
+        }
+        $userId = (int)$user['id'];
+
+        $uploaded = $_FILES['avatar'] ?? $_FILES['file'] ?? null;
+        if (!$uploaded || $uploaded['error'] !== UPLOAD_ERR_OK) {
+            return Response::error("No avatar file uploaded or upload error occurred.", "NO_FILE", null, 400);
+        }
+
+        $maxBytes = 5 * 1024 * 1024; // 5MB
+        if ($uploaded['size'] > $maxBytes) {
+            return Response::error("Avatar exceeds 5MB limit.", "FILE_TOO_LARGE", null, 400);
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $uploaded['tmp_name']);
+        finfo_close($finfo);
+
+        $allowed = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+        ];
+
+        if (!isset($allowed[$mime])) {
+            return Response::error("Only PNG, JPG, and WebP images are allowed.", "INVALID_MIME", null, 400);
+        }
+
+        $ext = $allowed[$mime];
+        $targetDir = realpath(__DIR__ . '/../../public') . '/uploads/avatars';
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $fileName = 'usr_' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $targetPath = $targetDir . '/' . $fileName;
+
+        $saved = is_uploaded_file($uploaded['tmp_name'])
+            ? @move_uploaded_file($uploaded['tmp_name'], $targetPath)
+            : @copy($uploaded['tmp_name'], $targetPath);
+
+        if (!$saved) {
+            return Response::error("Failed to save avatar image.", "UPLOAD_FAILED", null, 500);
+        }
+
+        $avatarUrl = url('/uploads/avatars/' . $fileName);
+        Database::execute("UPDATE users SET avatar_url = ? WHERE id = ?", [$avatarUrl, $userId]);
+
+        $updatedUser = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status FROM users WHERE id = ?", [$userId]);
+        Session::set('user', $updatedUser);
+
+        return Response::success(['avatar_url' => $avatarUrl, 'user' => $updatedUser], "Profile picture updated successfully.");
     }
 
     // ==========================================
@@ -1066,6 +1216,9 @@ class ApiSpaController
         if (!AuthorizationService::isPlatformAdmin()) {
             return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
         }
+
+        // Automated fallback check: Evaluates billing cycles if 24h elapsed without server cron
+        SubscriptionService::checkAndRunDailyEvaluationFallback();
 
         $totalTenants = (int) Database::fetchColumn("SELECT COUNT(*) FROM tenants WHERE status != 'deleted'");
         $activeTenants = (int) Database::fetchColumn("SELECT COUNT(*) FROM tenants WHERE status = 'active'");
@@ -1196,12 +1349,28 @@ class ApiSpaController
 
         $plans = Database::query("SELECT id, name, slug, price, billing_interval FROM plans WHERE is_active = 1 ORDER BY price ASC, id ASC");
 
+        $defaultCronKey = PlatformSettingService::get('cron_secret_key');
+        if (empty($defaultCronKey)) {
+            $defaultCronKey = 'lc_cron_' . bin2hex(random_bytes(8));
+            PlatformSettingService::set('cron_secret_key', $defaultCronKey);
+        }
+
+        $cronFilePath = realpath(__DIR__ . '/../../cron.php') ?: (realpath(__DIR__ . '/../../database/billing_cron.php') ?: 'cron.php');
+        $cronInfo = [
+            'last_evaluation_at' => PlatformSettingService::get('last_billing_evaluation_at'),
+            'last_evaluation_result' => PlatformSettingService::get('last_billing_evaluation_result'),
+            'cron_secret_key' => $defaultCronKey,
+            'cli_command' => '0 0 * * * /usr/local/bin/php ' . $cronFilePath . ' >/dev/null 2>&1',
+            'web_cron_url' => url('/api/cron/billing?key=' . $defaultCronKey),
+        ];
+
         return Response::success([
             'customers' => $customers,
             'termination_due_list' => $terminationDueList,
             'invoices' => $invoices,
             'users' => $users,
             'plans' => $plans,
+            'cron_info' => $cronInfo,
         ]);
     }
 
@@ -1422,6 +1591,32 @@ class ApiSpaController
         } catch (\Throwable $e) {
             return Response::error("Failed to terminate workspace: " . $e->getMessage(), "ERROR", null, 400);
         }
+    }
+
+    public function superadminEvaluateBilling(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $result = SubscriptionService::runBillingCycleEvaluation();
+        $adminUserId = (int)(current_user()['id'] ?? 1);
+        AuditLogService::log(null, $adminUserId, 'manual_billing_evaluation', 'platform', 0, $result);
+
+        return Response::success($result, "Billing cycle evaluation completed successfully.");
+    }
+
+    public function cronBillingEvaluation(Request $request): Response
+    {
+        $cronKey = (string)PlatformSettingService::get('cron_secret_key', 'leadcollector_cron_secret');
+        $providedKey = (string)$request->query('key', $request->input('key', ''));
+
+        if (!empty($cronKey) && $providedKey !== $cronKey) {
+            return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
+        }
+
+        $result = SubscriptionService::runBillingCycleEvaluation();
+        return Response::success($result, "Cron billing cycle evaluation completed successfully.");
     }
 
     public function superadminToggleUserStatus(Request $request, string $id): Response
@@ -1953,7 +2148,7 @@ class ApiSpaController
         }
 
         $currentUser = current_user();
-        $user = Database::fetchOne("SELECT id, name, email, is_platform_admin, status, created_at FROM users WHERE id = ?", [(int)$currentUser['id']]);
+        $user = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status, created_at FROM users WHERE id = ?", [(int)$currentUser['id']]);
 
         $auditCount = (int) Database::fetchColumn("SELECT COUNT(*) FROM audit_logs WHERE user_id = ?", [(int)$currentUser['id']]);
 
@@ -1986,9 +2181,20 @@ class ApiSpaController
             return Response::error("Email address '{$email}' is already in use by another account.", "EMAIL_TAKEN", null, 400);
         }
 
-        Database::execute("UPDATE users SET name = ?, email = ? WHERE id = ?", [$name, $email, $userId]);
+        $avatarUpdate = '';
+        $params = [$name, $email];
+        if ($request->input('remove_avatar')) {
+            $avatarUpdate = ', avatar_url = NULL';
+        } elseif ($request->has('avatar_url')) {
+            $avatarUrl = trim((string)$request->input('avatar_url')) ?: null;
+            $avatarUpdate = ', avatar_url = ?';
+            $params[] = $avatarUrl;
+        }
+        $params[] = $userId;
 
-        $updatedUser = Database::fetchOne("SELECT id, name, email, is_platform_admin, status FROM users WHERE id = ?", [$userId]);
+        Database::execute("UPDATE users SET name = ?, email = ?{$avatarUpdate} WHERE id = ?", $params);
+
+        $updatedUser = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status FROM users WHERE id = ?", [$userId]);
         Session::set('user', $updatedUser);
 
         AuditLogService::log(null, $userId, 'update_admin_profile', 'user', $userId, ['email' => $email, 'name' => $name]);

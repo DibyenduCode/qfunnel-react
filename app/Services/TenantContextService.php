@@ -49,11 +49,12 @@ class TenantContextService
                 'role' => 'owner',
                 'tenant_name' => $tenant['name'],
                 'tenant_slug' => $tenant['slug'],
+                'tenant_logo_url' => $tenant['logo_url'] ?? null,
                 'tenant_status' => $tenant['status'],
             ];
         } else {
             $membership = Database::fetchOne(
-                "SELECT tm.*, t.name as tenant_name, t.slug as tenant_slug, t.status as tenant_status 
+                "SELECT tm.*, t.name as tenant_name, t.slug as tenant_slug, t.logo_url as tenant_logo_url, t.status as tenant_status 
                  FROM tenant_memberships tm 
                  JOIN tenants t ON tm.tenant_id = t.id 
                  WHERE tm.tenant_id = ? AND tm.user_id = ? AND t.status != 'deleted'",
@@ -72,6 +73,7 @@ class TenantContextService
             'id' => (int)$membership['tenant_id'],
             'name' => $membership['tenant_name'],
             'slug' => $membership['tenant_slug'],
+            'logo_url' => $membership['tenant_logo_url'] ?? null,
             'status' => $membership['tenant_status'],
             'role' => $membership['role'],
         ];
@@ -89,7 +91,7 @@ class TenantContextService
         $user = Database::fetchOne("SELECT is_platform_admin FROM users WHERE id = ?", [$userId]);
         if ($user && !empty($user['is_platform_admin'])) {
             return Database::query(
-                "SELECT t.id, t.name, t.slug, t.status, 'owner' as role, t.created_at as joined_at 
+                "SELECT t.id, t.id as tenant_id, t.name, t.name as tenant_name, t.slug, t.slug as tenant_slug, t.logo_url, t.logo_url as tenant_logo_url, t.status, t.status as tenant_status, 'owner' as role, t.created_at as joined_at 
                  FROM tenants t 
                  WHERE t.status != 'deleted' 
                  ORDER BY t.name ASC"
@@ -97,7 +99,7 @@ class TenantContextService
         }
 
         return Database::query(
-            "SELECT t.id, t.name, t.slug, t.status, tm.role, tm.created_at as joined_at 
+            "SELECT t.id, t.id as tenant_id, t.name, t.name as tenant_name, t.slug, t.slug as tenant_slug, t.logo_url, t.logo_url as tenant_logo_url, t.status, t.status as tenant_status, tm.role, tm.created_at as joined_at 
              FROM tenant_memberships tm 
              JOIN tenants t ON tm.tenant_id = t.id 
              WHERE tm.user_id = ? AND t.status != 'deleted' 

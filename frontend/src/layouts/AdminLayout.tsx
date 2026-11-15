@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { BrandLogo } from '../components/BrandLogo';
+import { resolveMediaUrl } from '../api/client';
 import {
   LayoutDashboard,
   GitFork,
@@ -73,15 +75,38 @@ export const AdminLayout: React.FC = () => {
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full overflow-hidden">
+          {/* SaaS Minimal Brand Bar (LeadCollector) */}
+          <div className="h-12 px-4 border-b border-[#e2e5e9] flex items-center justify-between bg-white shrink-0">
+            <Link to="/admin/dashboard" className="flex items-center" title="LeadCollector Platform">
+              <BrandLogo size="xs" variant="full" />
+            </Link>
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden p-1 text-[#5d5f60] hover:text-[#131416] rounded-md transition-colors"
+              title="Close Navigation Menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Workspace Switcher Header */}
           <div className="h-14 flex items-center px-4 border-b border-[#e2e5e9] bg-white shrink-0 justify-between relative">
             <button 
               onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
-              className="flex items-center gap-2.5 text-left w-full hover:bg-[#f8fafc] p-1.5 rounded-xl transition"
+              className="flex items-center gap-2.5 text-left w-full hover:bg-[#f8fafc] p-1.5 rounded-xl transition-colors"
+              title="Switch Workspace"
             >
-              <div className="w-8 h-8 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                {activeTenant?.name?.charAt(0) || 'L'}
-              </div>
+              {activeTenant?.logo_url ? (
+                <img
+                  src={resolveMediaUrl(activeTenant.logo_url)}
+                  alt={activeTenant.name || 'Workspace'}
+                  className="w-8 h-8 rounded-lg object-cover border border-[#e2e5e9] shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-[#1d5fd6] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                  {activeTenant?.name?.charAt(0).toUpperCase() || 'W'}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <span className="block text-xs font-bold text-[#131416] truncate">
                   {activeTenant?.name || 'Workspace'}
@@ -93,36 +118,62 @@ export const AdminLayout: React.FC = () => {
               <ChevronDown className="w-3.5 h-3.5 text-[#5d5f60] shrink-0" />
             </button>
 
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden p-1 text-[#5d5f60] hover:text-[#131416] rounded-md"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
             {/* Workspace Dropdown */}
             {workspaceMenuOpen && (
-              <div className="absolute top-full left-3 right-3 mt-1 bg-white border border-[#e2e5e9] rounded-xl shadow-xs z-50 py-1.5">
-                <div className="px-3 py-1 text-[11px] font-bold text-[#5d5f60]">
-                  Your Workspaces
+              <div className="absolute top-full left-3 right-3 mt-1 bg-white border border-[#e2e5e9] rounded-xl shadow-xs z-50 py-1.5 divide-y divide-[#f1f5f9]">
+                <div>
+                  <div className="px-3 py-1 text-[11px] font-bold text-[#5d5f60]">
+                    Your Workspaces
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {userTenants.map((t) => {
+                      const tId = t.tenant_id || (t as any).id;
+                      const tName = t.tenant_name || (t as any).name || `Workspace #${tId}`;
+                      const tLogo = t.tenant_logo_url || (t as any).logo_url;
+                      const isCurrent = tId === activeTenant?.id;
+                      return (
+                        <button
+                          key={tId}
+                          onClick={() => {
+                            switchWorkspace(tId);
+                            setWorkspaceMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#f8fafc] transition-colors ${
+                            isCurrent ? 'text-[#1d5fd6] font-bold bg-[#dcf1ff]/40' : 'text-[#131416]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {tLogo ? (
+                              <img
+                                src={resolveMediaUrl(tLogo)}
+                                alt={tName}
+                                className="w-5 h-5 rounded-md object-cover border border-[#e2e5e9] shrink-0"
+                              />
+                            ) : (
+                              <div className="w-5 h-5 rounded-md bg-[#e2e5e9] text-[#131416] font-bold text-[10px] flex items-center justify-center shrink-0">
+                                {tName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="truncate">{tName}</span>
+                          </div>
+                          {isCurrent && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#1d5fd6] shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                {userTenants.map((t) => (
-                  <button
-                    key={t.tenant_id}
-                    onClick={() => {
-                      switchWorkspace(t.tenant_id);
-                      setWorkspaceMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#f8fafc] transition ${
-                      t.tenant_id === activeTenant?.id ? 'text-[#1d5fd6] font-bold bg-[#dcf1ff]/40' : 'text-[#131416]'
-                    }`}
+                <div className="pt-1 px-1">
+                  <Link
+                    to="/admin/settings"
+                    onClick={() => setWorkspaceMenuOpen(false)}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-[#1d5fd6] hover:bg-[#f8fafc] transition-colors flex items-center gap-1.5"
                   >
-                    <span className="truncate">{t.tenant_name || `Workspace #${t.tenant_id}`}</span>
-                    {t.tenant_id === activeTenant?.id && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#1d5fd6]" />
-                    )}
-                  </button>
-                ))}
+                    <Settings className="w-3 h-3" />
+                    <span>Workspace & Logo Settings</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
@@ -231,19 +282,31 @@ export const AdminLayout: React.FC = () => {
           {/* User Profile Footer */}
           <div className="p-3 border-t border-[#e2e5e9] bg-white shrink-0">
             <div className="flex items-center justify-between p-2 rounded-xl bg-[#f8fafc] border border-[#e2e5e9]">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-[#dcf1ff] text-[#1d5fd6] font-bold text-xs flex items-center justify-center shrink-0 border border-[#b9e6fe]">
-                  {user?.name?.charAt(0) || 'U'}
-                </div>
+              <Link
+                to="/admin/settings"
+                className="flex items-center gap-2.5 min-w-0 group hover:opacity-85 transition-opacity"
+                title="Profile & Workspace Settings"
+              >
+                {user?.avatar_url ? (
+                  <img
+                    src={resolveMediaUrl(user.avatar_url)}
+                    alt={user.name || 'User'}
+                    className="w-7 h-7 rounded-lg object-cover border border-[#e2e5e9] shrink-0"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-[#dcf1ff] text-[#1d5fd6] font-bold text-xs flex items-center justify-center shrink-0 border border-[#b9e6fe]">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                )}
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#131416] truncate">{user?.name || 'User'}</p>
+                  <p className="text-xs font-bold text-[#131416] truncate group-hover:text-[#1d5fd6] transition-colors">{user?.name || 'User'}</p>
                   <p className="text-[11px] text-[#5d5f60] truncate">{user?.email}</p>
                 </div>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 title="Sign Out"
-                className="p-1.5 text-[#5d5f60] hover:text-[#991b1b] hover:bg-[#fee2e2]/40 rounded-lg transition"
+                className="p-1.5 text-[#5d5f60] hover:text-[#991b1b] hover:bg-[#fee2e2]/40 rounded-lg transition-colors shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -259,14 +322,25 @@ export const AdminLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="lg:hidden p-1.5 rounded-lg text-[#5d5f60] hover:text-[#131416] hover:bg-[#f4f6f8] transition"
+              className="lg:hidden p-1.5 rounded-lg text-[#5d5f60] hover:text-[#131416] hover:bg-[#f4f6f8] transition-colors"
               title="Open Navigation Menu"
             >
               <Menu className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-[#5d5f60]">{activeTenant?.name || 'Workspace'}</span>
-              <span className="text-[#5d5f60]">/</span>
+              {activeTenant?.logo_url ? (
+                <img
+                  src={resolveMediaUrl(activeTenant.logo_url)}
+                  alt={activeTenant.name || 'Workspace'}
+                  className="w-5 h-5 rounded-md object-cover border border-[#e2e5e9] shrink-0"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-md bg-[#dcf1ff] text-[#1d5fd6] font-bold text-[10px] flex items-center justify-center shrink-0">
+                  {(activeTenant?.name || 'W').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="text-[#5d5f60] font-medium">{activeTenant?.name || 'Workspace'}</span>
+              <span className="text-[#9ca3af]">/</span>
               <span className="font-bold text-[#131416]">
                 {getPageTitle()}
               </span>

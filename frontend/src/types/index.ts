@@ -2,6 +2,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  avatar_url?: string | null;
   is_platform_admin: number | boolean;
   status: 'active' | 'disabled';
   email_verified_at?: string | null;
@@ -52,6 +53,7 @@ export interface Tenant {
   id: number;
   name: string;
   slug: string;
+  logo_url?: string | null;
   status: 'active' | 'suspended' | 'deleted' | 'terminated';
   created_at?: string;
 }
@@ -63,6 +65,7 @@ export interface TenantMembership {
   role: 'owner' | 'admin' | 'editor' | 'analyst';
   tenant_name?: string;
   tenant_slug?: string;
+  tenant_logo_url?: string | null;
   tenant_status?: string;
 }
 

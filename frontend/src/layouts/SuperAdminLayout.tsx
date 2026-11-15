@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BrandLogo } from '../components/BrandLogo';
+import { resolveMediaUrl } from '../api/client';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -112,14 +113,22 @@ export const SuperAdminLayout: React.FC = () => {
             <div className="flex items-center justify-between p-2 rounded-xl bg-[#f8fafc] border border-[#e2e5e9]">
               <Link
                 to="/admin/platform/profile"
-                className="flex items-center gap-2.5 min-w-0 group hover:opacity-80 transition"
+                className="flex items-center gap-2.5 min-w-0 group hover:opacity-85 transition-opacity"
                 title="Super Admin Profile & Security"
               >
-                <div className="w-7 h-7 rounded-lg bg-[#dcf1ff] text-[#1d5fd6] font-bold text-xs flex items-center justify-center shrink-0 border border-[#b9e6fe]">
-                  {user?.name?.charAt(0) || 'S'}
-                </div>
+                {user?.avatar_url ? (
+                  <img
+                    src={resolveMediaUrl(user.avatar_url)}
+                    alt={user.name || 'Super Admin'}
+                    className="w-7 h-7 rounded-lg object-cover border border-[#e2e5e9] shrink-0"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-[#dcf1ff] text-[#1d5fd6] font-bold text-xs flex items-center justify-center shrink-0 border border-[#b9e6fe]">
+                    {user?.name?.charAt(0).toUpperCase() || 'S'}
+                  </div>
+                )}
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#131416] truncate group-hover:text-[#1d5fd6]">{user?.name || 'Super Admin'}</p>
+                  <p className="text-xs font-bold text-[#131416] truncate group-hover:text-[#1d5fd6] transition-colors">{user?.name || 'Super Admin'}</p>
                   <p className="text-[11px] text-[#5d5f60] truncate">{user?.email}</p>
                 </div>
               </Link>

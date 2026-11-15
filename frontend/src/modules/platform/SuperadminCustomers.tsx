@@ -21,7 +21,12 @@ import {
   MoreVertical,
   Layers,
   ChevronDown,
-  X
+  X,
+  Play,
+  RefreshCw,
+  Terminal,
+  Copy,
+  Check
 } from 'lucide-react';
 
 export const SuperadminCustomers: React.FC = () => {
@@ -31,6 +36,10 @@ export const SuperadminCustomers: React.FC = () => {
   const [terminationDueList, setTerminationDueList] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [cronInfo, setCronInfo] = useState<any>(null);
+  const [evaluating, setEvaluating] = useState(false);
+  const [showCronModal, setShowCronModal] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -104,11 +113,33 @@ export const SuperadminCustomers: React.FC = () => {
       setTerminationDueList(res.termination_due_list || []);
       setInvoices(res.invoices || []);
       setUsers(res.users || []);
+      setCronInfo(res.cron_info || null);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load customer records');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRunEvaluation = async () => {
+    try {
+      setEvaluating(true);
+      setMsg('');
+      setErrorMsg('');
+      const res = await api.post('/api/platform/billing/evaluate', {});
+      setMsg(`Billing evaluation completed: ${res.suspended_count} workspace(s) suspended, ${res.flagged_due_count} flagged due, ${res.renewal_reminders_sent} reminder(s) sent.`);
+      await loadData();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to execute billing evaluation');
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
   const handleToggleTenant = async (tenant: any) => {
@@ -366,9 +397,30 @@ export const SuperadminCustomers: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full bg-white border border-[#e2e5e9] text-xs font-semibold text-[#131416]">
-            Total: {customers.length} Workspaces • {users.length} Users
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCronModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-white border border-[#e2e5e9] text-xs font-semibold text-[#131416] hover:bg-[#f8fafc] transition-colors shadow-xs"
+            title="View Automated Billing & Cron Setup"
+          >
+            <Terminal className="w-3.5 h-3.5 text-[#1d5fd6]" />
+            <span>Billing Cron Info</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRunEvaluation}
+            disabled={evaluating}
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition-colors disabled:opacity-60 shadow-xs"
+            title="Execute billing cycle evaluation immediately"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${evaluating ? 'animate-spin' : ''}`} />
+            <span>{evaluating ? 'Evaluating...' : 'Evaluate Billing Now'}</span>
+          </button>
+
+          <span className="px-3 py-1.5 rounded-lg bg-[#f8fafc] border border-[#e2e5e9] text-xs font-semibold text-[#131416]">
+            {customers.length} Workspaces • {users.length} Users
           </span>
         </div>
       </div>
@@ -1500,6 +1552,130 @@ export const SuperadminCustomers: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Cron Job Setup & Automated Billing Modal */}
+      {showCronModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl border border-[#e2e5e9] shadow-xs max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0f3]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#dcf1ff] text-[#1d5fd6] flex items-center justify-center shrink-0">
+                  <Terminal className="w-4 h-4 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#131416]">Automated Billing & Cron Job Configuration</h3>
+                  <p className="text-[11px] text-[#5d5f60]">Daily recurring evaluation, renewal reminders, grace periods, and auto-suspension</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCronModal(false)}
+                className="p-1 rounded-lg text-[#5d5f60] hover:text-[#131416] hover:bg-[#f8fafc]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Last Execution Info */}
+            <div className="p-4 rounded-xl bg-[#f8fafc] border border-[#e2e5e9] space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-bold text-[#131416]">Latest Daily Evaluation Status:</span>
+                <span className="text-[#5d5f60]">
+                  {cronInfo?.last_evaluation_at ? `Evaluated on ${cronInfo.last_evaluation_at}` : 'Evaluated just now'}
+                </span>
+              </div>
+              {cronInfo?.last_evaluation_result && (
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-[#fee2e2] text-[#991b1b] font-medium border border-[#fecaca]">
+                    {cronInfo.last_evaluation_result.suspended_count ?? 0} Suspended
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#fef3c7] text-[#b45309] font-medium border border-[#fde68a]">
+                    {cronInfo.last_evaluation_result.flagged_due_count ?? 0} Flagged for Review
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#dcf1ff] text-[#1d5fd6] font-medium border border-[#b9e6fe]">
+                    {cronInfo.last_evaluation_result.renewal_reminders_sent ?? 0} Reminders Sent
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Method 1: cPanel / Server CLI Cron Job */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#131416]">
+                Method 1: cPanel / Linux Crontab (Recommended)
+              </label>
+              <p className="text-[11px] text-[#5d5f60]">
+                Set this cron job to run once daily at midnight (0 0 * * *). Replace the path with your actual server directory.
+              </p>
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#131416] text-[#f8fafc] text-xs">
+                <pre className="flex-1 overflow-x-auto text-[11px]">
+                  <code>{cronInfo?.cli_command || '0 0 * * * php /path/to/leadcollector/cron.php >/dev/null 2>&1'}</code>
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(cronInfo?.cli_command || '0 0 * * * php cron.php', 'cli')}
+                  className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-xs font-semibold text-white shrink-0 transition-colors"
+                >
+                  {copiedKey === 'cli' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Method 2: Web Cron / External Monitor */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#131416]">
+                Method 2: Web Cron URL (For cron-job.org or curl)
+              </label>
+              <p className="text-[11px] text-[#5d5f60]">
+                If your host does not offer CLI PHP crons, trigger this authenticated HTTPS endpoint daily:
+              </p>
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#f8fafc] border border-[#e2e5e9] text-xs">
+                <pre className="flex-1 overflow-x-auto text-[11px] text-[#131416]">
+                  <code>{cronInfo?.web_cron_url || '/api/cron/billing'}</code>
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(cronInfo?.web_cron_url || '', 'url')}
+                  className="px-2 py-1 rounded bg-white border border-[#e2e5e9] hover:bg-[#f8fafc] text-xs font-semibold text-[#131416] shrink-0 transition-colors"
+                >
+                  {copiedKey === 'url' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Lifecycle Rules Explanation */}
+            <div className="p-3.5 rounded-xl bg-white border border-[#e2e5e9] space-y-2 text-xs text-[#5d5f60]">
+              <div className="font-bold text-[#131416] text-xs">How the Automated Billing Schedule Works:</div>
+              <ul className="list-disc pl-4 space-y-1 text-[11px]">
+                <li><strong>Advance Reminders:</strong> Exactly 3 days before renewal, an automated email reminder with invoice details is dispatched to the workspace owner.</li>
+                <li><strong>Grace Period (7 Days):</strong> If payment is not completed by the expiration date, a 7-day grace period activates. Quizzes stay live, and a renewal reminder is shown in the workspace.</li>
+                <li><strong>Safe Auto-Suspension:</strong> If the 7-day grace period expires without renewal, the workspace is automatically suspended. Visitor forms are paused. <strong>Zero data is ever deleted.</strong></li>
+                <li><strong>Self-Healing Fallback:</strong> If server cron is delayed, the system automatically runs the daily evaluation when administrators access the platform.</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-between items-center pt-2 border-t border-[#edf0f3]">
+              <button
+                type="button"
+                onClick={handleRunEvaluation}
+                disabled={evaluating}
+                className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition-colors disabled:opacity-60 shadow-xs"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${evaluating ? 'animate-spin' : ''}`} />
+                <span>{evaluating ? 'Running...' : 'Run Evaluation Now'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowCronModal(false)}
+                className="px-4 h-8 rounded-lg bg-white border border-[#e2e5e9] text-xs font-semibold text-[#131416] hover:bg-[#f8fafc] transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

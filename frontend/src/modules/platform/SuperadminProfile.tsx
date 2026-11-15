@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '../../api/client';
+import React, { useEffect, useState, useRef } from 'react';
+import { api, resolveMediaUrl } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
-import { ShieldCheck, User, KeyRound, CheckCircle, AlertTriangle, Save, Lock } from 'lucide-react';
+import { ShieldCheck, User, KeyRound, CheckCircle, AlertTriangle, Save, Lock, Upload, Trash2, Loader2 } from 'lucide-react';
 
 export const SuperadminProfile: React.FC = () => {
   const { user, checkAuth } = useAuthStore();
@@ -14,7 +14,10 @@ export const SuperadminProfile: React.FC = () => {
   // Profile Form
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   // Password Form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -33,11 +36,64 @@ export const SuperadminProfile: React.FC = () => {
       if (res.user) {
         setName(res.user.name || '');
         setEmail(res.user.email || '');
+        setAvatarUrl(res.user.avatar_url || null);
       }
     } catch (err: any) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileErr('Avatar file exceeds 5MB limit. Please choose a smaller image.');
+      if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
+      return;
+    }
+
+    setAvatarUploading(true);
+    setProfileMsg('');
+    setProfileErr('');
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await api.post('/api/platform/profile/avatar', formData);
+      setProfileMsg('Super admin avatar updated successfully.');
+      if (res.avatar_url) {
+        setAvatarUrl(res.avatar_url);
+      }
+      await checkAuth();
+    } catch (err: any) {
+      setProfileErr(err.message || 'Failed to upload avatar image.');
+    } finally {
+      setAvatarUploading(false);
+      if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!window.confirm('Are you sure you want to remove your admin avatar?')) return;
+    setAvatarUploading(true);
+    setProfileMsg('');
+    setProfileErr('');
+    try {
+      await api.post('/api/platform/profile', {
+        name,
+        email,
+        remove_avatar: 1,
+      });
+      setAvatarUrl(null);
+      setProfileMsg('Admin avatar removed. Reverted to initial badge.');
+      await checkAuth();
+    } catch (err: any) {
+      setProfileErr(err.message || 'Failed to remove avatar image.');
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -116,12 +172,27 @@ export const SuperadminProfile: React.FC = () => {
         </p>
       </div>
 
-      {/* Card 1: Admin Profile Details */}
+      {/* Card 1: Admin Profile Details & Avatar */}
       <div className="bg-white border border-[#e2e5e9] rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-[#edf0f3]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#dcf1ff] text-[#1d5fd6] font-bold text-sm flex items-center justify-center border border-[#b9e6fe]">
-              {name.charAt(0) || 'S'}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#edf0f3]">
+          <div className="flex items-center gap-3.5">
+            <div className="relative group shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={resolveMediaUrl(avatarUrl)}
+                  alt={name || 'Super Admin'}
+                  className="w-12 h-12 rounded-xl object-cover border border-[#e2e5e9] bg-white shadow-xs"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-[#dcf1ff] text-[#1d5fd6] font-bold text-base flex items-center justify-center border border-[#b9e6fe] shadow-xs">
+                  {name.charAt(0).toUpperCase() || 'S'}
+                </div>
+              )}
+              {avatarUploading && (
+                <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center text-white">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -132,6 +203,37 @@ export const SuperadminProfile: React.FC = () => {
               </div>
               <p className="text-[11px] text-[#5d5f60]">{email}</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              ref={avatarFileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleAvatarUpload}
+              className="hidden"
+              id="superadmin-avatar-input"
+            />
+            <button
+              type="button"
+              onClick={() => avatarFileInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition-colors disabled:opacity-60 shadow-xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>{avatarUploading ? 'Uploading...' : avatarUrl ? 'Change Avatar' : 'Upload Avatar'}</span>
+            </button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                disabled={avatarUploading}
+                className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-white border border-[#e2e5e9] text-[#991b1b] hover:bg-[#fee2e2]/40 text-xs font-semibold transition-colors disabled:opacity-60"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Remove</span>
+              </button>
+            )}
           </div>
         </div>
 

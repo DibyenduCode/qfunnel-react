@@ -43,13 +43,26 @@ class SubscriptionService
 
         $amount = (float)($plan['price'] ?? 0);
         $currency = $plan['currency'] ?? 'INR';
-        $interval = $plan['billing_cycle'] ?? 'monthly';
+        $interval = (string)($plan['billing_interval'] ?? ($plan['billing_cycle'] ?? 'monthly'));
+
+        $periodStart = date('Y-m-d H:i:s');
+        if ($interval === 'yearly') {
+            $periodEnd = date('Y-m-d H:i:s', strtotime('+1 year'));
+        } elseif ($interval === 'semi_annual') {
+            $periodEnd = date('Y-m-d H:i:s', strtotime('+6 months'));
+        } elseif ($interval === 'quarterly') {
+            $periodEnd = date('Y-m-d H:i:s', strtotime('+3 months'));
+        } elseif ($interval === 'lifetime') {
+            $periodEnd = date('Y-m-d H:i:s', strtotime('+50 years'));
+        } else {
+            $periodEnd = date('Y-m-d H:i:s', strtotime("+{$durationDays} days"));
+        }
 
         Database::execute(
             "INSERT INTO tenant_subscriptions 
-             (tenant_id, plan_id, status, billing_interval, starts_at, current_period_start, ends_at, current_period_end, amount, currency, provider, provider_subscription_id) 
-             VALUES (?, ?, 'active', ?, NOW(), NOW(), DATE_ADD(NOW(), INTERVAL ? DAY), DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?, 'self_service', ?)",
-            [$tenantId, $planId, $interval, $durationDays, $durationDays, $amount, $currency, 'sub_upgrade_' . time()]
+             (tenant_id, plan_id, status, billing_interval, starts_at, current_period_start, ends_at, current_period_end, next_billing_date, amount, currency, provider, provider_subscription_id) 
+             VALUES (?, ?, 'active', ?, NOW(), NOW(), ?, ?, ?, ?, ?, 'self_service', ?)",
+            [$tenantId, $planId, $interval, $periodEnd, $periodEnd, $periodEnd, $amount, $currency, 'sub_upgrade_' . time()]
         );
 
         Logger::info("Plan #{$planId} assigned to Tenant #{$tenantId} by User #{$adminUserId}. Notes: {$notes}");
@@ -113,6 +126,8 @@ class SubscriptionService
             $currentPeriodEnd = date('Y-m-d H:i:s', strtotime($data['current_period_end']));
         } elseif ($interval === 'yearly') {
             $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+1 year', strtotime($currentPeriodStart)));
+        } elseif ($interval === 'semi_annual') {
+            $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+6 months', strtotime($currentPeriodStart)));
         } elseif ($interval === 'quarterly') {
             $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+3 months', strtotime($currentPeriodStart)));
         } elseif ($interval === 'lifetime') {
@@ -559,6 +574,19 @@ class SubscriptionService
         $reminderCount = 0;
         foreach ($upcomingRenewals as $ren) {
             if (!empty($ren['owner_email'])) {
+                // Ensure we don't spam multiple reminder emails within 24 hours
+                $alreadySentToday = Database::fetchOne(
+                    "SELECT id FROM email_logs 
+                     WHERE recipient_email = ? 
+                       AND template_key = 'renewal_reminder' 
+                       AND sent_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) 
+                     LIMIT 1",
+                    [$ren['owner_email']]
+                );
+                if ($alreadySentToday) {
+                    continue;
+                }
+
                 try {
                     MailService::sendTemplate('renewal_reminder', $ren['owner_email'], $ren['owner_name'], [
                         'tenant_name' => $ren['tenant_name'],
@@ -575,11 +603,35 @@ class SubscriptionService
             }
         }
 
-        return [
+        $summary = [
             'suspended_count' => $suspendedCount,
             'flagged_due_count' => $flaggedDueCount,
             'renewal_reminders_sent' => $reminderCount,
             'evaluated_at' => $now,
         ];
+
+        // Persist execution timestamp and statistics to platform settings
+        PlatformSettingService::set('last_billing_evaluation_at', $now);
+        PlatformSettingService::set('last_billing_evaluation_result', $summary);
+
+        return $summary;
+    }
+
+    /**
+     * Automatic fallback runner:
+     * If more than 24 hours have elapsed since the last evaluation (e.g. if the server cron job
+     * was delayed or not yet configured), this runs silently in the background on regular admin requests.
+     */
+    public static function checkAndRunDailyEvaluationFallback(): ?array
+    {
+        try {
+            $lastRun = PlatformSettingService::get('last_billing_evaluation_at');
+            if (!$lastRun || strtotime((string)$lastRun) <= strtotime('-24 hours')) {
+                return self::runBillingCycleEvaluation();
+            }
+        } catch (\Throwable $e) {
+            Logger::error("Fallback billing evaluation error: " . $e->getMessage());
+        }
+        return null;
     }
 }

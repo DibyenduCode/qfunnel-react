@@ -189,6 +189,7 @@ $router->group([AuthMiddleware::class], function (Router $router) {
 // REACT SPA REST API ROUTES
 // ==========================================
 $router->get('/api/csrf-token', [ApiSpaController::class, 'csrfToken']);
+$router->get('/api/cron/billing', [ApiSpaController::class, 'cronBillingEvaluation']);
 $router->post('/api/auth/login', [ApiSpaController::class, 'login']);
 $router->post('/api/auth/register', [ApiSpaController::class, 'register']);
 $router->post('/api/auth/verify-otp', [ApiSpaController::class, 'verifyOtp']);
@@ -242,9 +243,11 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->get('/api/billing', [ApiSpaController::class, 'billing']);
         $router->post('/api/billing/upgrade', [ApiSpaController::class, 'upgradePlan']);
 
-        // Settings
+        // Settings & Profile Avatars
         $router->post('/api/settings/workspace', [ApiSpaController::class, 'updateWorkspace']);
+        $router->post('/api/settings/workspace/logo', [ApiSpaController::class, 'uploadWorkspaceLogo']);
         $router->post('/api/settings/profile', [ApiSpaController::class, 'updateProfile']);
+        $router->post('/api/settings/profile/avatar', [ApiSpaController::class, 'uploadUserAvatar']);
     });
 
     // Super Admin Platform API Routes Group
@@ -262,6 +265,7 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->post('/api/platform/tenants/{id}/mark-termination-due', [ApiSpaController::class, 'superadminMarkTerminationDue']);
         $router->post('/api/platform/tenants/{id}/dismiss-termination-due', [ApiSpaController::class, 'superadminDismissTerminationDue']);
         $router->post('/api/platform/tenants/{id}/terminate', [ApiSpaController::class, 'superadminTerminateTenant']);
+        $router->post('/api/platform/billing/evaluate', [ApiSpaController::class, 'superadminEvaluateBilling']);
         $router->post('/api/platform/users/{id}/toggle-status', [ApiSpaController::class, 'superadminToggleUserStatus']);
 
         // Plans CRUD
@@ -288,6 +292,7 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         // Super Admin Profile & Credentials
         $router->get('/api/platform/profile', [ApiSpaController::class, 'superadminProfile']);
         $router->post('/api/platform/profile', [ApiSpaController::class, 'superadminUpdateProfile']);
+        $router->post('/api/platform/profile/avatar', [ApiSpaController::class, 'uploadUserAvatar']);
         $router->post('/api/platform/profile/password', [ApiSpaController::class, 'superadminUpdatePassword']);
 
         // Email SMTP Settings & Template CMS

@@ -94,6 +94,10 @@ $runner->assert(
     'Super Administrator authenticated with platform privileges and active workspace'
 );
 
+// 1.5 Request parameter checking (has method)
+$sampleReq = new \App\Core\Request();
+$runner->assert(method_exists($sampleReq, 'has') && $sampleReq->has('non_existent_key_xyz') === false, 'Request::has method accurately verifies input existence');
+
 
 // --- SUITE 2: MULTI-TENANCY DATA ISOLATION ---
 echo "\n--- SUITE 2: Multi-Tenancy Data Isolation ---\n";
