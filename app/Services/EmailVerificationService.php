@@ -67,7 +67,6 @@ class EmailVerificationService
             'success' => true,
             'message' => "A 6-digit verification code has been sent to {$email}.",
             'expires_in_minutes' => self::OTP_EXPIRY_MINUTES,
-            'otp' => $otpCode, // Available for development/testing
             'simulated' => !empty($mailResult['simulated']),
         ];
     }
@@ -78,25 +77,6 @@ class EmailVerificationService
     public static function verifyOtp(int $userId, string $submittedOtp): array
     {
         $submittedOtp = trim($submittedOtp);
-        $isDev = Env::get('APP_ENV') === 'development';
-
-        // Universal master test OTP for development signups
-        if ($isDev && $submittedOtp === '123456') {
-            Database::execute(
-                "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = ?",
-                [$userId]
-            );
-            Database::execute("DELETE FROM email_verifications WHERE user_id = ?", [$userId]);
-            $user = Database::fetchOne("SELECT * FROM users WHERE id = ?", [$userId]);
-            if ($user) {
-                unset($user['password_hash']);
-                Session::set('user', $user);
-            }
-            return [
-                'success' => true,
-                'message' => 'Email verified successfully with development test OTP.',
-            ];
-        }
 
         $record = Database::fetchOne(
             "SELECT * FROM email_verifications WHERE user_id = ? ORDER BY id DESC LIMIT 1",

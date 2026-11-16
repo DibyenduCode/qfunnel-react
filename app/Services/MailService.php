@@ -239,15 +239,19 @@ class MailService
 
             // Construct MIME message
             $boundary = "bnd_" . md5(uniqid((string)time(), true));
+            $domain = parse_url(Env::get('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'filterfunnel.in';
+            $msgId = "<" . md5(uniqid((string)time(), true)) . "@" . $domain . ">";
             $headers = [
                 "Date: " . date('r'),
+                "Message-ID: {$msgId}",
                 "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>",
                 "To: =?UTF-8?B?" . base64_encode($toName) . "?= <{$toEmail}>",
                 "Reply-To: <{$replyTo}>",
                 "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
                 "MIME-Version: 1.0",
                 "Content-Type: multipart/alternative; boundary=\"{$boundary}\"",
-                "X-Mailer: QuizFunnel Mailer 2.0",
+                "X-Mailer: FilterFunnel Mailer",
+                "Auto-Submitted: auto-generated",
             ];
 
             $plain = !empty($textBody) ? $textBody : strip_tags($htmlBody);
@@ -434,6 +438,22 @@ class MailService
                         </td>
                     </tr>
 
+                    <!-- Deliverability / Spam Notice -->
+                    <tr>
+                        <td style=\"padding: 0 32px 24px 32px;\">
+                            <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;\">
+                                <tr>
+                                    <td width=\"26\" valign=\"top\" style=\"padding-right: 12px; font-size: 16px; line-height: 1;\">
+                                        📬
+                                    </td>
+                                    <td style=\"font-size: 12px; color: #64748b; line-height: 1.55;\">
+                                        <strong style=\"color: #334155;\">Important Deliverability Notice:</strong> If this email or any verification code lands in your <strong>Spam</strong> or <strong>Junk</strong> folder, please mark it as <em>\"Not Spam\"</em> or move it to your <strong>Primary Inbox</strong> to ensure you receive future critical security codes and notifications without delay.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
                     <!-- Brand Footer -->
                     <tr>
                         <td style=\"padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center; font-size: 12px; color: #64748b;\">
@@ -583,8 +603,12 @@ class MailService
                         </div>
                     </div>
 
-                    <div style="background: #f8fafc; border-left: 4px solid #1d5fd6; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin-bottom: 24px;">
+                    <div style="background: #f8fafc; border-left: 4px solid #1d5fd6; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin-bottom: 16px;">
                         ⏱️ This verification code is valid for <strong>{{otp_expiry_minutes}} minutes</strong>. For security, never share this code with anyone.
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 12.5px; color: #92400e; margin-bottom: 24px; line-height: 1.5;">
+                        📬 <strong>Can\'t find this in your Primary Inbox?</strong> Please check your <strong>Spam</strong> or <strong>Junk</strong> folder. If you find it there, please mark it as <em>\"Not Spam\"</em> so you receive all important platform notifications directly.
                     </div>
 
                     <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">If you did not create an account on {{app_name}}, please disregard this message or notify our support team.</p>
@@ -777,13 +801,19 @@ class MailService
             $fromName = !empty($settings['from_name']) ? $settings['from_name'] : 'FilterFunnel Platform';
             $replyTo = !empty($settings['reply_to']) ? $settings['reply_to'] : $fromEmail;
 
+            $domain = parse_url(Env::get('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'filterfunnel.in';
+            $msgId = "<" . md5(uniqid((string)time(), true)) . "@" . $domain . ">";
+
             $headers = [
+                'Date: ' . date('r'),
+                'Message-ID: ' . $msgId,
                 'MIME-Version: 1.0',
                 'Content-Type: text/html; charset=UTF-8',
                 'Content-Transfer-Encoding: 8bit',
                 'From: ' . sprintf('"%s" <%s>', addcslashes($fromName, '"'), $fromEmail),
                 'Reply-To: ' . sprintf('"%s" <%s>', addcslashes($fromName, '"'), $replyTo),
-                'X-Mailer: PHP/' . phpversion(),
+                'X-Mailer: FilterFunnel Mailer',
+                'Auto-Submitted: auto-generated',
             ];
 
             $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';

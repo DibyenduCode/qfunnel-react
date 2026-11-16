@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Mail, CheckCircle2, AlertCircle, RefreshCw, LogOut, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 
 export const EmailVerificationPage: React.FC = () => {
-  const { user, verifyOtp, resendOtp, logout, lastDevOtp, error, clearError, isPlatformAdmin } = useAuthStore();
+  const { user, verifyOtp, resendOtp, logout, error, clearError, isPlatformAdmin } = useAuthStore();
   const navigate = useNavigate();
 
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
@@ -12,7 +12,6 @@ export const EmailVerificationPage: React.FC = () => {
   const [resending, setResending] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [cooldown, setCooldown] = useState(60);
-  const [devOtp, setDevOtp] = useState<string | null>(lastDevOtp || null);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -126,12 +125,9 @@ export const EmailVerificationPage: React.FC = () => {
     setSuccessMsg('');
     setResending(true);
     try {
-      const res = await resendOtp();
+      await resendOtp();
       setCooldown(60);
       setSuccessMsg('A fresh 6-digit code has been dispatched to your email.');
-      if (res.dev_otp) {
-        setDevOtp(res.dev_otp);
-      }
     } catch {
       // Error handled in store
     } finally {
@@ -164,28 +160,15 @@ export const EmailVerificationPage: React.FC = () => {
           <span className="font-semibold text-[#131416]">{user.email}</span>. Enter the code below to access your workspace.
         </p>
 
-        {/* Development Preview Banner */}
-        {(devOtp || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) && (
-          <div className="mt-4 p-3.5 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-xs text-[#004cfd] flex items-center justify-between gap-3 shadow-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <ShieldCheck className="w-4 h-4 shrink-0 text-[#004cfd]" />
-              <span className="truncate">
-                Test Verification OTP: <strong className="font-mono text-sm tracking-wider font-bold">{devOtp || '123456'}</strong>
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                const chars = (devOtp || '123456').split('').slice(0, 6);
-                setOtpDigits(chars);
-                inputRefs.current[5]?.focus();
-              }}
-              className="px-2.5 py-1 rounded-md bg-[#004cfd] hover:bg-[#003ecc] text-white text-[11px] font-semibold transition cursor-pointer shrink-0"
-            >
-              Auto Fill
-            </button>
+        {/* Deliverability & Spam Folder Tip */}
+        <div className="mt-4 p-3.5 rounded-xl bg-white border border-[#e2e5e9] shadow-xs flex items-start gap-2.5">
+          <div className="w-5 h-5 rounded-md bg-[#eff6ff] text-[#1d5fd6] flex items-center justify-center shrink-0 mt-0.5">
+            <Mail className="w-3.5 h-3.5" />
           </div>
-        )}
+          <div className="text-[11.5px] text-[#5d5f60] leading-relaxed">
+            <strong className="text-[#131416]">Can't find the email in your inbox?</strong> Please check your <span className="font-semibold text-[#131416]">Spam or Junk</span> folder. It can take 1–2 minutes to land. If found there, mark it as <span className="font-semibold text-[#1d5fd6]">"Not Spam"</span> so future verification codes and lead alerts land directly in your Primary Inbox.
+          </div>
+        </div>
 
         {/* Card */}
         <div className="mt-5 bg-white py-8 px-6 sm:px-8 border border-[#e2e5e9] rounded-2xl shadow-xs">

@@ -94,8 +94,6 @@ class ApiSpaController
         $role = TenantContextService::getCurrentRole();
         $userTenants = TenantContextService::getUserTenants((int)$user['id']);
 
-        $isDev = in_array(strtolower((string)Env::get('APP_ENV', 'production')), ['development', 'local', 'testing'], true) || (bool)Env::get('APP_DEBUG', false);
-
         return Response::success([
             'user' => $user,
             'active_tenant' => $tenant,
@@ -104,7 +102,6 @@ class ApiSpaController
             'csrf_token' => csrf_token(),
             'requires_verification' => empty($user['email_verified_at']),
             'email_verified' => !empty($user['email_verified_at']),
-            'dev_otp' => $isDev ? ($result['otp_data']['otp'] ?? null) : null,
             'expires_in_minutes' => $result['otp_data']['expires_in_minutes'] ?? 15,
         ], "Registration successful. Please verify your email with the 6-digit code.", 201);
     }
@@ -154,11 +151,8 @@ class ApiSpaController
             ], 429);
         }
 
-        $isDev = in_array(strtolower((string)Env::get('APP_ENV', 'production')), ['development', 'local', 'testing'], true) || (bool)Env::get('APP_DEBUG', false);
-
         return Response::success([
             'expires_in_minutes' => $result['expires_in_minutes'] ?? 15,
-            'dev_otp' => $isDev ? ($result['otp'] ?? null) : null,
             'simulated' => $result['simulated'] ?? false,
         ], $result['message']);
     }
