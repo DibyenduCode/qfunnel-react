@@ -54,6 +54,11 @@ class ApiSpaController
             return Response::error($result['error'] ?? 'Invalid credentials.', 'AUTH_FAILED', null, 401);
         }
 
+        $rememberMe = (bool)$request->input('remember_me', false);
+        if ($rememberMe) {
+            Session::extendLifetime(30 * 86400); // 30 days persistent session
+        }
+
         $user = current_user();
         $tenant = TenantContextService::getActiveTenant();
         $role = TenantContextService::getCurrentRole();

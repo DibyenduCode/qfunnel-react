@@ -12,8 +12,21 @@ export const RegisterPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { register } = useAuthStore();
+  const { user, isPlatformAdmin, checkAuth, register } = useAuthStore();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (user) {
+      navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+    } else {
+      checkAuth().then((isAuthed) => {
+        if (isAuthed) {
+          const isSuper = useAuthStore.getState().isPlatformAdmin;
+          navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
+        }
+      });
+    }
+  }, [user, isPlatformAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

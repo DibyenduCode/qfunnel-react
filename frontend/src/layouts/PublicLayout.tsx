@@ -25,12 +25,18 @@ interface PublishedLegalPage {
 }
 
 export const PublicLayout: React.FC = () => {
-  const { user, isPlatformAdmin } = useAuthStore();
+  const { user, isPlatformAdmin, checkAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
   const [legalPages, setLegalPages] = useState<PublishedLegalPage[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      checkAuth().catch(() => {});
+    }
+  }, [user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -198,15 +204,20 @@ export const PublicLayout: React.FC = () => {
 
           {/* Desktop Auth Buttons & Mobile Menu Toggle */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-3">
               {user ? (
-                <Link
-                  to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"}
-                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
-                >
-                  <span>{isPlatformAdmin ? "Super Admin Console" : "Dashboard"}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-[#475467] hidden md:inline">
+                    Hi, <strong className="text-[#131416] font-semibold">{user.name?.split(' ')[0] || user.name || 'User'}</strong>
+                  </span>
+                  <Link
+                    to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"}
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
+                  >
+                    <span>{isPlatformAdmin ? "Super Admin Console" : "Go to Dashboard"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               ) : (
                 <>
                   <Link
@@ -282,14 +293,19 @@ export const PublicLayout: React.FC = () => {
             {/* Mobile Auth Buttons */}
             <div className="pt-2 border-t border-[#e2e5e9] flex flex-col gap-2">
               {user ? (
-                <Link
-                  to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
-                >
-                  <span>{isPlatformAdmin ? "Super Admin Console" : "Dashboard"}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex flex-col gap-1.5">
+                  <div className="px-1 text-xs text-[#475467]">
+                    Signed in as <strong className="text-[#131416]">{user.name || user.email}</strong>
+                  </div>
+                  <Link
+                    to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
+                  >
+                    <span>{isPlatformAdmin ? "Super Admin Console" : "Go to Dashboard"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link

@@ -4,6 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AppRoutes } from './routes/AppRoutes';
 import { TopProgressBar } from './components/TopProgressBar';
+import { useAuthStore } from './store/authStore';
+
+const AuthBootstrap: React.FC = () => {
+  const { checkAuth } = useAuthStore();
+  React.useEffect(() => {
+    checkAuth();
+  }, []);
+  return null;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +28,7 @@ export const App: React.FC = () => {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <AuthBootstrap />
           <TopProgressBar />
           <AppRoutes />
         </BrowserRouter>

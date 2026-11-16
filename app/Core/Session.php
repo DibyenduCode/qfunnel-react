@@ -37,6 +37,20 @@ class Session
         }
         self::$started = true;
 
+        // If remember_me was selected, keep refreshing the persistent cookie
+        if (!empty($_SESSION['remember_me']) && !empty($_SESSION['remember_expires']) && $_SESSION['remember_expires'] > time() && !headers_sent()) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                session_id(),
+                (int)$_SESSION['remember_expires'],
+                $params['path'] ?? '/',
+                $params['domain'] ?? '',
+                $params['secure'] ?? false,
+                $params['httponly'] ?? true
+            );
+        }
+
         // Auto-generate CSRF token if not set
         if (!isset($_SESSION['_csrf_token'])) {
             $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
@@ -50,6 +64,26 @@ class Session
             @session_regenerate_id(true);
         }
         $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    public static function extendLifetime(int $seconds = 2592000): void
+    {
+        self::start();
+        $_SESSION['remember_me'] = true;
+        $_SESSION['remember_expires'] = time() + $seconds;
+
+        if (!headers_sent() && ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                session_id(),
+                time() + $seconds,
+                $params['path'] ?? '/',
+                $params['domain'] ?? '',
+                $params['secure'] ?? false,
+                $params['httponly'] ?? true
+            );
+        }
     }
 
     public static function get(string $key, mixed $default = null): mixed

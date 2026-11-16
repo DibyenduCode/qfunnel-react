@@ -15,7 +15,7 @@ interface AuthState {
   lastDevOtp: string | null;
 
   checkAuth: () => Promise<boolean>;
-  login: (email: string, pass: string) => Promise<void>;
+  login: (email: string, pass: string, rememberMe?: boolean) => Promise<void>;
   register: (name: string, email: string, pass: string, workspace: string) => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
   resendOtp: () => Promise<{ expires_in_minutes: number; dev_otp?: string; simulated?: boolean }>;
@@ -71,10 +71,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (email, password) => {
+  login: async (email, password, rememberMe = true) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await api.post('/api/auth/login', { email, password });
+      const data = await api.post('/api/auth/login', {
+        email,
+        password,
+        remember_me: Boolean(rememberMe)
+      });
       if (data.csrf_token) {
         setCsrfToken(data.csrf_token);
       }
