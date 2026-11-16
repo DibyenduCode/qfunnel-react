@@ -9,6 +9,7 @@ demo_credentials.md
 
 # Deployment archives
 *.zip
+!production/*.zip
 cpanel_ready_deploy.zip
 
 # Frontend Dependencies & Builds
