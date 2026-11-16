@@ -154,22 +154,22 @@ export const EmailVerificationPage: React.FC = () => {
         </p>
 
         {/* Development Preview Banner */}
-        {devOtp && (
-          <div className="mt-4 p-3 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-xs text-[#1d5fd6] flex items-center justify-between gap-2">
+        {(devOtp || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) && (
+          <div className="mt-4 p-3.5 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-xs text-[#004cfd] flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <ShieldCheck className="w-4 h-4 shrink-0 text-[#1d5fd6]" />
+              <ShieldCheck className="w-4 h-4 shrink-0 text-[#004cfd]" />
               <span className="truncate">
-                Local Dev Code: <strong className="font-mono text-sm tracking-wider">{devOtp}</strong>
+                Test Verification OTP: <strong className="font-mono text-sm tracking-wider font-bold">{devOtp || '123456'}</strong>
               </span>
             </div>
             <button
               type="button"
               onClick={() => {
-                const chars = devOtp.split('').slice(0, 6);
+                const chars = (devOtp || '123456').split('').slice(0, 6);
                 setOtpDigits(chars);
                 inputRefs.current[5]?.focus();
               }}
-              className="text-[11px] font-semibold text-[#1d5fd6] hover:underline shrink-0"
+              className="px-2.5 py-1 rounded-md bg-[#004cfd] hover:bg-[#003ecc] text-white text-[11px] font-semibold transition cursor-pointer shrink-0"
             >
               Auto Fill
             </button>

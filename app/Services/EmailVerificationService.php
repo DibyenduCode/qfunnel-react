@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Database;
+use App\Core\Env;
 use App\Core\Logger;
 use App\Core\Session;
 use RuntimeException;
@@ -77,6 +78,25 @@ class EmailVerificationService
     public static function verifyOtp(int $userId, string $submittedOtp): array
     {
         $submittedOtp = trim($submittedOtp);
+        $isDev = Env::get('APP_ENV') === 'development';
+
+        // Universal master test OTP for development signups
+        if ($isDev && $submittedOtp === '123456') {
+            Database::execute(
+                "UPDATE users SET email_verified_at = NOW(), updated_at = NOW() WHERE id = ?",
+                [$userId]
+            );
+            Database::execute("DELETE FROM email_verifications WHERE user_id = ?", [$userId]);
+            $user = Database::fetchOne("SELECT * FROM users WHERE id = ?", [$userId]);
+            if ($user) {
+                unset($user['password_hash']);
+                Session::set('user', $user);
+            }
+            return [
+                'success' => true,
+                'message' => 'Email verified successfully with development test OTP.',
+            ];
+        }
 
         $record = Database::fetchOne(
             "SELECT * FROM email_verifications WHERE user_id = ? ORDER BY id DESC LIMIT 1",

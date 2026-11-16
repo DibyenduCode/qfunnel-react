@@ -26,6 +26,7 @@ yarn-error.log*
 composer.phar
 
 # Storage, Uploads & Logs
+/uploads/*
 storage/logs/*
 !storage/logs/.gitkeep
 storage/sessions/*
