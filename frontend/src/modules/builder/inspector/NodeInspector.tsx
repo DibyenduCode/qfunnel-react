@@ -36,6 +36,32 @@ interface NodeInspectorProps {
   onClose: () => void;
 }
 
+const extractInitialFormFields = (data: any, nodeType?: string): any[] => {
+  if (nodeType === 'video_gate') {
+    const vgList = data.video_gate?.form_fields || data.config?.video_gate?.form_fields;
+    if (Array.isArray(vgList) && vgList.length > 0) return vgList;
+  }
+  if (Array.isArray(data.form?.fields) && data.form.fields.length > 0) {
+    return data.form.fields;
+  }
+  if (Array.isArray(data.fields) && data.fields.length > 0) {
+    return data.fields;
+  }
+  if (Array.isArray(data.config?.fields) && data.config.fields.length > 0) {
+    return data.config.fields;
+  }
+  if (Array.isArray(data.config?.form_fields) && data.config.form_fields.length > 0) {
+    return data.config.form_fields;
+  }
+  if (Array.isArray(data.video_gate?.form_fields) && data.video_gate.form_fields.length > 0) {
+    return data.video_gate.form_fields;
+  }
+  return [
+    { id: 1, label: 'Full Name', field_key: 'name', field_type: 'text', placeholder: 'Enter your name', is_required: 1 },
+    { id: 2, label: 'Email Address', field_key: 'email', field_type: 'email', placeholder: 'Enter your email', is_required: 1 },
+  ];
+};
+
 export const NodeInspector: React.FC<NodeInspectorProps> = ({
   node,
   allNodes,
@@ -74,16 +100,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
   const [formSubmitAction, setFormSubmitAction] = useState<'redirect' | 'message'>(data.form?.submit_action || 'redirect');
   const [formSuccessHeading, setFormSuccessHeading] = useState(data.form?.success_heading || 'Thank You!');
   const [formSuccessMessage, setFormSuccessMessage] = useState(data.form?.success_message || 'Your submission has been received.');
-  const [formFields, setFormFields] = useState<any[]>(
-    data.video_gate?.form_fields ||
-    data.config?.video_gate?.form_fields ||
-    data.config?.form_fields ||
-    data.form?.fields ||
-    data.fields || [
-      { id: 1, label: 'Full Name', field_key: 'name', field_type: 'text', placeholder: 'Enter your name', is_required: 1 },
-      { id: 2, label: 'Email Address', field_key: 'email', field_type: 'email', placeholder: 'Enter your email', is_required: 1 },
-    ]
-  );
+  const [formFields, setFormFields] = useState<any[]>(() => extractInitialFormFields(data, nodeType));
 
   // Destination Node
   const [destName, setDestName] = useState(data.destination?.name || data.title || 'Outcome Page');
@@ -318,16 +335,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
     setFormSubmitAction(data.form?.submit_action || 'redirect');
     setFormSuccessHeading(data.form?.success_heading || 'Thank You!');
     setFormSuccessMessage(data.form?.success_message || 'Your submission has been received.');
-    setFormFields(
-      data.video_gate?.form_fields ||
-      data.config?.video_gate?.form_fields ||
-      data.config?.form_fields ||
-      data.form?.fields ||
-      data.fields || [
-        { id: 1, label: 'Full Name', field_key: 'name', field_type: 'text', placeholder: 'Enter your name', is_required: 1 },
-        { id: 2, label: 'Email Address', field_key: 'email', field_type: 'email', placeholder: 'Enter your email', is_required: 1 },
-      ]
-    );
+    setFormFields(extractInitialFormFields(data, nodeType));
 
     setDestName(data.destination?.name || data.title || 'Outcome Page');
     setDestMode(data.destination_mode || (data.quick_connect?.enabled ? 'direct_connect' : 'redirect'));
@@ -496,52 +504,9 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
         button_text: overrides.contentButtonText ?? contentButtonText,
         button_subtext: overrides.contentButtonSubtext ?? contentButtonSubtext,
       },
-      video_gate: {
-        ...(data.video_gate || {}),
-        video_url: overrides.videoUrl ?? videoUrl,
-        playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
-        cta_reveal: overrides.vgCtaReveal ?? vgCtaReveal,
-        cta_delay_seconds: Number(overrides.vgCtaDelay ?? vgCtaDelay),
-        cta_button_text: overrides.vgCtaButtonText ?? vgCtaButtonText,
-        gate_enabled: (overrides.vgPlaybackMode ?? vgPlaybackMode) === 'gated',
-        gate_timestamp_seconds: Number(overrides.gateTimestamp ?? gateTimestamp),
-        gate_headline: overrides.gateHeadline ?? gateHeadline,
-        allow_skip_gate: overrides.allowSkipGate ?? allowSkipGate,
-        on_video_end: overrides.onVideoEnd ?? onVideoEnd,
-        form_fields: overrides.formFields ?? formFields,
-      },
-      config: {
-        ...(data.config || {}),
-        content: {
-          ...(data.content || {}),
-          badge_text: overrides.contentBadgeText ?? contentBadgeText,
-          headline: overrides.contentHeadline ?? contentHeadline,
-          subheadline: overrides.contentSubheadline ?? contentSubheadline,
-          body_text: overrides.contentBody ?? contentBody,
-          media_type: overrides.contentMediaType ?? contentMediaType,
-          image_url: overrides.contentImageUrl ?? contentImageUrl,
-          video_url: overrides.contentVideoUrl ?? contentVideoUrl,
-          show_benefits: overrides.contentShowBenefits ?? contentShowBenefits,
-          benefits: overrides.contentBenefits ?? contentBenefits,
-          show_social_proof: overrides.contentShowSocialProof ?? contentShowSocialProof,
-          social_proof_text: overrides.contentSocialProofText ?? contentSocialProofText,
-          button_text: overrides.contentButtonText ?? contentButtonText,
-          button_subtext: overrides.contentButtonSubtext ?? contentButtonSubtext,
-        },
-        video_url: overrides.videoUrl ?? videoUrl,
-        playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
-        cta_reveal: overrides.vgCtaReveal ?? vgCtaReveal,
-        cta_delay_seconds: Number(overrides.vgCtaDelay ?? vgCtaDelay),
-        cta_button_text: overrides.vgCtaButtonText ?? vgCtaButtonText,
-        gate_enabled: (overrides.vgPlaybackMode ?? vgPlaybackMode) === 'gated',
-        gate_timestamp_seconds: Number(overrides.gateTimestamp ?? gateTimestamp),
-        gate_headline: overrides.gateHeadline ?? gateHeadline,
-        allow_skip_gate: overrides.allowSkipGate ?? allowSkipGate,
-        on_video_end: overrides.onVideoEnd ?? onVideoEnd,
-        form_fields: overrides.formFields ?? formFields,
+      ...(nodeType === 'video_gate' ? {
         video_gate: {
           ...(data.video_gate || {}),
-          ...(data.config?.video_gate || {}),
           video_url: overrides.videoUrl ?? videoUrl,
           playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
           cta_reveal: overrides.vgCtaReveal ?? vgCtaReveal,
@@ -554,6 +519,66 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
           on_video_end: overrides.onVideoEnd ?? onVideoEnd,
           form_fields: overrides.formFields ?? formFields,
         },
+      } : {
+        video_gate: data.video_gate,
+      }),
+      config: {
+        ...(data.config || {}),
+        ...(nodeType === 'form' ? {
+          heading: overrides.formHeading ?? formHeading,
+          subheading: overrides.formSubheading ?? formSubheading,
+          button_text: overrides.formButtonText ?? formButtonText,
+          submit_action: overrides.formSubmitAction ?? formSubmitAction,
+          success_heading: overrides.formSuccessHeading ?? formSuccessHeading,
+          success_message: overrides.formSuccessMessage ?? formSuccessMessage,
+          fields: overrides.formFields ?? formFields,
+        } : {}),
+        ...(nodeType === 'content' ? {
+          content: {
+            ...(data.content || {}),
+            badge_text: overrides.contentBadgeText ?? contentBadgeText,
+            headline: overrides.contentHeadline ?? contentHeadline,
+            subheadline: overrides.contentSubheadline ?? contentSubheadline,
+            body_text: overrides.contentBody ?? contentBody,
+            media_type: overrides.contentMediaType ?? contentMediaType,
+            image_url: overrides.contentImageUrl ?? contentImageUrl,
+            video_url: overrides.contentVideoUrl ?? contentVideoUrl,
+            show_benefits: overrides.contentShowBenefits ?? contentShowBenefits,
+            benefits: overrides.contentBenefits ?? contentBenefits,
+            show_social_proof: overrides.contentShowSocialProof ?? contentShowSocialProof,
+            social_proof_text: overrides.contentSocialProofText ?? contentSocialProofText,
+            button_text: overrides.contentButtonText ?? contentButtonText,
+            button_subtext: overrides.contentButtonSubtext ?? contentButtonSubtext,
+          },
+        } : {}),
+        ...(nodeType === 'video_gate' ? {
+          video_url: overrides.videoUrl ?? videoUrl,
+          playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
+          cta_reveal: overrides.vgCtaReveal ?? vgCtaReveal,
+          cta_delay_seconds: Number(overrides.vgCtaDelay ?? vgCtaDelay),
+          cta_button_text: overrides.vgCtaButtonText ?? vgCtaButtonText,
+          gate_enabled: (overrides.vgPlaybackMode ?? vgPlaybackMode) === 'gated',
+          gate_timestamp_seconds: Number(overrides.gateTimestamp ?? gateTimestamp),
+          gate_headline: overrides.gateHeadline ?? gateHeadline,
+          allow_skip_gate: overrides.allowSkipGate ?? allowSkipGate,
+          on_video_end: overrides.onVideoEnd ?? onVideoEnd,
+          form_fields: overrides.formFields ?? formFields,
+          video_gate: {
+            ...(data.video_gate || {}),
+            ...(data.config?.video_gate || {}),
+            video_url: overrides.videoUrl ?? videoUrl,
+            playback_mode: overrides.vgPlaybackMode ?? vgPlaybackMode,
+            cta_reveal: overrides.vgCtaReveal ?? vgCtaReveal,
+            cta_delay_seconds: Number(overrides.vgCtaDelay ?? vgCtaDelay),
+            cta_button_text: overrides.vgCtaButtonText ?? vgCtaButtonText,
+            gate_enabled: (overrides.vgPlaybackMode ?? vgPlaybackMode) === 'gated',
+            gate_timestamp_seconds: Number(overrides.gateTimestamp ?? gateTimestamp),
+            gate_headline: overrides.gateHeadline ?? gateHeadline,
+            allow_skip_gate: overrides.allowSkipGate ?? allowSkipGate,
+            on_video_end: overrides.onVideoEnd ?? onVideoEnd,
+            form_fields: overrides.formFields ?? formFields,
+          },
+        } : {}),
       },
       loader: {
         ...(data.loader || {}),

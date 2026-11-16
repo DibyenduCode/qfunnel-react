@@ -6,10 +6,12 @@ export const FormNode = memo(({ data, selected }: NodeProps) => {
   const form = (data.form as any) || {};
   const title = form.heading || (data.title as string) || 'Lead Capture Form';
   const subheading = form.subheading || '';
-  const fields = (form.fields as any[]) || (data.fields as any[]) || [
-    { label: 'Full Name', field_type: 'text', is_required: 1 },
-    { label: 'Email Address', field_type: 'email', is_required: 1 },
-  ];
+  const fields = (Array.isArray(form.fields) && form.fields.length > 0)
+    ? form.fields
+    : (Array.isArray(data.fields) && data.fields.length > 0 ? data.fields : [
+        { label: 'Full Name', field_type: 'text', is_required: 1 },
+        { label: 'Email Address', field_type: 'email', is_required: 1 },
+      ]);
   const submitAction = form.submit_action || 'redirect';
   const isMessage = submitAction === 'message';
 

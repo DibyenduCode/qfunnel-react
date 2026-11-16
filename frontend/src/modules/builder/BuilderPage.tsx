@@ -205,12 +205,14 @@ const BuilderInner: React.FC = () => {
             question: n.question,
             options: n.question?.options || n.options || [],
             form: n.form,
-            fields: n.form?.fields || n.fields || [],
+            fields: (Array.isArray(n.form?.fields) && n.form.fields.length > 0)
+              ? n.form.fields
+              : (Array.isArray(n.fields) && n.fields.length > 0 ? n.fields : (n.form?.fields || n.fields || [])),
             destination: n.destination || {},
             destination_mode: n.destination_mode,
             calculator: n.calculator,
             quick_connect: n.quick_connect,
-            video_gate: (() => {
+            video_gate: n.node_type === 'video_gate' ? (() => {
               const rawVg = n.video_gate || parsedConfig.video_gate || parsedConfig || {};
               const cleanVg = { ...(typeof rawVg === 'object' ? rawVg : {}) };
               delete (cleanVg as any).video_gate;
@@ -221,15 +223,15 @@ const BuilderInner: React.FC = () => {
                 45
               );
               const vgFormFields =
-                n.video_gate?.form_fields ||
-                parsedConfig.video_gate?.form_fields ||
-                parsedConfig.form_fields ||
-                n.fields ||
-                [];
+                (Array.isArray(n.video_gate?.form_fields) && n.video_gate.form_fields.length > 0)
+                  ? n.video_gate.form_fields
+                  : ((Array.isArray(parsedConfig.video_gate?.form_fields) && parsedConfig.video_gate.form_fields.length > 0)
+                    ? parsedConfig.video_gate.form_fields
+                    : (parsedConfig.form_fields || []));
               cleanVg.gate_timestamp_seconds = vgSeconds;
               cleanVg.form_fields = vgFormFields;
               return cleanVg;
-            })(),
+            })() : (n.video_gate || undefined),
             loader: parsedConfig.loader || n.loader,
             booking: parsedConfig.booking || n.booking,
             config: parsedConfig || n.config || {},
@@ -680,16 +682,25 @@ const BuilderInner: React.FC = () => {
             destination: d.destination,
             calculator: d.calculator,
             quick_connect: d.quick_connect,
-            form: d.form,
-            fields: d.fields || d.form?.fields || d.video_gate?.form_fields,
-            ...(() => {
+            form: {
+              ...(d.form || {}),
+              fields: (Array.isArray(d.form?.fields) && d.form.fields.length > 0)
+                ? d.form.fields
+                : (Array.isArray(d.fields) && d.fields.length > 0 ? d.fields : (d.form?.fields || d.fields || [])),
+            },
+            fields: (Array.isArray(d.form?.fields) && d.form.fields.length > 0)
+              ? d.form.fields
+              : (Array.isArray(d.fields) && d.fields.length > 0 ? d.fields : (d.form?.fields || d.fields || [])),
+            ...(n.type === 'video_gate' ? (() => {
               const vgClean = {
                 ...(d.config?.video_gate || {}),
                 ...(d.video_gate || {}),
               };
               delete (vgClean as any).video_gate;
               const vgSeconds = Number(d.video_gate?.gate_timestamp_seconds ?? d.config?.gate_timestamp_seconds ?? 45);
-              const vgFields = d.video_gate?.form_fields || d.config?.form_fields || d.fields || [];
+              const vgFields = (Array.isArray(d.video_gate?.form_fields) && d.video_gate.form_fields.length > 0)
+                ? d.video_gate.form_fields
+                : (d.config?.form_fields || d.fields || []);
               const vgCtaDelay = Number(d.video_gate?.cta_delay_seconds ?? d.config?.video_gate?.cta_delay_seconds ?? d.config?.cta_delay_seconds ?? 15);
               const vgCtaReveal = d.video_gate?.cta_reveal || d.config?.video_gate?.cta_reveal || d.config?.cta_reveal || 'always';
               const vgCtaBtn = d.video_gate?.cta_button_text || d.config?.video_gate?.cta_button_text || d.config?.cta_button_text || 'Continue to Next Step';
@@ -716,7 +727,10 @@ const BuilderInner: React.FC = () => {
                 video_gate: vgClean,
                 config: configClean,
               };
-            })(),
+            })() : {
+              video_gate: d.video_gate,
+              config: d.config,
+            }),
             condition: d.condition || d.config?.condition,
             content: d.content || d.config?.content,
             loader: d.loader || d.config?.loader,

@@ -151,7 +151,12 @@ class FunnelGraphService
                 if (empty($formData['button_text'])) {
                     $formData['button_text'] = 'Submit Details';
                 }
-                if (!empty($formData['fields']) && is_array($formData['fields'])) {
+                if (empty($formData['fields']) || !is_array($formData['fields'])) {
+                    $formData['fields'] = [
+                        ['id' => (int)($node['id'] * 1000 + 1), 'field_key' => 'name', 'label' => 'Full Name', 'field_type' => 'text', 'placeholder' => 'Enter your name', 'is_required' => 1],
+                        ['id' => (int)($node['id'] * 1000 + 2), 'field_key' => 'email', 'label' => 'Email Address', 'field_type' => 'email', 'placeholder' => 'Enter your email', 'is_required' => 1],
+                    ];
+                } else {
                     foreach ($formData['fields'] as $fIdx => &$fld) {
                         if (empty($fld['id'])) {
                             $fld['id'] = (int)($node['id'] * 1000 + $fIdx + 1);
@@ -160,6 +165,7 @@ class FunnelGraphService
                     unset($fld);
                 }
                 $node['form'] = $formData;
+                $node['fields'] = $formData['fields'];
             } elseif ($node['node_type'] === 'video_gate') {
                 $vg = !empty($nodeConfig['video_gate']) ? $nodeConfig['video_gate'] : $nodeConfig;
                 $vgUrl = $vg['video_url'] ?? '';
@@ -302,7 +308,17 @@ class FunnelGraphService
                     if (!isset($formPayload['subheading']) && !empty($node['description'])) {
                         $formPayload['subheading'] = $node['description'];
                     }
+                    $formFields = [];
+                    if (!empty($formPayload['fields']) && is_array($formPayload['fields'])) {
+                        $formFields = $formPayload['fields'];
+                    } elseif (!empty($node['fields']) && is_array($node['fields'])) {
+                        $formFields = $node['fields'];
+                    } elseif (!empty($configPayload['fields']) && is_array($configPayload['fields'])) {
+                        $formFields = $configPayload['fields'];
+                    }
+                    $formPayload['fields'] = $formFields;
                     $configPayload = array_merge($configPayload, $formPayload);
+                    $configPayload['fields'] = $formFields;
                 } elseif ($nodeType === 'question') {
                     if (isset($node['variable_key'])) $configPayload['variable_key'] = $node['variable_key'];
                     if (isset($node['input_type'])) $configPayload['input_type'] = $node['input_type'];
