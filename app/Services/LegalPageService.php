@@ -146,19 +146,26 @@ HTML,
             [
                 'slug' => 'about',
                 'title' => 'About LeadCollector',
-                'meta_description' => 'LeadCollector is the interactive visual quiz and real-time quote calculator platform built for modern revenue teams.',
+                'meta_description' => 'LeadCollector transforms static web forms into intelligent, interactive conversations with dynamic quotes and visual quiz funnels.',
                 'content' => <<<HTML
 <h2>1. Our Mission</h2>
-<p>LeadCollector was built to transform static, boring web forms into interactive, dynamic conversations. We empower revenue teams, marketing agencies, and clinic owners to engage prospective buyers with personalized visual quizzes and real-time quote calculators.</p>
+<p>We founded LeadCollector with a simple conviction: traditional 10-field web forms are broken. Buyers demand immediate value, transparency, and personal recommendations before handing over their contact information. We transform static web forms into intelligent, interactive conversations that convert cold visitors into qualified buyers.</p>
 
-<h2>2. Why Interactive Funnels Outperform Static Forms</h2>
-<p>Traditional static forms suffer from high drop-off rates because they offer no immediate value to visitors. Interactive branching funnels provide instant quotes, personalized guidance, and friction-free calendar scheduling, resulting in up to 3.8x higher conversion rates.</p>
+<h2>2. The Problem: Static Forms Bounce 97% of Prospective Buyers</h2>
+<p>When high-intent prospects arrive on your landing pages, presenting them with a wall of empty input boxes feels demanding and transactional. Visitors leave without knowing if your service fits their budget, timeline, or exact requirements. High cost-per-click ad traffic is wasted because forms ask for everything while delivering zero upfront value.</p>
 
-<h2>3. Enterprise-Grade Multi-Tenancy & Security</h2>
-<p>Every LeadCollector workspace operates with strict database-level tenant isolation, automated audit logging, rate limiting, and encrypted API communication. We adhere to GDPR and global privacy standards.</p>
+<h2>3. The LeadCollector Solution: Dynamic Diagnostic Journeys</h2>
+<p>LeadCollector replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations. Visitors willingly share details because they receive a transparent instant quote, tailored roadmap, and direct expert access.</p>
 
-<h2>4. Contact & Inquiries</h2>
-<p>For partnership inquiries, enterprise onboarding, or media requests, reach out to contact@leadcollector.in.</p>
+<h2>4. Architectural Pillars</h2>
+<ul>
+  <li><strong>Visual Node Canvas:</strong> Built on interactive React Flow graphs with zero-code branching, arithmetic formulas, score tallies, and live step previewing.</li>
+  <li><strong>Strict Multi-Tenancy:</strong> Complete data isolation across tenants with encrypted API credentials, granular role-based team management, and GDPR compliance.</li>
+  <li><strong>Immediate Sales Handoff:</strong> Convert prospects within 60 seconds with 1-click WhatsApp deep links, Calendly appointments, and automated webhooks.</li>
+</ul>
+
+<h2>5. Contact & Support</h2>
+<p>Have questions or need enterprise assistance? Contact our team at <a href="mailto:contact@leadcollector.in">contact@leadcollector.in</a> or visit our <a href="/support">Help Center</a>.</p>
 HTML,
                 'is_published' => 1,
             ]

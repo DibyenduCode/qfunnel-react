@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   GitFork,
@@ -11,24 +11,73 @@ import {
   Zap,
   Cpu,
   BarChart2,
-  HeartHandshake
+  HeartHandshake,
+  Clock
 } from 'lucide-react';
+import { SeoHelmet } from '../../components/SeoHelmet';
+import { api } from '../../api/client';
+
+interface AboutData {
+  id: number;
+  slug: string;
+  title: string;
+  meta_description: string;
+  content: string;
+  is_published: number;
+  updated_at: string;
+}
 
 export const AboutPage: React.FC = () => {
+  const [data, setData] = useState<AboutData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/api/public/legal-pages/about')
+      .then((res: any) => {
+        if (isMounted && res?.page) {
+          setData(res.page);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const pageTitle = data?.title || 'About LeadCollector';
+  const metaDesc = data?.meta_description || 'Transforming static forms into intelligent conversations with interactive visual funnels.';
+  const content = data?.content || '';
+
   return (
     <div className="py-12 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto space-y-16">
+      <SeoHelmet
+        title={`${pageTitle} — LeadCollector.in`}
+        description={metaDesc}
+      />
+
       {/* 1. Hero */}
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dcf1ff] border border-[#b9e6fe] text-xs font-semibold text-[#0a3a80]">
           <HeartHandshake className="w-3.5 h-3.5 text-[#1d5fd6]" />
-          <span>About LeadCollector</span>
+          <span>{pageTitle}</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#131416]">
           Transforming static forms into <span className="text-[#1d5fd6]">intelligent conversations</span>
         </h1>
         <p className="text-sm sm:text-base text-[#5d5f60] leading-relaxed">
-          We founded LeadCollector with a simple conviction: traditional 10-field web forms are broken. Buyers demand immediate value, transparency, and personal recommendations before handing over their contact information.
+          {metaDesc}
         </p>
+        {data?.updated_at && (
+          <p className="text-[11px] text-[#8c9096] flex items-center justify-center gap-1.5 pt-1">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Last revised: {new Date(data.updated_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          </p>
+        )}
       </div>
 
       {/* 2. Key Metrics Bar */}
@@ -51,34 +100,44 @@ export const AboutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. The Problem & The Solution */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-        <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#e2e5e9] space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <span className="text-xs font-bold text-[#b45309]">The Problem</span>
-            <h2 className="text-xl font-bold text-[#131416]">Static forms bounce 97% of prospective buyers</h2>
-            <p className="text-xs sm:text-sm text-[#5d5f60] leading-relaxed">
-              When high-intent prospects arrive on your landing pages, presenting them with a wall of empty input boxes feels demanding and transactional. Visitors leave without knowing if your service fits their budget, timeline, or exact requirements.
-            </p>
-          </div>
-          <div className="p-4 rounded-xl bg-[#fef3c7]/40 border border-[#fde68a] text-xs text-[#92400e]">
-            High cost-per-click ad traffic is wasted because forms ask for everything while delivering zero upfront value.
-          </div>
+      {/* 3. Story & Mission Sheet (Synchronized Live with Super Admin CMS) */}
+      {content ? (
+        <div className="bg-white border border-[#e2e5e9] rounded-2xl p-6 sm:p-10 space-y-6 text-xs sm:text-sm text-[#5d5f60] leading-relaxed shadow-xs">
+          <div
+            className="legal-content prose prose-slate max-w-none space-y-5 text-xs sm:text-sm text-[#5d5f60] leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-[#131416] [&_h2]:mt-8 [&_h2]:mb-2 [&_h2:first-child]:mt-0 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-[#131416] [&_h3]:mt-4 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:text-[#131416] [&_a]:text-[#1d5fd6] [&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         </div>
+      ) : (
+        /* Fallback layout if offline or loading */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#e2e5e9] space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <span className="text-xs font-bold text-[#b45309]">The Problem</span>
+              <h2 className="text-xl font-bold text-[#131416]">Static forms bounce 97% of prospective buyers</h2>
+              <p className="text-xs sm:text-sm text-[#5d5f60] leading-relaxed">
+                When high-intent prospects arrive on your landing pages, presenting them with a wall of empty input boxes feels demanding and transactional. Visitors leave without knowing if your service fits their budget, timeline, or exact requirements.
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-[#fef3c7]/40 border border-[#fde68a] text-xs text-[#92400e]">
+              High cost-per-click ad traffic is wasted because forms ask for everything while delivering zero upfront value.
+            </div>
+          </div>
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#dcf1ff]/30 border border-[#b9e6fe] space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <span className="text-xs font-bold text-[#1d5fd6]">The LeadCollector Solution</span>
-            <h2 className="text-xl font-bold text-[#0a3a80]">Interactive diagnostic journeys with instant value</h2>
-            <p className="text-xs sm:text-sm text-[#0a3a80]/80 leading-relaxed">
-              LeadCollector replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
-            </p>
-          </div>
-          <div className="p-4 rounded-xl bg-white border border-[#b9e6fe] text-xs text-[#0a3a80]">
-            Visitors willingly share details because they receive a transparent instant quote, tailored roadmap, and direct expert access.
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#dcf1ff]/30 border border-[#b9e6fe] space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <span className="text-xs font-bold text-[#1d5fd6]">The LeadCollector Solution</span>
+              <h2 className="text-xl font-bold text-[#0a3a80]">Interactive diagnostic journeys with instant value</h2>
+              <p className="text-xs sm:text-sm text-[#0a3a80]/80 leading-relaxed">
+                LeadCollector replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-white border border-[#b9e6fe] text-xs text-[#0a3a80]">
+              Visitors willingly share details because they receive a transparent instant quote, tailored roadmap, and direct expert access.
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 4. Core Architecture Values */}
       <div className="space-y-6">
@@ -114,7 +173,7 @@ export const AboutPage: React.FC = () => {
             </div>
             <h3 className="font-bold text-sm text-[#131416]">Immediate Sales Handoff</h3>
             <p className="text-xs text-[#5d5f60] leading-relaxed">
-              Convert prospects within 60 seconds with 1-click WhatsApp deep links, Calendly appointments, and automated webhook web hooks.
+              Convert prospects within 60 seconds with 1-click WhatsApp deep links, Calendly appointments, and automated webhooks.
             </p>
           </div>
         </div>

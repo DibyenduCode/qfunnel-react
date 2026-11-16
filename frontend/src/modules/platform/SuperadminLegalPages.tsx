@@ -43,7 +43,7 @@ export const SuperadminLegalPages: React.FC = () => {
     loadPages();
   }, []);
 
-  const loadPages = async (preferredId?: number) => {
+  const loadPages = async (preferredId?: number, preserveMessages = false) => {
     try {
       setLoading(true);
       const res = await api.get('/api/platform/legal-pages');
@@ -54,7 +54,7 @@ export const SuperadminLegalPages: React.FC = () => {
         const found = preferredId
           ? loadedPages.find((p) => p.id === preferredId)
           : loadedPages[0];
-        selectPage(found || loadedPages[0]);
+        selectPage(found || loadedPages[0], preserveMessages);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load legal pages');
@@ -63,15 +63,17 @@ export const SuperadminLegalPages: React.FC = () => {
     }
   };
 
-  const selectPage = (page: LegalPageItem) => {
+  const selectPage = (page: LegalPageItem, preserveMessages = false) => {
     setSelectedPage(page);
     setTitle(page.title);
     setSlug(page.slug);
     setMetaDescription(page.meta_description || '');
     setContent(page.content || '');
     setIsPublished(Boolean(page.is_published));
-    setMsg('');
-    setErrorMsg('');
+    if (!preserveMessages) {
+      setMsg('');
+      setErrorMsg('');
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -89,7 +91,7 @@ export const SuperadminLegalPages: React.FC = () => {
         is_published: isPublished ? 1 : 0,
       });
       setMsg(`Policy '${title}' successfully saved.`);
-      await loadPages(selectedPage.id);
+      await loadPages(selectedPage.id, true);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to save changes');
     } finally {
