@@ -2461,6 +2461,25 @@ class ApiSpaController
         }
     }
 
+    // ==========================================
+    // Public Legal & Company CMS Pages
+    // ==========================================
+
+    public function publicLegalPages(Request $request): Response
+    {
+        $pages = LegalPageService::getPublishedPages();
+        return Response::success(['pages' => $pages]);
+    }
+
+    public function publicLegalPageDetail(Request $request, string $slug): Response
+    {
+        $page = LegalPageService::getPageBySlug($slug, true);
+        if (!$page) {
+            return Response::error("Legal page not found.", "NOT_FOUND", null, 404);
+        }
+        return Response::success(['page' => $page]);
+    }
+
     public function superadminLegalPages(Request $request): Response
     {
         if (!AuthorizationService::isPlatformAdmin()) {

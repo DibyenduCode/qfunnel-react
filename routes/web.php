@@ -31,6 +31,10 @@ $router->post('/api/auth/switch-workspace', [ApiSpaController::class, 'switchWor
 // Cashfree & Webhooks
 $router->post('/api/webhook/cashfree', [ApiSpaController::class, 'cashfreeWebhook']);
 
+// Public Legal & Company CMS Pages
+$router->get('/api/public/legal-pages', [ApiSpaController::class, 'publicLegalPages']);
+$router->get('/api/public/legal-pages/{slug}', [ApiSpaController::class, 'publicLegalPageDetail']);
+
 // Public Quiz Runner API
 $router->get('/api/quiz/{slug}/manifest', [ApiSpaController::class, 'quizManifest']);
 $router->post('/api/quiz/{slug}/init', [ApiSpaController::class, 'quizInit']);

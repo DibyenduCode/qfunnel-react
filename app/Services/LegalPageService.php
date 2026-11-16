@@ -9,10 +9,176 @@ use RuntimeException;
 class LegalPageService
 {
     /**
+     * Ensure default legal and company policy documents are seeded if table is empty
+     */
+    public static function ensureDefaults(): void
+    {
+        try {
+            $countRow = Database::fetchOne("SELECT COUNT(*) as cnt FROM legal_pages");
+            $count = (int)($countRow['cnt'] ?? 0);
+            if ($count > 0) {
+                return;
+            }
+
+            self::seedDefaultPages();
+        } catch (\Throwable $e) {
+            // Silently ignore if table does not exist or connection fails
+        }
+    }
+
+    /**
+     * Seed initial production legal and company policies
+     */
+    public static function seedDefaultPages(): void
+    {
+        $defaults = [
+            [
+                'slug' => 'privacy',
+                'title' => 'Privacy Policy',
+                'meta_description' => 'Learn how LeadCollector collects, stores, and safeguards your data and user assessment submissions.',
+                'content' => <<<HTML
+<h2>1. Overview & Commitment</h2>
+<p>At LeadCollector ("we", "our", or "us", accessible via leadcollector.in), we prioritize the privacy and confidentiality of our customers, website visitors, and end-users who interact with interactive quizzes and calculators created through our software platform. This Privacy Policy details how we collect, store, isolate, and safeguard your data.</p>
+
+<h2>2. Information We Collect</h2>
+<h3>A. Workspace Customer Account Data</h3>
+<p>When you register for a LeadCollector account, we collect your name, business email address, company name, workspace subdomains, and encrypted password credentials.</p>
+<h3>B. End-User Lead Submission Data</h3>
+<p>When visitors complete an interactive branching quiz, estimate calculator, or lead form hosted via our runner, we collect the responses, answers, calculated quotes, timestamps, and optional contact details provided by the visitor.</p>
+
+<h2>3. Multi-Tenant Data Isolation & Security</h2>
+<p>LeadCollector is architected with strict multi-tenancy boundaries. Customer workspace data and lead submissions are strictly isolated by unique tenant identifiers. One workspace tenant cannot access, query, or view data belonging to another workspace.</p>
+<p><strong>Encryption Standards:</strong> All data transmitted between your visitors and LeadCollector is protected via TLS 1.3 / 256-Bit SSL encryption. Sensitive authentication secrets and webhook tokens are hashed using industry-standard algorithms.</p>
+
+<h2>4. How We Use Information</h2>
+<ul>
+  <li>To operate, maintain, and render visual branching funnels and calculations.</li>
+  <li>To deliver lead notifications to your connected integrations (Zapier, Webhooks, WhatsApp).</li>
+  <li>To calculate conversion metrics, drop-off rates, and funnel analytics.</li>
+  <li>We do not sell, rent, or monetize your customer lead data to third parties or advertising networks.</li>
+</ul>
+
+<h2>5. GDPR & Data Subject Rights</h2>
+<p>Under GDPR, CCPA, and applicable global privacy laws, you and your visitors have the right to access, rectify, export, or permanently delete personal data. You can delete lead submissions or workspaces directly from the LeadCollector dashboard or by emailing privacy@leadcollector.in.</p>
+
+<h2>6. Contact Our Privacy Officer</h2>
+<p>If you have questions regarding this Privacy Policy or our security practices, contact us at:</p>
+<p>LeadCollector Data Protection Officer<br>Email: privacy@leadcollector.in<br>Domain: leadcollector.in</p>
+HTML,
+                'is_published' => 1,
+            ],
+            [
+                'slug' => 'terms',
+                'title' => 'Terms of Service',
+                'meta_description' => 'Review the terms and conditions governing the use of the LeadCollector quiz funnels platform.',
+                'content' => <<<HTML
+<h2>1. Acceptance of Terms</h2>
+<p>By registering for an account, accessing, or using LeadCollector ("the Service", provided by LeadCollector Technologies Pvt Ltd / LeadCollector.in), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a company, organization, or other legal entity, you represent that you possess the authority to bind such entity to these terms.</p>
+
+<h2>2. Account Registration & Tenant Security</h2>
+<p>To use LeadCollector, you must provide valid credentials during account creation. You are solely responsible for safeguarding the credentials associated with your workspace and all actions taken under your account. You must notify LeadCollector immediately if you discover any unauthorized use or security compromise.</p>
+
+<h2>3. Acceptable Use Policy</h2>
+<p>You agree not to misuse the platform. Specifically, you agree that you will not use LeadCollector to:</p>
+<ul>
+  <li>Collect personal credit card numbers, national identification numbers, or HIPAA-restricted patient health data directly into unsecured form input fields without approved compliance add-ons.</li>
+  <li>Conduct phishing campaigns, fraudulent deceptive sweepstakes, or distribute malicious code.</li>
+  <li>Exceed rate limits or attempt to reverse-engineer the underlying API infrastructure and tenant isolation models.</li>
+  <li>Send unsolicited commercial bulk emails (SPAM) via webhook triggers or calendar integrations.</li>
+</ul>
+
+<h2>4. Subscription Billing, Upgrades & Cancellations</h2>
+<p>Paid subscription plans (Starter, Growth, Agency Scale) are billed in advance on a recurring monthly or annual basis via Stripe, Cashfree, PayPal, or supported regional payment processors. Upgrades take effect immediately with prorated billing. Downgrades or cancellations take effect at the end of the current paid billing cycle.</p>
+
+<h2>5. Data Ownership & Customer Intellectual Property</h2>
+<p>You retain all ownership rights, title, and interest in and to all question structures, funnel configurations, branding assets, formulas, and submission data you create or collect using LeadCollector. LeadCollector retains all rights, title, and interest in the software platform, runtime engine, visual canvas components, and documentation.</p>
+
+<h2>6. Service Level Agreement & Availability</h2>
+<p>We strive to maintain a 99.9% uptime record for the public quiz runner runtime. Scheduled maintenance windows are communicated in advance via our operational status channels.</p>
+
+<h2>7. Limitation of Liability</h2>
+<p>To the maximum extent permitted by applicable law, in no event shall LeadCollector, its affiliates, directors, or employees be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p>
+
+<h2>8. Governing Law & Contact</h2>
+<p>For questions regarding these Terms of Service, contact our legal team at legal@leadcollector.in.</p>
+HTML,
+                'is_published' => 1,
+            ],
+            [
+                'slug' => 'cookie-policy',
+                'title' => 'Cookie Policy',
+                'meta_description' => 'Understand how LeadCollector uses cookies, session identifiers, and tracking technologies.',
+                'content' => <<<HTML
+<h2>1. What Are Cookies?</h2>
+<p>Cookies are small data files stored on your device (computer, tablet, or smartphone) when you visit websites or interact with web-based applications. They are widely used to ensure websites function properly, retain user state across multiple steps, and deliver customized user experiences.</p>
+
+<h2>2. The Cookies We Use & Why</h2>
+<ul>
+  <li><strong>Essential & Security Cookies:</strong> Strictly required to maintain secure administrator sessions, protect against Cross-Site Request Forgery (CSRF), and verify authenticated tenant boundaries. These cannot be disabled.</li>
+  <li><strong>Quiz Runner State Cookies:</strong> Stores session identifiers for active quiz respondents, allowing users to navigate between branching questions and retain partial quote calculation without losing their progress.</li>
+  <li><strong>Performance & Analytics Cookies:</strong> Helps us understand how visitors interact with the marketing homepage and funnels to optimize page speed and conversion paths.</li>
+</ul>
+
+<h2>3. Managing Cookie Preferences</h2>
+<p>You can configure your browser settings to reject or delete cookies. However, please note that disabling essential cookies may impact the proper functionality of the LeadCollector quiz builder and authenticated dashboards.</p>
+HTML,
+                'is_published' => 1,
+            ],
+            [
+                'slug' => 'refund-policy',
+                'title' => 'Refund & Cancellation Policy',
+                'meta_description' => 'Review our clear cancellation terms, subscription downgrade rules, and refund policy.',
+                'content' => <<<HTML
+<h2>1. Subscription Billing & Auto-Renewal</h2>
+<p>LeadCollector subscription plans are billed on a recurring monthly or annual cycle. You may cancel your subscription at any time directly from your Workspace Billing dashboard.</p>
+
+<h2>2. 14-Day Money Back Guarantee for Annual Plans</h2>
+<p>We provide a 14-day money-back guarantee for all newly purchased annual subscription plans. If you are not completely satisfied with LeadCollector within 14 days of your initial annual upgrade, contact support for a full refund.</p>
+
+<h2>3. Monthly Subscriptions & Cancellations</h2>
+<p>Monthly subscriptions can be canceled at any time prior to the next renewal date. When canceled, your plan will remain active until the end of the paid billing period, and no further charges will occur. Partial month refunds are not issued.</p>
+
+<h2>4. How to Request a Refund</h2>
+<p>To submit a cancellation or refund inquiry, email billing@leadcollector.in with your workspace name and account email. Our finance team processes eligible refund requests within 3 to 5 business days.</p>
+HTML,
+                'is_published' => 1,
+            ],
+            [
+                'slug' => 'about',
+                'title' => 'About LeadCollector',
+                'meta_description' => 'LeadCollector is the interactive visual quiz and real-time quote calculator platform built for modern revenue teams.',
+                'content' => <<<HTML
+<h2>1. Our Mission</h2>
+<p>LeadCollector was built to transform static, boring web forms into interactive, dynamic conversations. We empower revenue teams, marketing agencies, and clinic owners to engage prospective buyers with personalized visual quizzes and real-time quote calculators.</p>
+
+<h2>2. Why Interactive Funnels Outperform Static Forms</h2>
+<p>Traditional static forms suffer from high drop-off rates because they offer no immediate value to visitors. Interactive branching funnels provide instant quotes, personalized guidance, and friction-free calendar scheduling, resulting in up to 3.8x higher conversion rates.</p>
+
+<h2>3. Enterprise-Grade Multi-Tenancy & Security</h2>
+<p>Every LeadCollector workspace operates with strict database-level tenant isolation, automated audit logging, rate limiting, and encrypted API communication. We adhere to GDPR and global privacy standards.</p>
+
+<h2>4. Contact & Inquiries</h2>
+<p>For partnership inquiries, enterprise onboarding, or media requests, reach out to contact@leadcollector.in.</p>
+HTML,
+                'is_published' => 1,
+            ]
+        ];
+
+        foreach ($defaults as $page) {
+            Database::execute(
+                "INSERT IGNORE INTO legal_pages (slug, title, meta_description, content, is_published, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+                [$page['slug'], $page['title'], $page['meta_description'], $page['content'], $page['is_published']]
+            );
+        }
+    }
+
+    /**
      * Get all legal pages for Super Admin management
      */
     public static function getAllPages(): array
     {
+        self::ensureDefaults();
         return Database::query("SELECT * FROM legal_pages ORDER BY id ASC");
     }
 
@@ -21,6 +187,7 @@ class LegalPageService
      */
     public static function getPublishedPages(): array
     {
+        self::ensureDefaults();
         return Database::query("SELECT id, slug, title, meta_description, updated_at FROM legal_pages WHERE is_published = 1 ORDER BY id ASC");
     }
 
@@ -29,13 +196,25 @@ class LegalPageService
      */
     public static function getPageBySlug(string $slug, bool $publishedOnly = true): ?array
     {
-        $sql = "SELECT * FROM legal_pages WHERE slug = ?";
+        self::ensureDefaults();
+        $cleanSlug = self::sanitizeSlug($slug);
+
+        // Support cookie aliases (cookies <-> cookie-policy)
+        $slugVariants = [$cleanSlug];
+        if ($cleanSlug === 'cookies') {
+            $slugVariants[] = 'cookie-policy';
+        } elseif ($cleanSlug === 'cookie-policy') {
+            $slugVariants[] = 'cookies';
+        }
+
+        $placeholders = implode(',', array_fill(0, count($slugVariants), '?'));
+        $sql = "SELECT * FROM legal_pages WHERE slug IN ({$placeholders})";
         if ($publishedOnly) {
             $sql .= " AND is_published = 1";
         }
         $sql .= " LIMIT 1";
 
-        return Database::fetchOne($sql, [$slug]);
+        return Database::fetchOne($sql, $slugVariants);
     }
 
     /**

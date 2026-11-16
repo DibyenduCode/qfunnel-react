@@ -13,7 +13,7 @@ interface LegalPageItem {
   updated_at: string;
 }
 
-const CORE_SLUGS = ['privacy', 'terms', 'refund-policy', 'cookie-policy'];
+const CORE_SLUGS = ['privacy', 'terms', 'refund-policy', 'cookie-policy', 'about'];
 
 export const SuperadminLegalPages: React.FC = () => {
   const [pages, setPages] = useState<LegalPageItem[]>([]);

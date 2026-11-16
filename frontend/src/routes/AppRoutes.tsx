@@ -13,6 +13,7 @@ import { SupportPage } from '../modules/company/SupportPage';
 import { PrivacyPage } from '../modules/legal/PrivacyPage';
 import { TermsPage } from '../modules/legal/TermsPage';
 import { CookiePolicyPage } from '../modules/legal/CookiePolicyPage';
+import { DynamicLegalPage } from '../modules/legal/DynamicLegalPage';
 
 import { LoginPage } from '../modules/auth/LoginPage';
 import { RegisterPage } from '../modules/auth/RegisterPage';
@@ -63,6 +64,10 @@ export const AppRoutes: React.FC = () => {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/cookies" element={<CookiePolicyPage />} />
+        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+        <Route path="/refund-policy" element={<DynamicLegalPage defaultSlug="refund-policy" />} />
+        <Route path="/legal/:slug" element={<DynamicLegalPage />} />
+        <Route path="/pages/:slug" element={<DynamicLegalPage />} />
       </Route>
 
       {/* Public Visitor Quiz Runner */}

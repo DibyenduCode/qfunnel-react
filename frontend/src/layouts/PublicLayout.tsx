@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BrandLogo } from '../components/BrandLogo';
+import { api } from '../api/client';
 import {
   GitFork,
   ArrowRight,
@@ -16,12 +17,44 @@ import {
   X
 } from 'lucide-react';
 
+interface PublishedLegalPage {
+  id: number;
+  slug: string;
+  title: string;
+  meta_description?: string;
+}
+
 export const PublicLayout: React.FC = () => {
   const { user, isPlatformAdmin } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
+  const [legalPages, setLegalPages] = useState<PublishedLegalPage[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/api/public/legal-pages')
+      .then((res: any) => {
+        if (isMounted && res?.pages && Array.isArray(res.pages)) {
+          setLegalPages(res.pages);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getPageUrl = (slug: string) => {
+    if (slug === 'about') return '/about';
+    if (slug === 'terms') return '/terms';
+    if (slug === 'privacy') return '/privacy';
+    if (slug === 'cookie-policy' || slug === 'cookies') return '/cookies';
+    if (slug === 'refund-policy') return '/refund-policy';
+    return `/legal/${slug}`;
+  };
 
   // Scroll to section helper with retry logic for cross-page navigation
   const scrollToSection = (sectionId: string) => {
@@ -379,15 +412,29 @@ export const PublicLayout: React.FC = () => {
               </ul>
             </div>
 
-            {/* Col 5: Company, Support & Legal */}
+            {/* Col 5: Company, Support & Legal (Dynamically populated from Super Admin Legal CMS) */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#131416]">Company & Legal</h4>
               <ul className="space-y-2 text-xs">
                 <li><Link to="/about" className="hover:text-[#1d5fd6] transition">About LeadCollector</Link></li>
                 <li><Link to="/support" className="hover:text-[#1d5fd6] transition">Help Center & Support</Link></li>
-                <li><Link to="/privacy" className="hover:text-[#1d5fd6] transition">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="hover:text-[#1d5fd6] transition">Terms of Service</Link></li>
-                <li><Link to="/cookies" className="hover:text-[#1d5fd6] transition">Cookie Policy</Link></li>
+                {legalPages.length > 0 ? (
+                  legalPages
+                    .filter((p) => p.slug !== 'about')
+                    .map((p) => (
+                      <li key={p.id}>
+                        <Link to={getPageUrl(p.slug)} className="hover:text-[#1d5fd6] transition">
+                          {p.title}
+                        </Link>
+                      </li>
+                    ))
+                ) : (
+                  <>
+                    <li><Link to="/privacy" className="hover:text-[#1d5fd6] transition">Privacy Policy</Link></li>
+                    <li><Link to="/terms" className="hover:text-[#1d5fd6] transition">Terms of Service</Link></li>
+                    <li><Link to="/cookies" className="hover:text-[#1d5fd6] transition">Cookie Policy</Link></li>
+                  </>
+                )}
               </ul>
             </div>
           </div>
@@ -401,10 +448,18 @@ export const PublicLayout: React.FC = () => {
               <span>&copy; {new Date().getFullYear()} LeadCollector.in. All rights reserved.</span>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex flex-wrap items-center gap-5">
               <Link to="/privacy" className="hover:text-[#1d5fd6]">Privacy</Link>
               <Link to="/terms" className="hover:text-[#1d5fd6]">Terms</Link>
               <Link to="/cookies" className="hover:text-[#1d5fd6]">Cookies</Link>
+              {legalPages
+                .filter((p) => !['privacy', 'terms', 'cookies', 'cookie-policy', 'about'].includes(p.slug))
+                .slice(0, 4)
+                .map((p) => (
+                  <Link key={p.id} to={getPageUrl(p.slug)} className="hover:text-[#1d5fd6]">
+                    {p.title}
+                  </Link>
+                ))}
               <Link to="/support" className="hover:text-[#1d5fd6]">Contact</Link>
             </div>
           </div>
