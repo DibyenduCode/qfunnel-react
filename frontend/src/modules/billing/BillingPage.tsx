@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, resolveMediaUrl } from '../../api/client';
-import { CreditCard, Check, Sparkles, Shield, ArrowUpRight, Loader2, QrCode, Landmark, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CreditCard, Check, Sparkles, Shield, ArrowUpRight, Loader2, QrCode, Landmark, CheckCircle2, AlertTriangle, Lock } from 'lucide-react';
 
 const loadCashfreeSdk = (): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -87,6 +87,15 @@ export const BillingPage: React.FC = () => {
 
   const handleUpgrade = async (plan: any) => {
     const planId = plan.id;
+    const planPrice = Number(plan.price || 0);
+    const currentPlan = (billingData?.plans || []).find((pl: any) => pl.id === billingData?.subscription?.plan_id);
+    const currentPlanPrice = Number(currentPlan?.price ?? 0);
+
+    if (currentPlanPrice > 0 && planPrice < currentPlanPrice) {
+      setErr("Downgrading to a lower tier plan is not permitted. You can only upgrade to a higher tier plan.");
+      return;
+    }
+
     try {
       setUpgradingPlanId(planId);
       setMsg('');
@@ -311,11 +320,15 @@ export const BillingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {plans
             .filter((p: any) => selectedCycle === 'all' || (p.billing_interval || 'monthly') === selectedCycle)
             .map((p: any) => {
+            const currentPlan = plans.find((pl: any) => pl.id === currentPlanId);
+            const currentPlanPrice = Number(currentPlan?.price ?? 0);
             const isCurrent = p.id === currentPlanId;
+            const planPrice = Number(p.price || 0);
+            const isDowngrade = !isCurrent && currentPlanPrice > 0 && planPrice < currentPlanPrice;
             const limits = typeof p.limits_json === 'string' ? JSON.parse(p.limits_json || '{}') : (p.limits_json || {});
             const feats = typeof p.features_json === 'string' ? JSON.parse(p.features_json || '{}') : (p.features_json || {});
             const isPro = ['pro', 'enterprise'].includes(p.slug);
@@ -395,16 +408,30 @@ export const BillingPage: React.FC = () => {
                   {isCurrent ? (
                     <button
                       disabled
-                      className="w-full py-2 rounded-[6px] border border-[#e8eaec] bg-[#f4f6f8] text-xs font-medium text-[#5d5f60] cursor-default"
+                      className="w-full py-2.5 rounded-xl border border-[#e8eaec] bg-[#f4f6f8] text-xs font-semibold text-[#5d5f60] cursor-not-allowed"
                     >
                       Current Plan
                     </button>
+                  ) : isDowngrade ? (
+                    <div className="space-y-1.5">
+                      <button
+                        disabled
+                        title="Downgrading to a lower plan tier is not permitted. You can only upgrade to a higher tier plan."
+                        className="w-full py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs font-semibold text-[#8c919a] cursor-not-allowed flex items-center justify-center gap-1.5"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Downgrade Not Available</span>
+                      </button>
+                      <p className="text-[10px] text-center text-[#8c919a]">
+                        You can only upgrade to a higher tier plan
+                      </p>
+                    </div>
                   ) : (
                     <div className="space-y-1.5">
                       <button
                         onClick={() => handleUpgrade(p)}
                         disabled={upgradingPlanId !== null}
-                        className="w-full py-2 rounded-xl bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+                        className="w-full py-2.5 rounded-xl bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
                       >
                         {upgradingPlanId === p.id ? (
                           <>
@@ -413,9 +440,11 @@ export const BillingPage: React.FC = () => {
                           </>
                         ) : (
                           <span>
-                            {Number(p.price) > 0 && billingData?.gateways?.cashfree?.enabled
+                            {p.billing_interval === 'lifetime'
+                              ? `Get Lifetime Access • ₹${Number(p.price).toLocaleString('en-IN')}`
+                              : Number(p.price) > 0 && billingData?.gateways?.cashfree?.enabled
                               ? `Pay via Cashfree • ₹${Number(p.price).toLocaleString('en-IN')}`
-                              : `Switch to ${p.name}`}
+                              : `Upgrade to ${p.name}`}
                           </span>
                         )}
                       </button>

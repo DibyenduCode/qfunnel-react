@@ -2525,6 +2525,27 @@ class ApiSpaController
     }
 
     // ==========================================
+    // Public Pricing Plans API
+    // ==========================================
+
+    public function publicPlans(Request $request): Response
+    {
+        $plans = Database::query(
+            "SELECT id, name, slug, description, price, billing_interval, limits_json, features_json, is_active, is_visible 
+             FROM plans 
+             WHERE is_active = 1 AND is_visible = 1 
+             ORDER BY price ASC, id ASC"
+        );
+
+        $featureCatalog = UsageLimitService::getFeatureCatalog();
+
+        return Response::success([
+            'plans' => $plans,
+            'feature_catalog' => $featureCatalog,
+        ]);
+    }
+
+    // ==========================================
     // Public Legal & Company CMS Pages
     // ==========================================
 

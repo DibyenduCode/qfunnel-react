@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { SeoHelmet } from '../../components/SeoHelmet';
+import { api } from '../../api/client';
 import {
   GitFork,
   Calculator,
@@ -33,12 +34,102 @@ import {
   Stethoscope,
   Hammer,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Lock,
+  Tag,
+  Crown
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const { user } = useAuthStore();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+
+  // Dynamic Plans from Database (Synchronized with Admin Visibility & Lifetime Deal)
+  const [publicPlans, setPublicPlans] = useState<any[]>([]);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [selectedCycleTab, setSelectedCycleTab] = useState<'all' | 'monthly' | 'lifetime'>('all');
+
+  useEffect(() => {
+    let active = true;
+    api.get('/api/public/plans')
+      .then((res: any) => {
+        if (active && res?.plans && Array.isArray(res.plans)) {
+          setPublicPlans(res.plans);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load public plans:', err);
+      })
+      .finally(() => {
+        if (active) setLoadingPlans(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const fallbackPlans = [
+    {
+      id: 3,
+      name: 'Free',
+      slug: 'free',
+      description: 'Essential single-funnel plan for testing the platform',
+      price: '0.00',
+      billing_interval: 'monthly',
+      limits_json: '{"max_funnels":1,"max_submissions_per_month":100,"max_team_members":1}',
+      features_json: '{"white_label":false,"calculator_mode":false,"webhooks":false,"csv_export":false,"api_access":false,"funnel_cloning":false}',
+      is_active: 1,
+      is_visible: 1
+    },
+    {
+      id: 1,
+      name: 'Starter',
+      slug: 'starter',
+      description: 'Ideal for emerging creators and growing lead funnels',
+      price: '749.00',
+      billing_interval: 'monthly',
+      limits_json: '{"max_funnels":5,"max_submissions_per_month":1000,"max_team_members":3}',
+      features_json: '{"white_label":false,"calculator_mode":false,"webhooks":false,"csv_export":true,"api_access":false,"funnel_cloning":true}',
+      is_active: 1,
+      is_visible: 1
+    },
+    {
+      id: 4,
+      name: 'Standard',
+      slug: 'standard',
+      description: 'Robust multi-funnel plan for scaling marketing operations',
+      price: '999.00',
+      billing_interval: 'monthly',
+      limits_json: '{"max_funnels":10,"max_submissions_per_month":5000,"max_team_members":10}',
+      features_json: '{"white_label":false,"calculator_mode":true,"webhooks":true,"csv_export":true,"api_access":false,"funnel_cloning":true}',
+      is_active: 1,
+      is_visible: 1
+    },
+    {
+      id: 2,
+      name: 'Pro',
+      slug: 'pro',
+      description: 'Unlimited funnels and submissions for high-velocity teams',
+      price: '1499.00',
+      billing_interval: 'monthly',
+      limits_json: '{"max_funnels":-1,"max_submissions_per_month":-1,"max_team_members":-1}',
+      features_json: '{"white_label":true,"calculator_mode":true,"webhooks":true,"csv_export":true,"api_access":true,"funnel_cloning":true}',
+      is_active: 1,
+      is_visible: 1
+    },
+    {
+      id: 11,
+      name: 'Lifetime Pro Deal',
+      slug: 'lifetime-pro-deal',
+      description: 'One-time payment lifetime access to all Pro capabilities',
+      price: '4999.00',
+      billing_interval: 'lifetime',
+      limits_json: '{"max_funnels":-1,"max_submissions_per_month":-1,"max_team_members":10}',
+      features_json: '{"white_label":true,"calculator_mode":true,"webhooks":true,"csv_export":true,"api_access":true,"funnel_cloning":true}',
+      is_active: 1,
+      is_visible: 1
+    }
+  ];
 
   // Interactive Live Calculator Playground State
   const [demoTier, setDemoTier] = useState<'standard' | 'premium' | 'enterprise'>('premium');
@@ -621,8 +712,8 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 7. Transparent SaaS Pricing Matrix */}
-      <section id="pricing" className="scroll-mt-20 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
+      {/* 7. Transparent SaaS Pricing Matrix (Dynamic Database Plans & Lifetime Deals) */}
+      <section id="pricing" className="scroll-mt-20 px-4 sm:px-8 max-w-7xl mx-auto space-y-12">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <span className="text-xs font-bold text-[#1d5fd6]">Transparent Plans</span>
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-[#131416]">
@@ -632,174 +723,222 @@ export const HomePage: React.FC = () => {
             Every plan includes visual node editing, dynamic quote formulas, and webhook endpoints.
           </p>
 
-          {/* Monthly / Annual Toggle */}
-          <div className="pt-2 flex items-center justify-center gap-3">
-            <span className={`text-xs font-semibold ${billingCycle === 'monthly' ? 'text-[#131416]' : 'text-[#5d5f60]'}`}>
-              Monthly
-            </span>
+          {/* Cycle / Plan Filter Tabs */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"
-              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
-              className={`w-12 h-6 flex items-center rounded-full p-1 transition cursor-pointer ${
-                billingCycle === 'annual' ? 'bg-[#1d5fd6]' : 'bg-[#e2e5e9]'
+              onClick={() => setSelectedCycleTab('all')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                selectedCycleTab === 'all'
+                  ? 'bg-[#131416] text-white shadow-xs'
+                  : 'bg-[#f4f6f8] text-[#5d5f60] hover:text-[#131416] hover:bg-[#e8eaec]'
               }`}
             >
-              <div
-                className={`bg-white w-4 h-4 rounded-full shadow-xs transform transition ${
-                  billingCycle === 'annual' ? 'translate-x-6' : 'translate-x-0'
-                }`}
-              />
+              All Plans ({((publicPlans.length > 0 ? publicPlans : fallbackPlans)).length})
             </button>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-xs font-semibold ${billingCycle === 'annual' ? 'text-[#131416]' : 'text-[#5d5f60]'}`}>
-                Annual
-              </span>
-              <span className="text-[10px] font-bold text-[#2f7a45] bg-[#dcfae5] px-2 py-0.5 rounded-full border border-[#bbf7d0]">
-                Save 20%
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedCycleTab('monthly')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                selectedCycleTab === 'monthly'
+                  ? 'bg-[#1d5fd6] text-white shadow-xs'
+                  : 'bg-[#f4f6f8] text-[#5d5f60] hover:text-[#131416] hover:bg-[#e8eaec]'
+              }`}
+            >
+              Monthly Subscriptions
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCycleTab('lifetime')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                selectedCycleTab === 'lifetime'
+                  ? 'bg-[#d97706] text-white shadow-xs'
+                  : 'bg-[#fef3c7] text-[#92400e] border border-[#fde68a] hover:bg-[#fde68a]'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              <span>Lifetime Deals</span>
+            </button>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-          {/* Starter Plan */}
-          <div className="bg-white border border-[#e2e5e9] rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-[#131416]">Starter</h3>
-                <p className="text-xs text-[#5d5f60] mt-1">Ideal for solopreneurs launching their first quiz.</p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-3xl sm:text-4xl font-extrabold text-[#131416]">
-                  {billingCycle === 'monthly' ? '₹749' : '₹599'}
+        {/* Dynamic Pricing Cards Grid */}
+        {loadingPlans ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 items-stretch">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="bg-white border border-[#e2e5e9] rounded-2xl p-6 space-y-4 animate-pulse">
+                <div className="h-4 w-24 bg-[#e2e5e9] rounded" />
+                <div className="h-8 w-32 bg-[#e2e5e9] rounded" />
+                <div className="space-y-2 pt-4">
+                  <div className="h-3 w-full bg-[#e2e5e9] rounded" />
+                  <div className="h-3 w-3/4 bg-[#e2e5e9] rounded" />
+                  <div className="h-3 w-5/6 bg-[#e2e5e9] rounded" />
                 </div>
-                <span className="text-xs text-[#5d5f60]">per month, billed {billingCycle}</span>
               </div>
-
-              <ul className="space-y-2.5 text-xs text-[#5d5f60] pt-4 border-t border-[#edf0f3]">
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Up to 3 Active Funnels</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>500 Leads / month</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Real-Time Formula Calculator</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Standard Webhook Dispatch</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              to="/register"
-              className="w-full py-2.5 rounded-xl border border-[#e2e5e9] bg-white text-xs font-semibold text-[#131416] text-center hover:bg-[#f4f6f8] transition"
-            >
-              Get Started Free
-            </Link>
+            ))}
           </div>
+        ) : (
+          <div className={`grid grid-cols-1 ${
+            (publicPlans.length > 0 ? publicPlans : fallbackPlans).filter((p) => {
+              if (selectedCycleTab === 'all') return true;
+              if (selectedCycleTab === 'lifetime') return p.billing_interval === 'lifetime';
+              if (selectedCycleTab === 'monthly') return p.billing_interval === 'monthly' || p.billing_interval === 'yearly';
+              return true;
+            }).length >= 4
+              ? 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+              : (publicPlans.length > 0 ? publicPlans : fallbackPlans).filter((p) => {
+                  if (selectedCycleTab === 'all') return true;
+                  if (selectedCycleTab === 'lifetime') return p.billing_interval === 'lifetime';
+                  if (selectedCycleTab === 'monthly') return p.billing_interval === 'monthly' || p.billing_interval === 'yearly';
+                  return true;
+                }).length === 3
+              ? 'md:grid-cols-3'
+              : 'md:grid-cols-2'
+          } gap-5 items-stretch`}>
+            {(publicPlans.length > 0 ? publicPlans : fallbackPlans)
+              .filter((p) => {
+                if (selectedCycleTab === 'all') return true;
+                if (selectedCycleTab === 'lifetime') return p.billing_interval === 'lifetime';
+                if (selectedCycleTab === 'monthly') return p.billing_interval === 'monthly' || p.billing_interval === 'yearly';
+                return true;
+              })
+              .map((p) => {
+                const limits = typeof p.limits_json === 'string' ? JSON.parse(p.limits_json || '{}') : (p.limits_json || {});
+                const feats = typeof p.features_json === 'string' ? JSON.parse(p.features_json || '{}') : (p.features_json || {});
+                const isLifetime = p.billing_interval === 'lifetime';
+                const isFree = Number(p.price) === 0;
+                const isPro = p.slug === 'pro';
 
-          {/* Growth Plan (Highlighted) */}
-          <div className="bg-[#dcf1ff]/30 border-2 border-[#1d5fd6] rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6 relative shadow-xs">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#1d5fd6] text-white text-[10px] font-bold">
-              Most Popular
-            </div>
+                const premiumFeatures = [
+                  { key: 'white_label', label: '100% White-Label (No Badge)' },
+                  { key: 'calculator_mode', label: 'Formula & Quote Engine' },
+                  { key: 'webhooks', label: 'HTTP Webhooks & Zapier' },
+                  { key: 'csv_export', label: '1-Click CSV Lead Export' },
+                  { key: 'api_access', label: 'Developer REST API Keys' },
+                  { key: 'funnel_cloning', label: '1-Click Funnel Clone' },
+                ];
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-[#0a3a80]">Growth</h3>
-                <p className="text-xs text-[#0a3a80]/80 mt-1">Built for scaling clinics and marketing agencies.</p>
-              </div>
+                return (
+                  <div
+                    key={p.id}
+                    className={`rounded-2xl p-6 flex flex-col justify-between transition-all duration-200 relative ${
+                      isLifetime
+                        ? 'bg-gradient-to-b from-[#fffbeb] to-white border-2 border-[#f59e0b] shadow-xs'
+                        : isPro
+                        ? 'bg-[#dcf1ff]/25 border-2 border-[#1d5fd6] shadow-xs'
+                        : 'bg-white border border-[#e2e5e9] hover:border-[#1d5fd6]/40 hover:shadow-xs'
+                    }`}
+                  >
+                    {/* Top Badges */}
+                    {isLifetime && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#d97706] text-white text-[10px] font-bold tracking-wide flex items-center gap-1 shadow-xs whitespace-nowrap">
+                        <Crown className="w-3 h-3" />
+                        <span>Lifetime Deal</span>
+                      </div>
+                    )}
+                    {isPro && !isLifetime && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#1d5fd6] text-white text-[10px] font-bold tracking-wide shadow-xs whitespace-nowrap">
+                        Most Popular
+                      </div>
+                    )}
+                    {isFree && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#dcfae5] text-[#166534] border border-[#bbf7d0] text-[10px] font-bold tracking-wide shadow-xs whitespace-nowrap">
+                        Free Forever
+                      </div>
+                    )}
 
-              <div className="space-y-1">
-                <div className="text-3xl sm:text-4xl font-extrabold text-[#131416]">
-                  {billingCycle === 'monthly' ? '₹999' : '₹799'}
-                </div>
-                <span className="text-xs text-[#5d5f60]">per month, billed {billingCycle}</span>
-              </div>
+                    <div className="space-y-4">
+                      <div className="pt-1">
+                        <h3 className={`text-base font-bold ${
+                          isLifetime ? 'text-[#92400e]' : isPro ? 'text-[#0a3a80]' : 'text-[#131416]'
+                        }`}>
+                          {p.name}
+                        </h3>
+                        <p className="text-xs text-[#5d5f60] mt-1 min-h-[32px] line-clamp-2">
+                          {p.description}
+                        </p>
+                      </div>
 
-              <ul className="space-y-2.5 text-xs text-[#131416] pt-4 border-t border-[#b9e6fe]">
-                <li className="flex items-center gap-2 font-medium">
-                  <Check className="w-3.5 h-3.5 text-[#1d5fd6]" />
-                  <span>15 Active Funnels</span>
-                </li>
-                <li className="flex items-center gap-2 font-medium">
-                  <Check className="w-3.5 h-3.5 text-[#1d5fd6]" />
-                  <span>5,000 Leads / month</span>
-                </li>
-                <li className="flex items-center gap-2 font-medium">
-                  <Check className="w-3.5 h-3.5 text-[#1d5fd6]" />
-                  <span>1-Click WhatsApp Direct Routing</span>
-                </li>
-                <li className="flex items-center gap-2 font-medium">
-                  <Check className="w-3.5 h-3.5 text-[#1d5fd6]" />
-                  <span>Custom Branding & Clean Links</span>
-                </li>
-                <li className="flex items-center gap-2 font-medium">
-                  <Check className="w-3.5 h-3.5 text-[#1d5fd6]" />
-                  <span>Funnel Drop-Off Analytics</span>
-                </li>
-              </ul>
-            </div>
+                      <div className="space-y-1">
+                        <div className="text-3xl font-extrabold text-[#131416] tracking-tight">
+                          ₹{Number(p.price).toLocaleString('en-IN')}
+                        </div>
+                        <span className="text-xs text-[#5d5f60] block">
+                          {isFree
+                            ? 'forever free, no card needed'
+                            : isLifetime
+                            ? 'one-time payment · lifetime access'
+                            : 'per month, billed monthly'}
+                        </span>
+                      </div>
 
-            <Link
-              to="/register"
-              className="w-full py-2.5 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold text-center hover:bg-[#1853bf] transition shadow-xs"
-            >
-              Start 14-Day Free Trial
-            </Link>
+                      {/* Limits and Feature Highlights */}
+                      <ul className="space-y-2 text-xs text-[#131416] pt-4 border-t border-[#edf0f3]">
+                        <li className="flex items-center gap-2">
+                          <Check className={`w-3.5 h-3.5 shrink-0 ${isLifetime ? 'text-[#d97706]' : isPro ? 'text-[#1d5fd6]' : 'text-[#2f7a45]'}`} />
+                          <span>{Number(limits.max_funnels || 0) <= 0 ? 'Unlimited Active Funnels' : `${limits.max_funnels} Active Funnel${Number(limits.max_funnels) > 1 ? 's' : ''}`}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className={`w-3.5 h-3.5 shrink-0 ${isLifetime ? 'text-[#d97706]' : isPro ? 'text-[#1d5fd6]' : 'text-[#2f7a45]'}`} />
+                          <span>{Number(limits.max_submissions_per_month || 0) <= 0 ? 'Unlimited Leads / mo' : `${Number(limits.max_submissions_per_month).toLocaleString()} Leads / mo`}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className={`w-3.5 h-3.5 shrink-0 ${isLifetime ? 'text-[#d97706]' : isPro ? 'text-[#1d5fd6]' : 'text-[#2f7a45]'}`} />
+                          <span>{Number(limits.max_team_members || 0) <= 0 ? 'Unlimited Team Seats' : `${limits.max_team_members} Team Member${Number(limits.max_team_members) > 1 ? 's' : ''}`}</span>
+                        </li>
+
+                        {premiumFeatures.map(({ key, label }) => {
+                          const enabled = Boolean(feats[key]) || isPro || (isLifetime && ['white_label', 'calculator_mode', 'csv_export', 'funnel_cloning'].includes(key));
+                          if (!enabled) return null;
+                          return (
+                            <li key={key} className="flex items-center gap-2">
+                              <Check className={`w-3.5 h-3.5 shrink-0 ${isLifetime ? 'text-[#d97706]' : 'text-[#1d5fd6]'}`} />
+                              <span className="font-medium">{label}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+
+                    {/* Call-to-Action Link */}
+                    <div className="pt-6">
+                      {isFree ? (
+                        <Link
+                          to={user ? "/admin/dashboard" : "/register"}
+                          className="w-full py-2.5 rounded-xl border border-[#e2e5e9] bg-white text-xs font-semibold text-[#131416] text-center hover:bg-[#f4f6f8] transition block shadow-xs"
+                        >
+                          {user ? "Go to Dashboard" : "Get Started Free"}
+                        </Link>
+                      ) : isLifetime ? (
+                        <Link
+                          to={user ? "/admin/billing" : "/register"}
+                          className="w-full py-2.5 rounded-xl bg-[#d97706] hover:bg-[#b45309] text-white text-xs font-semibold text-center transition shadow-xs flex items-center justify-center gap-1.5"
+                        >
+                          <span>Get Lifetime Access</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : isPro ? (
+                        <Link
+                          to={user ? "/admin/billing" : "/register"}
+                          className="w-full py-2.5 rounded-xl bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-semibold text-center transition shadow-xs flex items-center justify-center gap-1.5"
+                        >
+                          <span>Start 14-Day Free Trial</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : (
+                        <Link
+                          to={user ? "/admin/billing" : "/register"}
+                          className="w-full py-2.5 rounded-xl border border-[#e2e5e9] bg-white text-xs font-semibold text-[#131416] text-center hover:bg-[#f4f6f8] transition block shadow-xs"
+                        >
+                          {user ? `Upgrade to ${p.name}` : `Choose ${p.name}`}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
           </div>
-
-          {/* Agency Scale Plan */}
-          <div className="bg-white border border-[#e2e5e9] rounded-2xl p-6 sm:p-8 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-[#131416]">Agency Scale</h3>
-                <p className="text-xs text-[#5d5f60] mt-1">For high-volume operations and agencies managing clients.</p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-3xl sm:text-4xl font-extrabold text-[#131416]">
-                  {billingCycle === 'monthly' ? '₹1,499' : '₹1,199'}
-                </div>
-                <span className="text-xs text-[#5d5f60]">per month, billed {billingCycle}</span>
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-[#5d5f60] pt-4 border-t border-[#edf0f3]">
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Unlimited Active Funnels</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Unlimited Leads</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Multi-User Team Roles & Permissions</span>
-                </li>
-                <li className="flex items-center gap-2 text-[#131416]">
-                  <Check className="w-3.5 h-3.5 text-[#2f7a45]" />
-                  <span>Dedicated Priority Slack Support</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              to="/register"
-              className="w-full py-2.5 rounded-xl border border-[#e2e5e9] bg-white text-xs font-semibold text-[#131416] text-center hover:bg-[#f4f6f8] transition"
-            >
-              Start Agency Scale
-            </Link>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* 8. Interactive FAQ Accordion */}

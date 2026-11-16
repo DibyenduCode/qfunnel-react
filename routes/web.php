@@ -39,6 +39,9 @@ $router->get('/api/public/legal-pages/{slug}', [ApiSpaController::class, 'public
 $router->get('/api/public/support-channels', [ApiSpaController::class, 'publicSupportChannels']);
 $router->post('/api/public/support-tickets', [ApiSpaController::class, 'publicSubmitSupportTicket']);
 
+// Public Pricing Plans API
+$router->get('/api/public/plans', [ApiSpaController::class, 'publicPlans']);
+
 // Public Quiz Runner API
 $router->get('/api/quiz/{slug}/manifest', [ApiSpaController::class, 'quizManifest']);
 $router->post('/api/quiz/{slug}/init', [ApiSpaController::class, 'quizInit']);
