@@ -18,12 +18,21 @@ export const LoginPage: React.FC = () => {
   // If already authenticated, redirect straight to the appropriate dashboard
   useEffect(() => {
     if (user) {
-      navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+      if (!user.email_verified_at) {
+        navigate('/verify-email', { replace: true });
+      } else {
+        navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+      }
     } else {
       checkAuth().then((isAuthed) => {
         if (isAuthed) {
+          const u = useAuthStore.getState().user;
           const isSuper = useAuthStore.getState().isPlatformAdmin;
-          navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
+          if (u && !u.email_verified_at) {
+            navigate('/verify-email', { replace: true });
+          } else {
+            navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
+          }
         }
       });
     }
@@ -36,8 +45,11 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login(email, password, rememberMe);
+      const u = useAuthStore.getState().user;
       const isSuper = useAuthStore.getState().isPlatformAdmin;
-      if (isSuper) {
+      if (u && !u.email_verified_at) {
+        navigate('/verify-email');
+      } else if (isSuper) {
         navigate('/admin/platform');
       } else {
         navigate('/admin/dashboard');

@@ -217,7 +217,9 @@ class CashfreeService
         $interval = (string)($plan['billing_interval'] ?? ($plan['billing_cycle'] ?? 'monthly'));
 
         $periodStart = date('Y-m-d');
-        if ($interval === 'yearly') {
+        if ($interval === 'lifetime') {
+            $periodEnd = '2099-12-31';
+        } elseif ($interval === 'yearly') {
             $periodEnd = date('Y-m-d', strtotime('+1 year'));
         } elseif ($interval === 'semi_annual') {
             $periodEnd = date('Y-m-d', strtotime('+6 months'));

@@ -187,7 +187,7 @@ export interface Plan {
   name: string;
   slug: string;
   price: number | string;
-  billing_interval: 'monthly' | 'quarterly' | 'semi_annual' | 'yearly';
+  billing_interval: 'monthly' | 'quarterly' | 'semi_annual' | 'yearly' | 'lifetime';
   description?: string;
   limits_json: string | PlanLimits;
   features_json: string | PlanFeatures;

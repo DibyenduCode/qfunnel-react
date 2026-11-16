@@ -1142,6 +1142,7 @@ export const SuperadminCustomers: React.FC = () => {
                     <option value="quarterly">3 Months (Quarterly)</option>
                     <option value="semi_annual">6 Months (Semi-Annual)</option>
                     <option value="yearly">Yearly</option>
+                    <option value="lifetime">Lifetime (No Expiry)</option>
                   </select>
                 </div>
               </div>
@@ -1269,6 +1270,7 @@ export const SuperadminCustomers: React.FC = () => {
                     <option value="quarterly">Quarterly (+3 Months)</option>
                     <option value="semi_annual">Semi-Annual (+6 Months)</option>
                     <option value="yearly">Yearly (+1 Year)</option>
+                    <option value="lifetime">Lifetime (One-Time / Permanent)</option>
                   </select>
                 </div>
               </div>

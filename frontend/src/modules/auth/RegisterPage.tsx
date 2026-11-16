@@ -20,12 +20,21 @@ export const RegisterPage: React.FC = () => {
 
   React.useEffect(() => {
     if (user) {
-      navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+      if (!user.email_verified_at) {
+        navigate('/verify-email', { replace: true });
+      } else {
+        navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+      }
     } else {
       checkAuth().then((isAuthed) => {
         if (isAuthed) {
+          const u = useAuthStore.getState().user;
           const isSuper = useAuthStore.getState().isPlatformAdmin;
-          navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
+          if (u && !u.email_verified_at) {
+            navigate('/verify-email', { replace: true });
+          } else {
+            navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
+          }
         }
       });
     }

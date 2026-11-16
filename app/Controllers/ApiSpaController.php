@@ -1041,7 +1041,7 @@ class ApiSpaController
         }
 
         $planId = (int)$request->input('plan_id');
-        $interval = (string)$request->input('billing_interval', 'monthly');
+        $interval = (string)$request->input('billing_interval', '');
         $paymentMethod = (string)$request->input('payment_method', 'direct_activation');
         $txnRef = trim((string)$request->input('transaction_reference', ''));
 
@@ -1050,6 +1050,10 @@ class ApiSpaController
         $targetPlan = Database::fetchOne("SELECT * FROM plans WHERE id = ? AND is_active = 1 AND (is_visible = 1 OR id = ?)", [$planId, $currentPlanId]);
         if (!$targetPlan) {
             return Response::error("Selected plan is invalid or currently inactive.", "INVALID_PLAN", null, 404);
+        }
+
+        if (empty($interval)) {
+            $interval = $targetPlan['billing_interval'] ?? 'monthly';
         }
 
         // Enforce Upgrade-Only Policy (Downgrades and re-selecting current tier are prohibited)
@@ -1081,7 +1085,11 @@ class ApiSpaController
         }
 
         $price = $targetPrice;
-        if ($interval === 'yearly') {
+        if ($interval === 'lifetime' || ($targetPlan['billing_interval'] ?? '') === 'lifetime') {
+            $interval = 'lifetime';
+            $amount = $price;
+            $currentPeriodEnd = '2099-12-31 23:59:59';
+        } elseif ($interval === 'yearly') {
             $amount = $price * 12 * 0.85; // 15% discount for annual billing
             $currentPeriodEnd = date('Y-m-d H:i:s', strtotime('+1 year'));
         } elseif ($interval === 'semi_annual') {

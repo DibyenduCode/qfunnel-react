@@ -19,6 +19,8 @@ const loadCashfreeSdk = (): Promise<any> => {
 
 const formatInterval = (interval?: string) => {
   switch (interval) {
+    case 'lifetime':
+      return 'one-time';
     case 'quarterly':
       return '3mo';
     case 'semi_annual':
@@ -224,11 +226,21 @@ export const BillingPage: React.FC = () => {
           <h1 className="text-xl font-semibold text-[#131416]">
             {sub.plan_name || 'Free Plan'}
           </h1>
-          <p className="text-xs text-[#687080] mt-1">
-            Status:{' '}
-            <span className="capitalize font-semibold text-emerald-600">
-              {sub.status || 'Active'}
+          <p className="text-xs text-[#687080] mt-1 flex items-center gap-2 flex-wrap">
+            <span>Status:{' '}
+              <span className="capitalize font-semibold text-emerald-600">
+                {sub.status || 'Active'}
+              </span>
             </span>
+            {sub.billing_interval === 'lifetime' ? (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#fef3c7] text-[#b45309] border border-[#fde68a]">
+                Lifetime Access • Never Expires
+              </span>
+            ) : sub.ends_at ? (
+              <span className="text-[11px] text-[#5d5f60]">
+                Renews/Expires: {new Date(sub.ends_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            ) : null}
           </p>
         </div>
 
@@ -281,6 +293,7 @@ export const BillingPage: React.FC = () => {
               { id: 'quarterly', label: '3 Months' },
               { id: 'semi_annual', label: '6 Months' },
               { id: 'yearly', label: 'Annual (1 Yr)' },
+              { id: 'lifetime', label: 'Lifetime Deals' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -328,16 +341,25 @@ export const BillingPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-[#131416]">{p.name}</h3>
-                    {isCurrent && (
-                      <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-medium bg-[#dcfae5] text-[#04250e] border border-[#bbf7d0]">
-                        Active
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {p.billing_interval === 'lifetime' && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#fef3c7] text-[#b45309] border border-[#fde68a]">
+                          Lifetime Deal
+                        </span>
+                      )}
+                      {isCurrent && (
+                        <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-medium bg-[#dcfae5] text-[#04250e] border border-[#bbf7d0]">
+                          Active
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-baseline gap-1 my-3">
                     <span className="text-2xl font-bold text-[#131416]">₹{Number(p.price).toLocaleString('en-IN')}</span>
-                    <span className="text-xs text-[#5d5f60]">/{formatInterval(p.billing_interval)}</span>
+                    <span className="text-xs text-[#5d5f60]">
+                      {p.billing_interval === 'lifetime' ? ' / one-time' : `/${formatInterval(p.billing_interval)}`}
+                    </span>
                   </div>
 
                   <p className="text-[11px] text-[#5d5f60] mb-4 min-h-[32px]">{p.description}</p>

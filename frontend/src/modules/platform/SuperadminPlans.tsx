@@ -26,6 +26,8 @@ interface FeatureMeta {
 
 const formatIntervalLabel = (interval?: string) => {
   switch (interval) {
+    case 'lifetime':
+      return 'one-time';
     case 'quarterly':
       return '3mo';
     case 'semi_annual':
@@ -304,7 +306,7 @@ export const SuperadminPlans: React.FC = () => {
                     )}
                   </div>
                   <span className="text-xs font-mono font-bold text-[#1d5fd6] px-2 py-0.5 rounded bg-[#dcf1ff] border border-[#b9e6fe]">
-                    ₹{Number(p.price || 0).toLocaleString('en-IN')}/{formatIntervalLabel(p.billing_interval)}
+                    ₹{Number(p.price || 0).toLocaleString('en-IN')}{p.billing_interval === 'lifetime' ? ' (One-Time)' : `/${formatIntervalLabel(p.billing_interval)}`}
                   </span>
                 </div>
 
@@ -409,7 +411,7 @@ export const SuperadminPlans: React.FC = () => {
                   <th key={p.id} className="py-3 px-4 text-center">
                     <span className="font-bold text-[#131416]">{p.name}</span>
                     <span className="block text-[10px] font-normal text-[#5d5f60] mt-0.5">
-                      ₹{Number(p.price || 0).toLocaleString('en-IN')}/{formatIntervalLabel(p.billing_interval)}
+                      ₹{Number(p.price || 0).toLocaleString('en-IN')}{p.billing_interval === 'lifetime' ? ' (One-Time)' : `/${formatIntervalLabel(p.billing_interval)}`}
                     </span>
                   </th>
                 ))}
@@ -602,6 +604,7 @@ export const SuperadminPlans: React.FC = () => {
                     <option value="quarterly">Quarterly (3 Months)</option>
                     <option value="semi_annual">Semi-Annual (6 Months)</option>
                     <option value="yearly">Yearly (12 Months)</option>
+                    <option value="lifetime">Lifetime Deal (One-Time Payment)</option>
                   </select>
                 </div>
               </div>

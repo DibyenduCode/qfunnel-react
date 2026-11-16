@@ -111,8 +111,8 @@ export const EmailVerificationPage: React.FC = () => {
       setSuccessMsg('Email verified successfully! Redirecting...');
       setTimeout(() => {
         const isSuper = useAuthStore.getState().isPlatformAdmin;
-        navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
-      }, 700);
+        window.location.href = isSuper ? '/admin/platform' : '/admin/dashboard';
+      }, 600);
     } catch {
       inputRefs.current[0]?.focus();
       setSubmitting(false);

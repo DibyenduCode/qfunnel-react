@@ -203,7 +203,9 @@ class SubscriptionService
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad((string)$tenantId, 4, '0', STR_PAD_LEFT) . '-' . strtoupper(bin2hex(random_bytes(2)));
 
         $periodStart = date('Y-m-d');
-        if ($interval === 'yearly') {
+        if ($interval === 'lifetime') {
+            $periodEnd = '2099-12-31';
+        } elseif ($interval === 'yearly') {
             $periodEnd = date('Y-m-d', strtotime('+1 year'));
         } elseif ($interval === 'semi_annual') {
             $periodEnd = date('Y-m-d', strtotime('+6 months'));
@@ -533,6 +535,7 @@ class SubscriptionService
              FROM tenant_subscriptions ts
              JOIN tenants t ON ts.tenant_id = t.id
              WHERE t.status = 'active' 
+               AND (ts.billing_interval != 'lifetime' OR ts.billing_interval IS NULL)
                AND ts.current_period_end IS NOT NULL 
                AND NOW() > DATE_ADD(ts.current_period_end, INTERVAL ts.grace_period_days DAY)"
         );
@@ -567,6 +570,7 @@ class SubscriptionService
              JOIN tenant_memberships tm ON tm.tenant_id = t.id AND tm.role = 'owner'
              JOIN users u ON tm.user_id = u.id
              WHERE t.status = 'active'
+               AND (ts.billing_interval != 'lifetime' OR ts.billing_interval IS NULL)
                AND ts.current_period_end IS NOT NULL
                AND ts.current_period_end BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 DAY)"
         );
