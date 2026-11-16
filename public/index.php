@@ -25,7 +25,11 @@ use App\Core\Router;
 use App\Core\View;
 
 // 1. Load Environment Variables
-Env::load(__DIR__ . '/../.env');
+if (file_exists(__DIR__ . '/../.env')) {
+    Env::load(__DIR__ . '/../.env');
+} elseif (file_exists(__DIR__ . '/../.env.production')) {
+    Env::load(__DIR__ . '/../.env.production');
+}
 
 // 2. Configure Error Reporting
 $debug = (bool) Env::get('APP_DEBUG', false);
@@ -39,7 +43,33 @@ if ($debug) {
 }
 
 // 3. Initialize Logger
-Logger::init(__DIR__ . '/../storage/logs');
+$logDir = __DIR__ . '/../storage/logs';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0775, true);
+}
+Logger::init($logDir);
+
+// Register fatal shutdown handler to catch White Screen of Death
+register_shutdown_function(function () use ($debug) {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE], true)) {
+        Logger::error("Fatal PHP Shutdown Error: " . $error['message'], [
+            'file' => $error['file'],
+            'line' => $error['line'],
+        ]);
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: text/html; charset=UTF-8');
+        }
+        if ($debug) {
+            echo "<h1>Application Fatal Error</h1>";
+            echo "<p><strong>Message:</strong> " . htmlspecialchars($error['message']) . "</p>";
+            echo "<p><strong>File:</strong> " . htmlspecialchars($error['file']) . " on line " . $error['line'] . "</p>";
+        } else {
+            echo "<h1>Server Error</h1><p>A fatal system error occurred. Please verify your cPanel file extraction, PHP version (8.1+ required), and .env settings. Check storage/logs/app.log for details.</p>";
+        }
+    }
+});
 
 // 4. Initialize Database Connection
 try {
@@ -88,6 +118,37 @@ $path = $request->path();
 $isApiRoute = str_starts_with($path, '/api') || str_starts_with($path, '/qfunnel2/api');
 
 if (!$isApiRoute) {
+    // Serve static assets if routed through index.php
+    if (preg_match('#^/(?:(?:qfunnel2/)?(?:dist/)?)(assets/.+)$#', $path, $matches)) {
+        $relativePath = $matches[1];
+        $targetFile = null;
+        if (file_exists(__DIR__ . '/' . $relativePath)) {
+            $targetFile = __DIR__ . '/' . $relativePath;
+        } elseif (file_exists(__DIR__ . '/dist/' . $relativePath)) {
+            $targetFile = __DIR__ . '/dist/' . $relativePath;
+        }
+
+        if ($targetFile) {
+            $ext = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+            $mimeMap = [
+                'js' => 'application/javascript; charset=UTF-8',
+                'css' => 'text/css; charset=UTF-8',
+                'svg' => 'image/svg+xml',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'webp' => 'image/webp',
+                'ico' => 'image/x-icon',
+                'woff2' => 'font/woff2',
+                'woff' => 'font/woff',
+            ];
+            header('Content-Type: ' . ($mimeMap[$ext] ?? 'application/octet-stream'));
+            header('Cache-Control: public, max-age=31536000, immutable');
+            readfile($targetFile);
+            exit;
+        }
+    }
+
     // Dynamic XML Sitemap
     if ($path === '/sitemap.xml' || $path === '/qfunnel2/sitemap.xml') {
         header('Content-Type: application/xml; charset=UTF-8');

@@ -4,6 +4,10 @@
     # Prevent directory browsing
     Options -Indexes
 
+    # Route /assets/ requests to dist/assets/ directly if not in public/assets/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+
     # Serve existing files and directories directly
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
