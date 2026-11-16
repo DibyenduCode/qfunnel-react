@@ -58,8 +58,8 @@ export const HomePage: React.FC = () => {
 
   const faqs = [
     {
-      q: 'How does LeadCollector increase lead conversion rates compared to traditional forms?',
-      a: 'Traditional 10-field web forms create cognitive fatigue and suffer from a 97% bounce rate. LeadCollector breaks the qualification process into single-question micro-steps with personalized branching. Prospective buyers receive instant value—such as a tailored price estimate or diagnostic score—before submitting their details, driving 3x to 5x higher completions.'
+      q: 'How does FilterFunnel increase lead conversion rates compared to traditional forms?',
+      a: 'Traditional 10-field web forms create cognitive fatigue and suffer from a 97% bounce rate. FilterFunnel breaks the qualification process into single-question micro-steps with personalized branching. Prospective buyers receive instant value—such as a tailored price estimate or diagnostic score—before submitting their details, driving 3x to 5x higher completions.'
     },
     {
       q: 'Can I embed funnels into my existing WordPress, Webflow, or Shopify website?',
@@ -71,7 +71,7 @@ export const HomePage: React.FC = () => {
     },
     {
       q: 'Can leads be automatically sent to WhatsApp and our CRM?',
-      a: 'Yes. LeadCollector features native 1-click WhatsApp deep routing, prefilling the customer message with their calculated quote and answers. Furthermore, real-time webhooks dispatch structured JSON payloads to Zapier, Make, HubSpot, or any custom API endpoint.'
+      a: 'Yes. FilterFunnel features native 1-click WhatsApp deep routing, prefilling the customer message with their calculated quote and answers. Furthermore, real-time webhooks dispatch structured JSON payloads to Zapier, Make, HubSpot, or any custom API endpoint.'
     },
     {
       q: 'Do I need programming knowledge to build complex branching logic?',
@@ -82,7 +82,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="space-y-24 sm:space-y-32 pb-20">
       <SeoHelmet
-        title="LeadCollector.in — Visual Interactive Quiz Funnels & Lead Generation Platform"
+        title="FilterFunnel.in — Visual Interactive Quiz Funnels & Lead Generation Platform"
         description="Replace static web forms with interactive visual quiz funnels, calculator flows, and multi-step lead capture. Automate lead qualification with WhatsApp and email OTP."
       />
       {/* 1. Hero Section */}
@@ -158,7 +158,7 @@ export const HomePage: React.FC = () => {
                     <span className="w-2.5 h-2.5 rounded-full bg-[#94a3b8]" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#64748b]" />
                   </div>
-                  <span className="text-[11px] font-mono pl-2 text-[#5d5f60]">app.leadcollector.in/funnel/quote-demo</span>
+                  <span className="text-[11px] font-mono pl-2 text-[#5d5f60]">app.filterfunnel.in/funnel/quote-demo</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#dcfae5] text-[#2f7a45] text-[10px] font-semibold">
@@ -229,7 +229,7 @@ export const HomePage: React.FC = () => {
             Why Modern Revenue Teams Are Abandoning Static Web Forms
           </h2>
           <p className="text-xs sm:text-sm text-[#5d5f60]">
-            Compare the friction of traditional contact forms against the engagement of LeadCollector interactive paths.
+            Compare the friction of traditional contact forms against the engagement of FilterFunnel interactive paths.
           </p>
         </div>
 
@@ -266,11 +266,11 @@ export const HomePage: React.FC = () => {
             </ul>
           </div>
 
-          {/* LeadCollector Interactive (Positive) */}
+          {/* FilterFunnel Interactive (Positive) */}
           <div className="p-6 sm:p-8 rounded-2xl bg-[#dcf1ff]/30 border border-[#b9e6fe] space-y-6">
             <div className="flex items-center justify-between border-b border-[#b9e6fe] pb-4">
               <div>
-                <h3 className="font-bold text-base text-[#0a3a80]">LeadCollector Interactive Quizzes</h3>
+                <h3 className="font-bold text-base text-[#0a3a80]">FilterFunnel Interactive Quizzes</h3>
                 <p className="text-xs text-[#0a3a80]/80">Engaging, transparent, high-intent conversions</p>
               </div>
               <span className="px-2.5 py-1 rounded bg-[#dcfae5] text-[#2f7a45] text-xs font-bold">
@@ -365,7 +365,7 @@ export const HomePage: React.FC = () => {
             Experience the Real-Time Calculation Engine
           </h2>
           <p className="text-xs sm:text-sm text-[#5d5f60]">
-            Adjust the sliders below to see how LeadCollector recalculates dynamic estimates instantly without server latency.
+            Adjust the sliders below to see how FilterFunnel recalculates dynamic estimates instantly without server latency.
           </p>
         </div>
 
@@ -466,7 +466,7 @@ export const HomePage: React.FC = () => {
               to="/register"
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
             >
-              <span>Build This Formula In LeadCollector</span>
+              <span>Build This Formula In FilterFunnel</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -548,7 +548,7 @@ export const HomePage: React.FC = () => {
             Loved by Fast-Growing Revenue Teams
           </h2>
           <p className="text-xs sm:text-sm text-[#5d5f60]">
-            See what founders, agency directors, and clinic managers achieve after switching to LeadCollector.
+            See what founders, agency directors, and clinic managers achieve after switching to FilterFunnel.
           </p>
         </div>
 
@@ -605,7 +605,7 @@ export const HomePage: React.FC = () => {
                 ))}
               </div>
               <p className="text-xs sm:text-sm text-[#131416] leading-relaxed">
-                "Our home remodeling leads were costing over ₹1,100 each on Google Ads because people bounced off our 15-field static form. With LeadCollector, our cost-per-qualified lead dropped to ₹390. The formula engine is unbeatable."
+                "Our home remodeling leads were costing over ₹1,100 each on Google Ads because people bounced off our 15-field static form. With FilterFunnel, our cost-per-qualified lead dropped to ₹390. The formula engine is unbeatable."
               </p>
             </div>
             <div className="pt-4 border-t border-[#edf0f3] flex items-center gap-3">

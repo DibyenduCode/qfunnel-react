@@ -46,8 +46,8 @@ export const RegisterPage: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <SeoHelmet
-        title="Create Account — LeadCollector.in"
-        description="Sign up for LeadCollector and start creating high-converting interactive visual quiz funnels and quote calculators."
+        title="Create Account — FilterFunnel.in"
+        description="Sign up for FilterFunnel and start creating high-converting interactive visual quiz funnels and quote calculators."
         noindex
       />
       <div>

@@ -1327,7 +1327,7 @@ export const QuizRunnerPage: React.FC = () => {
 
           {!isWhiteLabel && (
             <div className={`text-[10px] pt-1 ${isDark ? 'text-slate-500' : 'text-[#8b919a]'}`}>
-              Powered by <span className={`font-semibold ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>LeadCollector.in</span>
+              Powered by <span className={`font-semibold ${isDark ? 'text-slate-400' : 'text-[#5c6066]'}`}>FilterFunnel.in</span>
             </div>
           )}
         </footer>

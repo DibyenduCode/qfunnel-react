@@ -51,8 +51,8 @@ export const LoginPage: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <SeoHelmet
-        title="Sign In — LeadCollector.in"
-        description="Sign in to your LeadCollector account to access workspaces and visual funnel analytics."
+        title="Sign In — FilterFunnel.in"
+        description="Sign in to your FilterFunnel account to access workspaces and visual funnel analytics."
         noindex
       />
       <div>
@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="owner@leadcollector.in"
+          placeholder="owner@filterfunnel.in"
           className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#1d5fd6] focus:ring-1 focus:ring-[#1d5fd6] outline-hidden transition"
         />
       </div>

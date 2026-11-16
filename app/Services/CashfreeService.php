@@ -80,7 +80,7 @@ class CashfreeService
         // Customer details
         $customerPhone = '9999999999';
         $customerName = !empty($user['name']) ? trim($user['name']) : 'Workspace Owner';
-        $customerEmail = !empty($user['email']) ? trim($user['email']) : 'billing@leadcollector.in';
+        $customerEmail = !empty($user['email']) ? trim($user['email']) : 'billing@filterfunnel.in';
         $customerId = 'cust_' . ($user['id'] ?? $tenantId);
 
         $payload = [

@@ -49,14 +49,14 @@ export const AboutPage: React.FC = () => {
     };
   }, []);
 
-  const pageTitle = data?.title || 'About LeadCollector';
+  const pageTitle = data?.title || 'About FilterFunnel';
   const metaDesc = data?.meta_description || 'Transforming static forms into intelligent conversations with interactive visual funnels.';
   const content = data?.content || '';
 
   return (
     <div className="py-12 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto space-y-16">
       <SeoHelmet
-        title={`${pageTitle} — LeadCollector.in`}
+        title={`${pageTitle} — FilterFunnel.in`}
         description={metaDesc}
       />
 
@@ -126,10 +126,10 @@ export const AboutPage: React.FC = () => {
 
           <div className="p-6 sm:p-8 rounded-2xl bg-[#dcf1ff]/30 border border-[#b9e6fe] space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
-              <span className="text-xs font-bold text-[#1d5fd6]">The LeadCollector Solution</span>
+              <span className="text-xs font-bold text-[#1d5fd6]">The FilterFunnel Solution</span>
               <h2 className="text-xl font-bold text-[#0a3a80]">Interactive diagnostic journeys with instant value</h2>
               <p className="text-xs sm:text-sm text-[#0a3a80]/80 leading-relaxed">
-                LeadCollector replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
+                FilterFunnel replaces rigid forms with guided visual question paths. Each answer recalculates dynamic project quotes, qualifies visitor readiness, and routes hot buyers straight to WhatsApp or scheduled consultations.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-white border border-[#b9e6fe] text-xs text-[#0a3a80]">
@@ -185,7 +185,7 @@ export const AboutPage: React.FC = () => {
           Ready to scale your lead generation?
         </h2>
         <p className="text-xs sm:text-sm text-[#5d5f60] max-w-xl mx-auto">
-          Join thousands of agencies, clinics, and service businesses already building interactive funnels with LeadCollector.
+          Join thousands of agencies, clinics, and service businesses already building interactive funnels with FilterFunnel.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link

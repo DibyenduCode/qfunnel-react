@@ -432,7 +432,7 @@ export const PublicLayout: React.FC = () => {
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#131416]">Company & Legal</h4>
               <ul className="space-y-2 text-xs">
-                <li><Link to="/about" className="hover:text-[#1d5fd6] transition">About LeadCollector</Link></li>
+                <li><Link to="/about" className="hover:text-[#1d5fd6] transition">About FilterFunnel</Link></li>
                 <li><Link to="/support" className="hover:text-[#1d5fd6] transition">Help Center & Support</Link></li>
                 {legalPages.length > 0 ? (
                   legalPages
@@ -461,7 +461,7 @@ export const PublicLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-[#2f7a45]" />
               <span>All systems fully operational</span>
               <span>•</span>
-              <span>&copy; {new Date().getFullYear()} LeadCollector.in. All rights reserved.</span>
+              <span>&copy; {new Date().getFullYear()} FilterFunnel.in. All rights reserved.</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-5">

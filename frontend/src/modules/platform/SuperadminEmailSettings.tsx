@@ -44,9 +44,9 @@ export const SuperadminEmailSettings: React.FC = () => {
     username: '',
     password: '',
     has_password: false,
-    from_email: 'no-reply@leadcollector.in',
-    from_name: 'LeadCollector Platform',
-    reply_to: 'support@leadcollector.in',
+    from_email: 'no-reply@filterfunnel.in',
+    from_name: 'FilterFunnel Platform',
+    reply_to: 'support@filterfunnel.in',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [testRecipient, setTestRecipient] = useState('');
@@ -215,11 +215,11 @@ export const SuperadminEmailSettings: React.FC = () => {
 
   // Sample data for live HTML preview
   const sampleTags: Record<string, string> = {
-    app_name: 'LeadCollector',
-    app_url: 'https://leadcollector.in',
-    dashboard_url: 'https://leadcollector.in/dashboard',
-    login_url: 'https://leadcollector.in/login',
-    support_email: 'support@leadcollector.in',
+    app_name: 'FilterFunnel',
+    app_url: 'https://filterfunnel.in',
+    dashboard_url: 'https://filterfunnel.in/dashboard',
+    login_url: 'https://filterfunnel.in/login',
+    support_email: 'support@filterfunnel.in',
     current_year: '2026',
     user_name: 'Sarah Connor',
     user_email: 'sarah.connor@apexstudio.io',
@@ -492,7 +492,7 @@ export const SuperadminEmailSettings: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. LeadCollector Cloud Notifications"
+                    placeholder="e.g. FilterFunnel Cloud Notifications"
                     value={smtp.from_name}
                     onChange={(e) => setSmtp({ ...smtp, from_name: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#1d5fd6] outline-hidden transition"

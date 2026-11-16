@@ -11,11 +11,11 @@ export interface SeoHelmetProps {
   noindex?: boolean;
 }
 
-const DEFAULT_TITLE = 'LeadCollector.in — Visual Interactive Quiz Funnels & Lead Generation Platform';
+const DEFAULT_TITLE = 'FilterFunnel.in — Visual Interactive Quiz Funnels & Lead Generation Platform';
 const DEFAULT_DESC =
-  'Build high-converting interactive quiz funnels, calculator flows, and multi-step lead capture forms with LeadCollector.in.';
+  'Build high-converting interactive quiz funnels, calculator flows, and multi-step lead capture forms with FilterFunnel.in.';
 const DEFAULT_IMAGE = '/dist/logo.png';
-const DEFAULT_SITE_NAME = 'LeadCollector.in';
+const DEFAULT_SITE_NAME = 'FilterFunnel.in';
 
 export const SeoHelmet: React.FC<SeoHelmetProps> = ({
   title,
@@ -27,9 +27,9 @@ export const SeoHelmet: React.FC<SeoHelmetProps> = ({
   noindex = false,
 }) => {
   const fullTitle = title
-    ? title.includes('LeadCollector')
+    ? title.includes('FilterFunnel')
       ? title
-      : `${title} | LeadCollector`
+      : `${title} | FilterFunnel`
     : DEFAULT_TITLE;
   const currentUrl = canonicalUrl || (typeof window !== 'undefined' ? window.location.href : '');
 

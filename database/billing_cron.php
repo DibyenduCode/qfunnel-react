@@ -10,7 +10,7 @@ use App\Services\SubscriptionService;
 // Load .env
 \App\Core\Env::load(__DIR__ . '/../.env');
 
-echo "=== LeadCollector SaaS Billing & Subscription Cycle Evaluator ===\n";
+echo "=== FilterFunnel SaaS Billing & Subscription Cycle Evaluator ===\n";
 echo "Timestamp: " . date('Y-m-d H:i:s') . "\n\n";
 
 try {

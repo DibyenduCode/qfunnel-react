@@ -80,9 +80,9 @@ export const AdminLayout: React.FC = () => {
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex flex-col h-full overflow-hidden">
-          {/* SaaS Minimal Brand Bar (LeadCollector) */}
+          {/* SaaS Minimal Brand Bar (FilterFunnel) */}
           <div className="h-12 px-4 border-b border-[#e2e5e9] flex items-center justify-between bg-white shrink-0">
-            <Link to="/admin/dashboard" className="flex items-center" title="LeadCollector Platform">
+            <Link to="/admin/dashboard" className="flex items-center" title="FilterFunnel Platform">
               <BrandLogo size="xs" variant="full" />
             </Link>
             <button

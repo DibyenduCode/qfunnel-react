@@ -64,15 +64,15 @@ class PlatformSettingService
             'bank_transfer' => [
                 'enabled' => false,
                 'bank_name' => 'HDFC Bank / State Bank of India',
-                'account_holder' => 'LeadCollector Technologies Pvt Ltd',
+                'account_holder' => 'FilterFunnel Technologies Pvt Ltd',
                 'account_number' => '',
                 'routing_code' => '',
-                'instructions' => "Please transfer subscription dues via UPI / NEFT / IMPS / RTGS to the above bank account and mention your Workspace ID in the transaction reference.\nOnce transferred, notify billing@leadcollector.in.",
+                'instructions' => "Please transfer subscription dues via UPI / NEFT / IMPS / RTGS to the above bank account and mention your Workspace ID in the transaction reference.\nOnce transferred, notify billing@filterfunnel.in.",
             ],
             'manual_custom' => [
                 'enabled' => false,
                 'title' => 'Offline / Invoice Payment',
-                'instructions' => "For offline purchase orders or custom INR tax invoices, contact your account manager or email billing@leadcollector.in.",
+                'instructions' => "For offline purchase orders or custom INR tax invoices, contact your account manager or email billing@filterfunnel.in.",
                 'qr_code_url' => '',
             ],
         ];

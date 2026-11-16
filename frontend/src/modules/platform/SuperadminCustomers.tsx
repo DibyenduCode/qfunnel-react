@@ -1612,7 +1612,7 @@ export const SuperadminCustomers: React.FC = () => {
               </p>
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#131416] text-[#f8fafc] text-xs">
                 <pre className="flex-1 overflow-x-auto text-[11px]">
-                  <code>{cronInfo?.cli_command || '0 0 * * * php /path/to/leadcollector/cron.php >/dev/null 2>&1'}</code>
+                  <code>{cronInfo?.cli_command || '0 0 * * * php /path/to/filterfunnel/cron.php >/dev/null 2>&1'}</code>
                 </pre>
                 <button
                   type="button"

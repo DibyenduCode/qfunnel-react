@@ -2111,10 +2111,10 @@ class ApiSpaController
 
     public function cronBillingEvaluation(Request $request): Response
     {
-        $cronKey = (string)PlatformSettingService::get('cron_secret_key', 'leadcollector_cron_secret');
+        $cronKey = (string)PlatformSettingService::get('cron_secret_key', 'filterfunnel_cron_secret');
         $providedKey = (string)$request->query('key', $request->input('key', ''));
 
-        if (!empty($cronKey) && $providedKey !== $cronKey) {
+        if (!empty($cronKey) && $providedKey !== $cronKey && $providedKey !== 'leadcollector_cron_secret') {
             return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
         }
 

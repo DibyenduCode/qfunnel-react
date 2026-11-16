@@ -9,7 +9,7 @@ use RuntimeException;
 class SupportTicketService
 {
     public const DEFAULT_CHANNELS = [
-        'email' => 'support@leadcollector.in',
+        'email' => 'support@filterfunnel.in',
         'phone' => '+1 (800) 555-0199',
         'whatsapp' => '+1 (800) 555-0199',
         'hours' => 'Monday – Friday, 8:00 AM – 8:00 PM EST',

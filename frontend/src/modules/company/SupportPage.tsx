@@ -40,7 +40,7 @@ export const SupportPage: React.FC = () => {
   });
 
   const [channels, setChannels] = useState<SupportChannels>({
-    email: 'support@leadcollector.in',
+    email: 'support@filterfunnel.in',
     phone: '+1 (800) 555-0199',
     whatsapp: '+1 (800) 555-0199',
     hours: 'Monday – Friday, 8:00 AM – 8:00 PM EST',
@@ -91,7 +91,7 @@ export const SupportPage: React.FC = () => {
   return (
     <div className="py-12 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto space-y-16">
       <SeoHelmet
-        title="Help Center & Support — LeadCollector.in"
+        title="Help Center & Support — FilterFunnel.in"
         description="Get assistance setting up branching paths, quote calculation rules, or connecting webhook endpoints."
       />
 
@@ -99,7 +99,7 @@ export const SupportPage: React.FC = () => {
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#dcf1ff] border border-[#b9e6fe] text-xs font-semibold text-[#0a3a80]">
           <HelpCircle className="w-3.5 h-3.5 text-[#1d5fd6]" />
-          <span>LeadCollector Help Center & Support</span>
+          <span>FilterFunnel Help Center & Support</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#131416]">
           We are here to help your funnels <span className="text-[#1d5fd6]">convert</span>

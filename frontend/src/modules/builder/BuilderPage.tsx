@@ -494,7 +494,7 @@ const BuilderInner: React.FC = () => {
         initialData.title = 'Mini Landing Page / Story';
         initialData.content = {
           badge_text: 'LIMITED TIME ASSESSMENT',
-          headline: 'Discover Why Top Teams Scale Conversions with LeadCollector',
+          headline: 'Discover Why Top Teams Scale Conversions with FilterFunnel',
           subheadline: 'A customized 60-second diagnostic designed for high-growth businesses',
           body_text: 'Explore this visual breakdown before reviewing your customized recommendations.',
           media_type: 'image',

@@ -239,7 +239,7 @@ export const SuperadminSupportTickets: React.FC = () => {
               required
               value={channels.email}
               onChange={(e) => setChannels({ ...channels, email: e.target.value })}
-              placeholder="e.g. support@leadcollector.in"
+              placeholder="e.g. support@filterfunnel.in"
               className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:outline-hidden focus:border-[#1d5fd6] focus:bg-white transition"
             />
           </div>

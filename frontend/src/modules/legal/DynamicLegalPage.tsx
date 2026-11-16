@@ -24,20 +24,20 @@ const FALLBACK_PAGES: Record<string, Partial<LegalPageData>> = {
     id: 1,
     slug: 'privacy',
     title: 'Privacy Policy',
-    meta_description: 'Learn how LeadCollector collects, stores, and safeguards your data and user assessment submissions.',
+    meta_description: 'Learn how FilterFunnel collects, stores, and safeguards your data and user assessment submissions.',
     updated_at: '2026-11-01',
     content: `<h2>1. Overview & Commitment</h2>
-<p>At LeadCollector ("we", "our", or "us", accessible via leadcollector.in), we prioritize the privacy and confidentiality of our customers, website visitors, and end-users who interact with interactive quizzes and calculators created through our software platform. This Privacy Policy details how we collect, store, isolate, and safeguard your data.</p>
+<p>At FilterFunnel ("we", "our", or "us", accessible via filterfunnel.in), we prioritize the privacy and confidentiality of our customers, website visitors, and end-users who interact with interactive quizzes and calculators created through our software platform. This Privacy Policy details how we collect, store, isolate, and safeguard your data.</p>
 
 <h2>2. Information We Collect</h2>
 <h3>A. Workspace Customer Account Data</h3>
-<p>When you register for a LeadCollector account, we collect your name, business email address, company name, workspace subdomains, and encrypted password credentials.</p>
+<p>When you register for a FilterFunnel account, we collect your name, business email address, company name, workspace subdomains, and encrypted password credentials.</p>
 <h3>B. End-User Lead Submission Data</h3>
 <p>When visitors complete an interactive branching quiz, estimate calculator, or lead form hosted via our runner, we collect the responses, answers, calculated quotes, timestamps, and optional contact details provided by the visitor.</p>
 
 <h2>3. Multi-Tenant Data Isolation & Security</h2>
-<p>LeadCollector is architected with strict multi-tenancy boundaries. Customer workspace data and lead submissions are strictly isolated by unique tenant identifiers. One workspace tenant cannot access, query, or view data belonging to another workspace.</p>
-<p><strong>Encryption Standards:</strong> All data transmitted between your visitors and LeadCollector is protected via TLS 1.3 / 256-Bit SSL encryption. Sensitive authentication secrets and webhook tokens are hashed using industry-standard algorithms.</p>
+<p>FilterFunnel is architected with strict multi-tenancy boundaries. Customer workspace data and lead submissions are strictly isolated by unique tenant identifiers. One workspace tenant cannot access, query, or view data belonging to another workspace.</p>
+<p><strong>Encryption Standards:</strong> All data transmitted between your visitors and FilterFunnel is protected via TLS 1.3 / 256-Bit SSL encryption. Sensitive authentication secrets and webhook tokens are hashed using industry-standard algorithms.</p>
 
 <h2>4. How We Use Information</h2>
 <ul>
@@ -48,26 +48,26 @@ const FALLBACK_PAGES: Record<string, Partial<LegalPageData>> = {
 </ul>
 
 <h2>5. GDPR & Data Subject Rights</h2>
-<p>Under GDPR, CCPA, and applicable global privacy laws, you and your visitors have the right to access, rectify, export, or permanently delete personal data. You can delete lead submissions or workspaces directly from the LeadCollector dashboard or by emailing privacy@leadcollector.in.</p>
+<p>Under GDPR, CCPA, and applicable global privacy laws, you and your visitors have the right to access, rectify, export, or permanently delete personal data. You can delete lead submissions or workspaces directly from the FilterFunnel dashboard or by emailing privacy@filterfunnel.in.</p>
 
 <h2>6. Contact Our Privacy Officer</h2>
 <p>If you have questions regarding this Privacy Policy or our security practices, contact us at:</p>
-<p>LeadCollector Data Protection Officer<br>Email: privacy@leadcollector.in<br>Domain: leadcollector.in</p>`,
+<p>FilterFunnel Data Protection Officer<br>Email: privacy@filterfunnel.in<br>Domain: filterfunnel.in</p>`,
   },
   terms: {
     id: 2,
     slug: 'terms',
     title: 'Terms of Service',
-    meta_description: 'Review the terms and conditions governing the use of the LeadCollector quiz funnels platform.',
+    meta_description: 'Review the terms and conditions governing the use of the FilterFunnel quiz funnels platform.',
     updated_at: '2026-11-01',
     content: `<h2>1. Acceptance of Terms</h2>
-<p>By registering for an account, accessing, or using LeadCollector ("the Service", provided by LeadCollector Technologies Pvt Ltd / LeadCollector.in), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a company, organization, or other legal entity, you represent that you possess the authority to bind such entity to these terms.</p>
+<p>By registering for an account, accessing, or using FilterFunnel ("the Service", provided by FilterFunnel Technologies Pvt Ltd / FilterFunnel.in), you agree to be bound by these Terms of Service. If you are entering into this agreement on behalf of a company, organization, or other legal entity, you represent that you possess the authority to bind such entity to these terms.</p>
 
 <h2>2. Account Registration & Tenant Security</h2>
-<p>To use LeadCollector, you must provide valid credentials during account creation. You are solely responsible for safeguarding the credentials associated with your workspace and all actions taken under your account. You must notify LeadCollector immediately if you discover any unauthorized use or security compromise.</p>
+<p>To use FilterFunnel, you must provide valid credentials during account creation. You are solely responsible for safeguarding the credentials associated with your workspace and all actions taken under your account. You must notify FilterFunnel immediately if you discover any unauthorized use or security compromise.</p>
 
 <h2>3. Acceptable Use Policy</h2>
-<p>You agree not to misuse the platform. Specifically, you agree that you will not use LeadCollector to:</p>
+<p>You agree not to misuse the platform. Specifically, you agree that you will not use FilterFunnel to:</p>
 <ul>
   <li>Collect personal credit card numbers, national identification numbers, or HIPAA-restricted patient health data directly into unsecured form input fields without approved compliance add-ons.</li>
   <li>Conduct phishing campaigns, fraudulent deceptive sweepstakes, or distribute malicious code.</li>
@@ -79,22 +79,22 @@ const FALLBACK_PAGES: Record<string, Partial<LegalPageData>> = {
 <p>Paid subscription plans (Starter, Growth, Agency Scale) are billed in advance on a recurring monthly or annual basis via Stripe, Cashfree, PayPal, or supported regional payment processors. Upgrades take effect immediately with prorated billing. Downgrades or cancellations take effect at the end of the current paid billing cycle.</p>
 
 <h2>5. Data Ownership & Customer Intellectual Property</h2>
-<p>You retain all ownership rights, title, and interest in and to all question structures, funnel configurations, branding assets, formulas, and submission data you create or collect using LeadCollector. LeadCollector retains all rights, title, and interest in the software platform, runtime engine, visual canvas components, and documentation.</p>
+<p>You retain all ownership rights, title, and interest in and to all question structures, funnel configurations, branding assets, formulas, and submission data you create or collect using FilterFunnel. FilterFunnel retains all rights, title, and interest in the software platform, runtime engine, visual canvas components, and documentation.</p>
 
 <h2>6. Service Level Agreement & Availability</h2>
 <p>We strive to maintain a 99.9% uptime record for the public quiz runner runtime. Scheduled maintenance windows are communicated in advance via our operational status channels.</p>
 
 <h2>7. Limitation of Liability</h2>
-<p>To the maximum extent permitted by applicable law, in no event shall LeadCollector, its affiliates, directors, or employees be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p>
+<p>To the maximum extent permitted by applicable law, in no event shall FilterFunnel, its affiliates, directors, or employees be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or related to your use of the Service.</p>
 
 <h2>8. Governing Law & Contact</h2>
-<p>For questions regarding these Terms of Service, contact our legal team at legal@leadcollector.in.</p>`,
+<p>For questions regarding these Terms of Service, contact our legal team at legal@filterfunnel.in.</p>`,
   },
   'cookie-policy': {
     id: 3,
     slug: 'cookie-policy',
     title: 'Cookie Policy',
-    meta_description: 'Understand how LeadCollector uses cookies, session identifiers, and tracking technologies.',
+    meta_description: 'Understand how FilterFunnel uses cookies, session identifiers, and tracking technologies.',
     updated_at: '2026-11-01',
     content: `<h2>1. What Are Cookies?</h2>
 <p>Cookies are small data files stored on your device (computer, tablet, or smartphone) when you visit websites or interact with web-based applications. They are widely used to ensure websites function properly, retain user state across multiple steps, and deliver customized user experiences.</p>
@@ -107,7 +107,7 @@ const FALLBACK_PAGES: Record<string, Partial<LegalPageData>> = {
 </ul>
 
 <h2>3. Managing Cookie Preferences</h2>
-<p>You can configure your browser settings to reject or delete cookies. However, please note that disabling essential cookies may impact the proper functionality of the LeadCollector quiz builder and authenticated dashboards.</p>`,
+<p>You can configure your browser settings to reject or delete cookies. However, please note that disabling essential cookies may impact the proper functionality of the FilterFunnel quiz builder and authenticated dashboards.</p>`,
   },
   'refund-policy': {
     id: 4,
@@ -116,16 +116,16 @@ const FALLBACK_PAGES: Record<string, Partial<LegalPageData>> = {
     meta_description: 'Review our clear cancellation terms, subscription downgrade rules, and refund policy.',
     updated_at: '2026-11-01',
     content: `<h2>1. Subscription Billing & Auto-Renewal</h2>
-<p>LeadCollector subscription plans are billed on a recurring monthly or annual cycle. You may cancel your subscription at any time directly from your Workspace Billing dashboard.</p>
+<p>FilterFunnel subscription plans are billed on a recurring monthly or annual cycle. You may cancel your subscription at any time directly from your Workspace Billing dashboard.</p>
 
 <h2>2. 14-Day Money Back Guarantee for Annual Plans</h2>
-<p>We provide a 14-day money-back guarantee for all newly purchased annual subscription plans. If you are not completely satisfied with LeadCollector within 14 days of your initial annual upgrade, contact support for a full refund.</p>
+<p>We provide a 14-day money-back guarantee for all newly purchased annual subscription plans. If you are not completely satisfied with FilterFunnel within 14 days of your initial annual upgrade, contact support for a full refund.</p>
 
 <h2>3. Monthly Subscriptions & Cancellations</h2>
 <p>Monthly subscriptions can be canceled at any time prior to the next renewal date. When canceled, your plan will remain active until the end of the paid billing period, and no further charges will occur. Partial month refunds are not issued.</p>
 
 <h2>4. How to Request a Refund</h2>
-<p>To submit a cancellation or refund inquiry, email billing@leadcollector.in with your workspace name and account email. Our finance team processes eligible refund requests within 3 to 5 business days.</p>`,
+<p>To submit a cancellation or refund inquiry, email billing@filterfunnel.in with your workspace name and account email. Our finance team processes eligible refund requests within 3 to 5 business days.</p>`,
   },
 };
 
@@ -232,8 +232,8 @@ export const DynamicLegalPage: React.FC<DynamicLegalPageProps> = ({ defaultSlug 
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-8 max-w-4xl mx-auto space-y-8">
       <SeoHelmet
-        title={`${page.title} — LeadCollector.in`}
-        description={page.meta_description || `Official ${page.title} for LeadCollector platform.`}
+        title={`${page.title} — FilterFunnel.in`}
+        description={page.meta_description || `Official ${page.title} for FilterFunnel platform.`}
       />
 
       {/* Header */}
@@ -273,8 +273,8 @@ export const DynamicLegalPage: React.FC<DynamicLegalPageProps> = ({ defaultSlug 
         <div className="pt-6 border-t border-[#edf0f3] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#5d5f60]">
           <div>
             Need legal or compliance clarifications? Contact our compliance officer at{' '}
-            <a href="mailto:privacy@leadcollector.in" className="text-[#1d5fd6] underline font-medium">
-              privacy@leadcollector.in
+            <a href="mailto:privacy@filterfunnel.in" className="text-[#1d5fd6] underline font-medium">
+              privacy@filterfunnel.in
             </a>
           </div>
           <div className="text-[11px] font-mono text-[#8c9096]">

@@ -22,9 +22,9 @@ class MailService
             'encryption' => 'tls', // 'tls', 'ssl', 'none'
             'username' => '',
             'password' => '',
-            'from_email' => 'no-reply@leadcollector.in',
-            'from_name' => 'LeadCollector Platform',
-            'reply_to' => 'support@leadcollector.in',
+            'from_email' => 'no-reply@filterfunnel.in',
+            'from_name' => 'FilterFunnel Platform',
+            'reply_to' => 'support@filterfunnel.in',
         ];
 
         $saved = PlatformSettingService::get('smtp_settings', []);
@@ -74,11 +74,11 @@ class MailService
             ];
         }
 
-        $subject = "Test Email from LeadCollector Platform (" . date('H:i:s') . ")";
+        $subject = "Test Email from FilterFunnel Platform (" . date('H:i:s') . ")";
         $bodyHtml = "
             <div style='font-family: sans-serif; padding: 24px; color: #1e293b;'>
                 <h2 style='color: #1d5fd6; margin-top: 0;'>✓ SMTP Connection Successful</h2>
-                <p>Congratulations! Your Global SMTP server is successfully configured and connected to <strong>LeadCollector Platform</strong>.</p>
+                <p>Congratulations! Your Global SMTP server is successfully configured and connected to <strong>FilterFunnel Platform</strong>.</p>
                 <div style='background: #f1f5f9; padding: 14px 18px; border-radius: 8px; font-size: 13px; line-height: 1.6;'>
                     <strong>Host:</strong> {$settings['host']}:{$settings['port']}<br>
                     <strong>Encryption:</strong> " . strtoupper($settings['encryption']) . "<br>
@@ -346,14 +346,14 @@ class MailService
         }
 
         // Standard default tags
-        $appName = Env::get('APP_NAME', 'LeadCollector');
-        $appUrl = rtrim(Env::get('APP_URL', 'https://leadcollector.in'), '/');
+        $appName = Env::get('APP_NAME', 'FilterFunnel');
+        $appUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
         $mergedTags = array_merge([
             'app_name' => $appName,
             'app_url' => $appUrl,
             'login_url' => "{$appUrl}/login",
             'dashboard_url' => "{$appUrl}/dashboard",
-            'support_email' => 'support@leadcollector.in',
+            'support_email' => 'support@filterfunnel.in',
             'current_year' => date('Y'),
             'user_name' => $toName,
             'user_email' => $toEmail,
@@ -391,8 +391,8 @@ class MailService
      */
     public static function renderEmailWrapper(string $subject, string $preheader, string $contentHtml, array $tags): string
     {
-        $appName = htmlspecialchars($tags['app_name'] ?? 'LeadCollector');
-        $supportEmail = htmlspecialchars($tags['support_email'] ?? 'support@leadcollector.in');
+        $appName = htmlspecialchars($tags['app_name'] ?? 'FilterFunnel');
+        $supportEmail = htmlspecialchars($tags['support_email'] ?? 'support@filterfunnel.in');
         $year = date('Y');
 
         return "
@@ -773,8 +773,8 @@ class MailService
         }
 
         try {
-            $fromEmail = !empty($settings['from_email']) ? $settings['from_email'] : 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'leadcollector.in');
-            $fromName = !empty($settings['from_name']) ? $settings['from_name'] : 'LeadCollector Platform';
+            $fromEmail = !empty($settings['from_email']) ? $settings['from_email'] : 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'filterfunnel.in');
+            $fromName = !empty($settings['from_name']) ? $settings['from_name'] : 'FilterFunnel Platform';
             $replyTo = !empty($settings['reply_to']) ? $settings['reply_to'] : $fromEmail;
 
             $headers = [

@@ -58,13 +58,15 @@ class WebhookService
 
         $headers = [
             'Content-Type: application/json',
-            'User-Agent: LeadCollector-Webhook-Service/1.0',
+            'User-Agent: FilterFunnel-Webhook-Service/1.0',
+            'X-FilterFunnel-Event: ' . $eventType,
+            'X-FilterFunnel-Delivery: ' . bin2hex(random_bytes(16)),
             'X-LeadCollector-Event: ' . $eventType,
-            'X-LeadCollector-Delivery: ' . bin2hex(random_bytes(16)),
             'X-QFunnel-Event: ' . $eventType,
         ];
 
         if (!empty($signature)) {
+            $headers[] = 'X-FilterFunnel-Signature: ' . $signature;
             $headers[] = 'X-LeadCollector-Signature: ' . $signature;
             $headers[] = 'X-QFunnel-Signature: ' . $signature;
         }
@@ -132,7 +134,7 @@ class WebhookService
 
         $testPayload = [
             'test' => true,
-            'message' => 'This is a test notification from LeadCollector Webhook Engine.',
+            'message' => 'This is a test notification from FilterFunnel Webhook Engine.',
             'lead' => [
                 'name' => 'John Doe (Test)',
                 'email' => 'john.test@example.com',

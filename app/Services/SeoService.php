@@ -15,7 +15,7 @@ class SeoService
      */
     public static function makeFullUrl(string $path = ''): string
     {
-        $baseUrl = rtrim(Env::get('APP_URL', 'https://leadcollector.in'), '/');
+        $baseUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
         $clean = '/' . ltrim($path, '/');
         return $clean === '/' ? $baseUrl . '/' : $baseUrl . $clean;
     }
@@ -25,16 +25,16 @@ class SeoService
      */
     public static function resolveMetadata(string $path): array
     {
-        $appName = Env::get('APP_NAME', 'LeadCollector');
+        $appName = Env::get('APP_NAME', 'FilterFunnel');
         $cleanPath = '/' . ltrim($path, '/');
         if ($cleanPath !== '/' && str_ends_with($cleanPath, '/')) {
             $cleanPath = rtrim($cleanPath, '/');
         }
 
         $defaultImage = self::makeFullUrl('/dist/logo.png');
-        $defaultSiteName = 'LeadCollector.in';
+        $defaultSiteName = 'FilterFunnel.in';
         $defaultTitle = "{$appName} — Visual Interactive Quiz Funnels & Lead Generation Platform";
-        $defaultDesc = "Build high-converting interactive quiz funnels, calculator flows, and multi-step lead capture forms with LeadCollector.in.";
+        $defaultDesc = "Build high-converting interactive quiz funnels, calculator flows, and multi-step lead capture forms with FilterFunnel.in.";
 
         // Match Funnel / Quiz route: /quiz/{slug} or /funnel/{slug} or /q/{slug}
         if (preg_match('#^/(quiz|funnel|q)/([a-zA-Z0-9_\-]+)#i', $cleanPath, $matches)) {
@@ -269,7 +269,7 @@ class SeoService
      */
     public static function generateSitemapXml(): string
     {
-        $baseUrl = rtrim(Env::get('APP_URL', 'https://leadcollector.in'), '/');
+        $baseUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
         $nowIso = date('c');
 
         $staticUrls = [
@@ -328,7 +328,7 @@ class SeoService
      */
     public static function generateRobotsTxt(): string
     {
-        $baseUrl = rtrim(Env::get('APP_URL', 'https://leadcollector.in'), '/');
+        $baseUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
 
         return "User-agent: *\n" .
                "Allow: /\n" .

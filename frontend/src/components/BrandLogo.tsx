@@ -33,7 +33,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     <div className={`inline-flex items-center select-none ${className}`}>
       <img
         src={logoSrc}
-        alt="LeadCollector"
+        alt="FilterFunnel"
         className={`${isMark ? heights.markH : heights.h} w-auto object-contain shrink-0`}
         draggable={false}
       />

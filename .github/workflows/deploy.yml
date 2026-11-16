@@ -1,4 +1,4 @@
-name: Deploy LeadCollector to cPanel
+name: Deploy FilterFunnel to cPanel
 
 on:
   push:

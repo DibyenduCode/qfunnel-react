@@ -1,6 +1,6 @@
-# LeadCollector SaaS — Production Deployment Package
+# FilterFunnel SaaS — Production Deployment Package
 
-This directory contains the production-ready build and deployment package for deploying LeadCollector to any cPanel hosting or Linux VPS.
+This directory contains the production-ready build and deployment package for deploying FilterFunnel to any cPanel hosting or Linux VPS.
 
 ---
 
@@ -57,7 +57,7 @@ After importing the database, use these credentials to access the master platfor
 2. Locate `.env.production`, rename it to `.env` (or copy its content to a new `.env` file).
 3. Update the database credentials and domain:
    ```env
-   APP_NAME="LeadCollector"
+   APP_NAME="FilterFunnel"
    APP_ENV=production
    APP_DEBUG=false
    APP_URL=https://yourdomain.com
