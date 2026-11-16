@@ -50,3 +50,4 @@ Thumbs.db
 
 # Agent & Skills local cache
 .taste-skill/
+.playwright-cli/

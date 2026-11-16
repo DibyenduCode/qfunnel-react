@@ -1,0 +1,26 @@
+# =================================================================
+# cPanel Native Git Version Control Deployment File (.cpanel.yml)
+# =================================================================
+# Use this file if you are using cPanel's built-in "Git Version Control"
+# feature instead of GitHub Actions.
+#
+# IMPORTANT:
+# Replace "yourcpaneluser" with your actual cPanel username.
+# If deploying to a subdomain, replace "public_html" with your subdomain folder path.
+# =================================================================
+
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/yourcpaneluser/public_html/
+    - /bin/cp -R app $DEPLOYPATH
+    - /bin/cp -R config $DEPLOYPATH
+    - /bin/cp -R database $DEPLOYPATH
+    - /bin/cp -R routes $DEPLOYPATH
+    - /bin/cp -R storage $DEPLOYPATH
+    - /bin/cp -R public $DEPLOYPATH
+    - /bin/cp -R vendor $DEPLOYPATH
+    - /bin/cp index.php $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH
+    - /bin/chmod -R 775 $DEPLOYPATH/storage
+    - /bin/chmod -R 775 $DEPLOYPATH/public/uploads
