@@ -40,7 +40,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkAuth: async () => {
     try {
-      set({ isLoading: true, error: null });
+      if (!get().user) {
+        set({ isLoading: true, error: null });
+      }
       const data = await api.get('/api/auth/me');
       if (data.csrf_token) {
         setCsrfToken(data.csrf_token);
@@ -128,6 +130,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: data.user,
         activeTenant: data.active_tenant || get().activeTenant,
+        role: data.role || get().role,
+        userTenants: data.user_tenants || get().userTenants,
+        isPlatformAdmin: Boolean(data.user?.is_platform_admin),
         isLoading: false,
         lastDevOtp: null,
       });

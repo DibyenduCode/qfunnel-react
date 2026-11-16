@@ -16,17 +16,6 @@ export const EmailVerificationPage: React.FC = () => {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // If already verified or platform admin, go straight to dashboard
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  if (isPlatformAdmin) {
-    return <Navigate to="/admin/platform" replace />;
-  }
-  if (user.email_verified_at) {
-    return <Navigate to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"} replace />;
-  }
-
   // 60-second cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -40,6 +29,29 @@ export const EmailVerificationPage: React.FC = () => {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
+
+  // Redirect unauthenticated, superadmin, or already verified users without violating Hook Rules
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { replace: true });
+    } else if (isPlatformAdmin) {
+      navigate('/admin/platform', { replace: true });
+    } else if (user.email_verified_at && !submitting && !successMsg) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [user, isPlatformAdmin, navigate, submitting, successMsg]);
+
+  // If redirecting out, render clean loader
+  if (!user || isPlatformAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-[#1d5fd6] animate-spin" />
+          <p className="text-xs text-[#5d5f60] font-medium">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDigitChange = (index: number, value: string) => {
     // Only accept numeric digit
@@ -99,12 +111,11 @@ export const EmailVerificationPage: React.FC = () => {
       await verifyOtp(fullCode);
       setSuccessMsg('Email verified successfully! Redirecting...');
       setTimeout(() => {
-        navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
+        const isSuper = useAuthStore.getState().isPlatformAdmin;
+        navigate(isSuper ? '/admin/platform' : '/admin/dashboard', { replace: true });
       }, 700);
     } catch {
-      // Error is set in store
       inputRefs.current[0]?.focus();
-    } finally {
       setSubmitting(false);
     }
   };

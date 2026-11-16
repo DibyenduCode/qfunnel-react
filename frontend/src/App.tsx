@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AppRoutes } from './routes/AppRoutes';
 import { TopProgressBar } from './components/TopProgressBar';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuthStore } from './store/authStore';
 
 const AuthBootstrap: React.FC = () => {
@@ -30,7 +31,9 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <AuthBootstrap />
           <TopProgressBar />
-          <AppRoutes />
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
         </BrowserRouter>
       </QueryClientProvider>
     </HelmetProvider>
