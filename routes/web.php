@@ -35,6 +35,10 @@ $router->post('/api/webhook/cashfree', [ApiSpaController::class, 'cashfreeWebhoo
 $router->get('/api/public/legal-pages', [ApiSpaController::class, 'publicLegalPages']);
 $router->get('/api/public/legal-pages/{slug}', [ApiSpaController::class, 'publicLegalPageDetail']);
 
+// Public Support Request & Direct Channels API
+$router->get('/api/public/support-channels', [ApiSpaController::class, 'publicSupportChannels']);
+$router->post('/api/public/support-tickets', [ApiSpaController::class, 'publicSubmitSupportTicket']);
+
 // Public Quiz Runner API
 $router->get('/api/quiz/{slug}/manifest', [ApiSpaController::class, 'quizManifest']);
 $router->post('/api/quiz/{slug}/init', [ApiSpaController::class, 'quizInit']);
@@ -148,6 +152,12 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->post('/api/platform/legal-pages', [ApiSpaController::class, 'superadminCreateLegalPage']);
         $router->post('/api/platform/legal-pages/{id}/update', [ApiSpaController::class, 'superadminUpdateLegalPage']);
         $router->post('/api/platform/legal-pages/{id}/delete', [ApiSpaController::class, 'superadminDeleteLegalPage']);
+
+        // Support Tickets & Help Desk CMS
+        $router->get('/api/platform/support-tickets', [ApiSpaController::class, 'superadminSupportTickets']);
+        $router->post('/api/platform/support-tickets/{id}/status', [ApiSpaController::class, 'superadminUpdateSupportTicketStatus']);
+        $router->post('/api/platform/support-tickets/{id}/delete', [ApiSpaController::class, 'superadminDeleteSupportTicket']);
+        $router->post('/api/platform/support-channels', [ApiSpaController::class, 'superadminSaveSupportChannels']);
 
         // Platform Documentation
         $router->get('/api/platform/docs', [ApiSpaController::class, 'superadminDocs']);

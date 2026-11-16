@@ -38,6 +38,7 @@ import { SuperadminCustomers } from '../modules/platform/SuperadminCustomers';
 import { SuperadminPlans } from '../modules/platform/SuperadminPlans';
 import { SuperadminGateways } from '../modules/platform/SuperadminGateways';
 import { SuperadminLegalPages } from '../modules/platform/SuperadminLegalPages';
+import { SuperadminSupportTickets } from '../modules/platform/SuperadminSupportTickets';
 import { SuperadminDocs } from '../modules/platform/SuperadminDocs';
 import { SuperadminProfile } from '../modules/platform/SuperadminProfile';
 import { SuperadminEmailSettings } from '../modules/platform/SuperadminEmailSettings';
@@ -128,6 +129,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/admin/platform/payment-gateways" element={<SuperadminGateways />} />
         <Route path="/admin/platform/email-settings" element={<SuperadminEmailSettings />} />
         <Route path="/admin/platform/legal-pages" element={<SuperadminLegalPages />} />
+        <Route path="/admin/platform/support-tickets" element={<SuperadminSupportTickets />} />
         <Route path="/admin/platform/docs" element={<SuperadminDocs />} />
         <Route path="/admin/platform/profile" element={<SuperadminProfile />} />
         <Route path="/admin/platform/logs" element={<SuperadminLogs />} />

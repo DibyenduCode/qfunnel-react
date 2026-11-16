@@ -23,6 +23,7 @@ use App\Services\PlatformSettingService;
 use App\Services\AuditLogService;
 use App\Services\WebhookService;
 use App\Services\LegalPageService;
+use App\Services\SupportTicketService;
 use App\Services\MailService;
 use App\Services\EmailVerificationService;
 use App\Services\CashfreeService;
@@ -2582,6 +2583,100 @@ class ApiSpaController
         ]);
 
         return Response::success(['id' => $pageId], "Legal page '{$page['title']}' permanently deleted.");
+    }
+
+    // ==========================================
+    // SUPPORT TICKETS & HELP DESK CMS
+    // ==========================================
+
+    public function publicSupportChannels(Request $request): Response
+    {
+        $channels = SupportTicketService::getSupportChannels();
+        return Response::success(['channels' => $channels]);
+    }
+
+    public function publicSubmitSupportTicket(Request $request): Response
+    {
+        try {
+            $data = [
+                'name' => (string)$request->input('name', ''),
+                'email' => (string)$request->input('email', ''),
+                'phone' => (string)$request->input('phone', ''),
+                'category' => (string)$request->input('category', 'builder'),
+                'subject' => (string)$request->input('subject', ''),
+                'message' => (string)$request->input('message', ''),
+            ];
+            $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+            $ticket = SupportTicketService::createTicket($data, $ip);
+
+            return Response::success(['ticket' => $ticket], "Your support ticket #{$ticket['ticket_num']} has been submitted successfully.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "VALIDATION_FAILED", null, 400);
+        }
+    }
+
+    public function superadminSupportTickets(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $status = (string)$request->query('status', '');
+        $search = (string)$request->query('search', '');
+
+        $tickets = SupportTicketService::getAllTickets($status ?: null, $search ?: null);
+        $stats = SupportTicketService::getTicketStats();
+        $channels = SupportTicketService::getSupportChannels();
+
+        return Response::success([
+            'tickets' => $tickets,
+            'stats' => $stats,
+            'channels' => $channels,
+        ]);
+    }
+
+    public function superadminUpdateSupportTicketStatus(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $status = (string)$request->input('status', 'open');
+        $notes = $request->input('admin_notes');
+
+        try {
+            SupportTicketService::updateTicketStatus((int)$id, $status, $notes !== null ? (string)$notes : null);
+            return Response::success(['id' => (int)$id], "Ticket status updated to '{$status}'.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "UPDATE_FAILED", null, 400);
+        }
+    }
+
+    public function superadminDeleteSupportTicket(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        SupportTicketService::deleteTicket((int)$id);
+        return Response::success(['id' => (int)$id], "Support ticket deleted.");
+    }
+
+    public function superadminSaveSupportChannels(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $channels = SupportTicketService::saveSupportChannels([
+            'email' => (string)$request->input('email', ''),
+            'phone' => (string)$request->input('phone', ''),
+            'whatsapp' => (string)$request->input('whatsapp', ''),
+            'hours' => (string)$request->input('hours', ''),
+            'description' => (string)$request->input('description', ''),
+        ]);
+
+        return Response::success(['channels' => $channels], "Direct support contact channels successfully saved.");
     }
 
     public function superadminDocs(Request $request): Response

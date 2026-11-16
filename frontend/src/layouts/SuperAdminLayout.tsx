@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   Scale,
   Code2,
-  UserCheck
+  UserCheck,
+  LifeBuoy
 } from 'lucide-react';
 
 export const SuperAdminLayout: React.FC = () => {
@@ -34,6 +35,7 @@ export const SuperAdminLayout: React.FC = () => {
     { name: 'Payment Gateways', href: '/admin/platform/payment-gateways', icon: CreditCard, chip: 'bg-[#e0e7ff] text-[#3730a3]' },
     { name: 'Email & Global SMTP', href: '/admin/platform/email-settings', icon: Mail, chip: 'bg-[#ffedd5] text-[#c2410c]' },
     { name: 'Compliance & Legal CMS', href: '/admin/platform/legal-pages', icon: Scale, chip: 'bg-[#fce7f3] text-[#9d174d]' },
+    { name: 'Support & Inquiries', href: '/admin/platform/support-tickets', icon: LifeBuoy, chip: 'bg-[#e0f2fe] text-[#0369a1]' },
     { name: 'Developer & API Docs', href: '/admin/platform/docs', icon: Code2, chip: 'bg-[#ede9fe] text-[#5b21b6]' },
     { name: 'System Audit Logs', href: '/admin/platform/logs', icon: FileText, chip: 'bg-[#ccfbf1] text-[#0f766e]' },
   ];
