@@ -6,6 +6,13 @@ class Session
 {
     private static bool $started = false;
 
+    public static function isSecure(): bool
+    {
+        return (bool) Env::get('SESSION_SECURE', false)
+            || (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+    }
+
     public static function start(): void
     {
         if (self::$started || session_status() === PHP_SESSION_ACTIVE) {
@@ -15,7 +22,7 @@ class Session
 
         if (!headers_sent()) {
             $lifetime = (int) Env::get('SESSION_LIFETIME', 7200);
-            $secure = (bool) Env::get('SESSION_SECURE', false);
+            $secure = self::isSecure();
             $samesite = Env::get('SESSION_SAME_SITE', 'Lax');
 
             @ini_set('session.gc_maxlifetime', (string) $lifetime);
@@ -37,18 +44,30 @@ class Session
         }
         self::$started = true;
 
+        // Session Hijacking Protection: User-Agent Fingerprint Check
+        $currentUa = $_SERVER['HTTP_USER_AGENT'] ?? 'CLI_ENVIRONMENT';
+        $uaHash = hash('sha256', $currentUa);
+        if (isset($_SESSION['user']) && isset($_SESSION['_user_agent_hash'])) {
+            if (!hash_equals($_SESSION['_user_agent_hash'], $uaHash)) {
+                Logger::warning("Potential session hijacking detected: User-Agent mismatch for user ID " . ($_SESSION['user']['id'] ?? 'unknown'));
+                self::destroy();
+                return;
+            }
+        } elseif (isset($_SESSION['user']) && !isset($_SESSION['_user_agent_hash'])) {
+            $_SESSION['_user_agent_hash'] = $uaHash;
+        }
+
         // If remember_me was selected, keep refreshing the persistent cookie
         if (!empty($_SESSION['remember_me']) && !empty($_SESSION['remember_expires']) && $_SESSION['remember_expires'] > time() && !headers_sent()) {
             $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                session_id(),
-                (int)$_SESSION['remember_expires'],
-                $params['path'] ?? '/',
-                $params['domain'] ?? '',
-                $params['secure'] ?? false,
-                $params['httponly'] ?? true
-            );
+            setcookie(session_name(), session_id(), [
+                'expires' => (int)$_SESSION['remember_expires'],
+                'path' => $params['path'] ?? '/',
+                'domain' => $params['domain'] ?? '',
+                'secure' => self::isSecure(),
+                'httponly' => true,
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
         }
 
         // Auto-generate CSRF token if not set
@@ -64,6 +83,8 @@ class Session
             @session_regenerate_id(true);
         }
         $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        $currentUa = $_SERVER['HTTP_USER_AGENT'] ?? 'CLI_ENVIRONMENT';
+        $_SESSION['_user_agent_hash'] = hash('sha256', $currentUa);
     }
 
     public static function extendLifetime(int $seconds = 2592000): void
@@ -74,15 +95,14 @@ class Session
 
         if (!headers_sent() && ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
-            setcookie(
-                session_name(),
-                session_id(),
-                time() + $seconds,
-                $params['path'] ?? '/',
-                $params['domain'] ?? '',
-                $params['secure'] ?? false,
-                $params['httponly'] ?? true
-            );
+            setcookie(session_name(), session_id(), [
+                'expires' => time() + $seconds,
+                'path' => $params['path'] ?? '/',
+                'domain' => $params['domain'] ?? '',
+                'secure' => self::isSecure(),
+                'httponly' => true,
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
         }
     }
 
@@ -114,19 +134,18 @@ class Session
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             $_SESSION = [];
-            if (ini_get('session.use_cookies')) {
+            if (ini_get('session.use_cookies') && !headers_sent()) {
                 $params = session_get_cookie_params();
-                setcookie(
-                    session_name(),
-                    '',
-                    time() - 42000,
-                    $params['path'],
-                    $params['domain'],
-                    $params['secure'],
-                    $params['httponly']
-                );
+                setcookie(session_name(), '', [
+                    'expires' => time() - 42000,
+                    'path' => $params['path'] ?? '/',
+                    'domain' => $params['domain'] ?? '',
+                    'secure' => self::isSecure(),
+                    'httponly' => true,
+                    'samesite' => $params['samesite'] ?? 'Lax',
+                ]);
             }
-            session_destroy();
+            @session_destroy();
             self::$started = false;
         }
     }
