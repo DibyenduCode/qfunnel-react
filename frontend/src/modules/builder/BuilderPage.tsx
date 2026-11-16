@@ -727,7 +727,7 @@ const BuilderInner: React.FC = () => {
         edges: edges.map((e) => ({
           source_node_id: e.source,
           source_handle: e.sourceHandle || null,
-          source_option_id: e.sourceHandle && !['output', 'match', 'default'].includes(e.sourceHandle) && !isNaN(Number(e.sourceHandle)) ? e.sourceHandle : null,
+          source_option_id: e.sourceHandle && !['output', 'match', 'default', 'input'].includes(e.sourceHandle) && !isNaN(Number(e.sourceHandle)) ? Number(e.sourceHandle) : null,
           target_node_id: e.target,
         })),
       };

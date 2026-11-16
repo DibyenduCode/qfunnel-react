@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\Database;
+use App\Core\Env;
 use App\Services\AuthService;
 use App\Services\TenantContextService;
 use App\Services\AuthorizationService;
@@ -93,6 +94,8 @@ class ApiSpaController
         $role = TenantContextService::getCurrentRole();
         $userTenants = TenantContextService::getUserTenants((int)$user['id']);
 
+        $isDev = in_array(strtolower((string)Env::get('APP_ENV', 'production')), ['development', 'local', 'testing'], true) || (bool)Env::get('APP_DEBUG', false);
+
         return Response::success([
             'user' => $user,
             'active_tenant' => $tenant,
@@ -101,7 +104,7 @@ class ApiSpaController
             'csrf_token' => csrf_token(),
             'requires_verification' => empty($user['email_verified_at']),
             'email_verified' => !empty($user['email_verified_at']),
-            'dev_otp' => $result['otp_data']['otp'] ?? null,
+            'dev_otp' => $isDev ? ($result['otp_data']['otp'] ?? null) : null,
             'expires_in_minutes' => $result['otp_data']['expires_in_minutes'] ?? 15,
         ], "Registration successful. Please verify your email with the 6-digit code.", 201);
     }
@@ -151,9 +154,11 @@ class ApiSpaController
             ], 429);
         }
 
+        $isDev = in_array(strtolower((string)Env::get('APP_ENV', 'production')), ['development', 'local', 'testing'], true) || (bool)Env::get('APP_DEBUG', false);
+
         return Response::success([
             'expires_in_minutes' => $result['expires_in_minutes'] ?? 15,
-            'dev_otp' => $result['otp'] ?? null,
+            'dev_otp' => $isDev ? ($result['otp'] ?? null) : null,
             'simulated' => $result['simulated'] ?? false,
         ], $result['message']);
     }
@@ -630,8 +635,8 @@ class ApiSpaController
         $user = current_user();
 
         try {
-            FunnelPublishService::unpublish($tenantId, (int)$id, (int)$user['id']);
-            return Response::success(null, "Funnel unpublished successfully.");
+            $funnel = FunnelPublishService::unpublish($tenantId, (int)$id, (int)$user['id']);
+            return Response::success($funnel, "Funnel unpublished successfully.");
         } catch (\Throwable $e) {
             return Response::error($e->getMessage(), "UNPUBLISH_FAILED", null, 400);
         }

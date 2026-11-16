@@ -24,7 +24,7 @@ export const EmailVerificationPage: React.FC = () => {
     return <Navigate to="/admin/platform" replace />;
   }
   if (user.email_verified_at) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={isPlatformAdmin ? "/admin/platform" : "/admin/dashboard"} replace />;
   }
 
   // 60-second cooldown timer
@@ -99,7 +99,7 @@ export const EmailVerificationPage: React.FC = () => {
       await verifyOtp(fullCode);
       setSuccessMsg('Email verified successfully! Redirecting...');
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(isPlatformAdmin ? '/admin/platform' : '/admin/dashboard', { replace: true });
       }, 700);
     } catch {
       // Error is set in store

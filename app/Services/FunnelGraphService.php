@@ -512,6 +512,22 @@ class FunnelGraphService
             // 2. Process Edges
             Database::execute("DELETE FROM funnel_edges WHERE funnel_id = ?", [$funnelId]);
 
+            // Query all valid option IDs and node IDs currently belonging to this funnel to enforce referential integrity
+            $validOptionRows = Database::query(
+                "SELECT qo.id FROM question_options qo JOIN questions q ON qo.question_id = q.id WHERE q.funnel_id = ?",
+                [$funnelId]
+            );
+            $validOptionMap = [];
+            foreach ($validOptionRows as $vor) {
+                $validOptionMap[(int)$vor['id']] = true;
+            }
+
+            $validNodeRows = Database::query("SELECT id FROM funnel_nodes WHERE funnel_id = ?", [$funnelId]);
+            $validNodeMap = [];
+            foreach ($validNodeRows as $vnr) {
+                $validNodeMap[(int)$vnr['id']] = true;
+            }
+
             foreach ($edges as $edge) {
                 $srcKey = $edge['source_node_key'] ?? $edge['source_node_id'] ?? null;
                 $tgtKey = $edge['target_node_key'] ?? $edge['target_node_id'] ?? null;
@@ -522,13 +538,26 @@ class FunnelGraphService
                 $tgtNodeId = $nodeIdMap[$tgtKey] ?? (is_numeric($tgtKey) ? (int)$tgtKey : null);
                 $optId = null;
                 if (!empty($optKey)) {
-                    $optId = $nodeIdMap["opt_{$optKey}"] ?? (is_numeric($optKey) ? (int)$optKey : null);
+                    $candidateOpt = $nodeIdMap["opt_{$optKey}"] ?? (is_numeric($optKey) ? (int)$optKey : null);
+                    if ($candidateOpt && isset($validOptionMap[$candidateOpt])) {
+                        $optId = $candidateOpt;
+                    }
                 }
                 if (empty($sourceHandle) && !empty($optKey)) {
                     $sourceHandle = (string)$optKey;
                 }
 
-                if ($srcNodeId && $tgtNodeId) {
+                // If sourceHandle is a numeric string or option key, check if it matches an option
+                if (!$optId && !empty($sourceHandle) && !in_array($sourceHandle, ['output', 'input', 'match', 'default'])) {
+                    if (isset($nodeIdMap["opt_{$sourceHandle}"]) && isset($validOptionMap[$nodeIdMap["opt_{$sourceHandle}"]])) {
+                        $optId = $nodeIdMap["opt_{$sourceHandle}"];
+                    } elseif (is_numeric($sourceHandle) && isset($validOptionMap[(int)$sourceHandle])) {
+                        $optId = (int)$sourceHandle;
+                    }
+                }
+
+                // Strict foreign key safety: only insert if both source and target nodes exist in funnel_nodes
+                if ($srcNodeId && $tgtNodeId && isset($validNodeMap[$srcNodeId]) && isset($validNodeMap[$tgtNodeId])) {
                     Database::execute(
                         "INSERT INTO funnel_edges (tenant_id, funnel_id, source_node_id, source_option_id, source_handle, target_node_id) VALUES (?, ?, ?, ?, ?, ?)",
                         [$tenantId, $funnelId, $srcNodeId, $optId, $sourceHandle, $tgtNodeId]

@@ -83,6 +83,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/register" element={<RegisterPage />} />
       </Route>
       <Route path="/verify-email" element={<EmailVerificationPage />} />
+      <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
 
       {/* Fullscreen Visual Builder */}
       <Route

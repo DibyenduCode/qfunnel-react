@@ -115,6 +115,11 @@ class MailService
 
         // Fallback / Simulation mode if SMTP is disabled
         if (!$isLive) {
+            $nativeRes = self::sendNativeMail($toEmail, $toName, $subject, $htmlBody, $settings);
+            if ($nativeRes['success']) {
+                return $nativeRes;
+            }
+
             $logId = self::logEmail($toEmail, $toName, null, $subject, 'simulated', null);
             Logger::info("SMTP Disabled: Simulated email to {$toEmail} | Subject: {$subject}");
             return [
@@ -142,6 +147,11 @@ class MailService
         $socket = @stream_socket_client($targetHost . ":{$port}", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT);
         if (!$socket) {
             $errorMsg = "Socket connect failed to {$targetHost}:{$port} - {$errstr} ({$errno})";
+            $nativeRes = self::sendNativeMail($toEmail, $toName, $subject, $htmlBody, $settings);
+            if ($nativeRes['success']) {
+                Logger::warning("SMTP socket failed ({$errorMsg}). Fallback to native mail succeeded.");
+                return $nativeRes;
+            }
             self::logEmail($toEmail, $toName, null, $subject, 'failed', $errorMsg);
             return ['success' => false, 'message' => $errorMsg];
         }
@@ -276,6 +286,11 @@ class MailService
         } catch (Throwable $e) {
             @fclose($socket);
             $err = $e->getMessage();
+            $nativeRes = self::sendNativeMail($toEmail, $toName, $subject, $htmlBody, $settings);
+            if ($nativeRes['success']) {
+                Logger::warning("SMTP Error ({$err}). Fallback to native mail succeeded for {$toEmail}.");
+                return $nativeRes;
+            }
             self::logEmail($toEmail, $toName, null, $subject, 'failed', $err);
             Logger::error("SMTP Error sending to {$toEmail}: {$err}");
             return ['success' => false, 'message' => $err];
@@ -741,6 +756,59 @@ class MailService
                 'body_text' => "Workspace Suspended: {{tenant_name}}\nReason: {{suspension_reason}}\n\nPlease visit your dashboard to reactivate: {{dashboard_url}}\n\n{{app_name}} Support",
             ]
         ];
+    }
+
+    /**
+     * Dispatch email using PHP's native mail() function (standard on cPanel/Linux Exim sendmail).
+     */
+    public static function sendNativeMail(
+        string $toEmail,
+        string $toName,
+        string $subject,
+        string $htmlBody,
+        array $settings
+    ): array {
+        if (!function_exists('mail')) {
+            return ['success' => false, 'message' => 'PHP mail() function is disabled on this server.'];
+        }
+
+        try {
+            $fromEmail = !empty($settings['from_email']) ? $settings['from_email'] : 'no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'leadcollector.in');
+            $fromName = !empty($settings['from_name']) ? $settings['from_name'] : 'LeadCollector Platform';
+            $replyTo = !empty($settings['reply_to']) ? $settings['reply_to'] : $fromEmail;
+
+            $headers = [
+                'MIME-Version: 1.0',
+                'Content-Type: text/html; charset=UTF-8',
+                'Content-Transfer-Encoding: 8bit',
+                'From: ' . sprintf('"%s" <%s>', addcslashes($fromName, '"'), $fromEmail),
+                'Reply-To: ' . sprintf('"%s" <%s>', addcslashes($fromName, '"'), $replyTo),
+                'X-Mailer: PHP/' . phpversion(),
+            ];
+
+            $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+            $recipientHeader = !empty($toName) ? sprintf('"%s" <%s>', addcslashes($toName, '"'), $toEmail) : $toEmail;
+
+            $additionalParams = (filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) ? "-f{$fromEmail}" : '';
+            $sent = $additionalParams 
+                ? @mail($recipientHeader, $encodedSubject, $htmlBody, implode("\r\n", $headers), $additionalParams)
+                : @mail($recipientHeader, $encodedSubject, $htmlBody, implode("\r\n", $headers));
+
+            if ($sent) {
+                $logId = self::logEmail($toEmail, $toName, null, $subject, 'sent', null);
+                Logger::info("Dispatched email via native PHP mail() to {$toEmail} | Subject: {$subject}");
+                return [
+                    'success' => true,
+                    'simulated' => false,
+                    'message' => 'Email sent via server mail agent.',
+                    'log_id' => $logId,
+                ];
+            }
+        } catch (Throwable $e) {
+            Logger::error("Native mail() failed: " . $e->getMessage());
+        }
+
+        return ['success' => false, 'message' => 'Native mail delivery failed.'];
     }
 
     /**

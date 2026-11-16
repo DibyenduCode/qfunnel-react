@@ -105,4 +105,9 @@ class FunnelPublishService
             ];
         });
     }
+
+    public static function unpublish(int $tenantId, int $funnelId, int $userId): array
+    {
+        return FunnelService::unpublishFunnel($tenantId, $funnelId, $userId);
+    }
 }
