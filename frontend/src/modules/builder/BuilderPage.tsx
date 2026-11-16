@@ -247,7 +247,7 @@ const BuilderInner: React.FC = () => {
         target: String(e.target_node_id),
         targetHandle: 'input',
         animated: true,
-        style: { stroke: '#1b6c80', strokeWidth: 1.5 },
+        style: { stroke: '#004cfd', strokeWidth: 1.5 },
       }));
 
       setNodes(rfNodes);
@@ -277,7 +277,7 @@ const BuilderInner: React.FC = () => {
           {
             ...params,
             animated: true,
-            style: { stroke: '#1b6c80', strokeWidth: 1.5 },
+            style: { stroke: '#004cfd', strokeWidth: 1.5 },
           },
           eds
         )
@@ -1088,7 +1088,7 @@ const BuilderInner: React.FC = () => {
     return (
       <div className="flex-1 h-screen flex items-center justify-center bg-[#f9fbfc]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-7 h-7 border-2 border-[#1b6c80] border-t-transparent rounded-full animate-spin" />
+          <div className="w-7 h-7 border-2 border-[#004cfd] border-t-transparent rounded-full animate-spin" />
           <span className="text-xs font-medium text-[#5d5f60]">Loading funnel canvas...</span>
         </div>
       </div>
@@ -1306,11 +1306,11 @@ const BuilderInner: React.FC = () => {
                         <Icon className="w-3 h-3" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="text-xs font-medium text-[#131416] group-hover:text-[#1b6c80] truncate block">
+                        <span className="text-xs font-medium text-[#131416] group-hover:text-[#004cfd] truncate block">
                           {item.title}
                         </span>
                       </div>
-                      <ArrowRight className="w-3 h-3 text-[#cdced1] group-hover:text-[#1b6c80] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      <ArrowRight className="w-3 h-3 text-[#cdced1] group-hover:text-[#004cfd] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </button>
                   );
                 })}

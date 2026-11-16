@@ -129,7 +129,7 @@ export const QuestionNode = memo(({ data, selected }: NodeProps) => {
                       type="source"
                       position={Position.Right}
                       id={handleId}
-                      className="!w-3 !h-3 !bg-[#1b6c80] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
+                      className="!w-3 !h-3 !bg-[#004cfd] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
                     />
                   </div>
                 );

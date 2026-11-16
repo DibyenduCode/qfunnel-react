@@ -104,10 +104,10 @@ export const DestinationNode = memo(({ data, selected }: NodeProps) => {
           <div className="p-2 rounded-[8px] bg-[#f4f6f8] border border-[#e8eaec] space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#5d5f60] flex items-center gap-1">
-                <Calculator className="w-3 h-3 text-[#1b6c80]" />
+                <Calculator className="w-3 h-3 text-[#004cfd]" />
                 <span>Formula</span>
               </span>
-              <span className="text-[10px] font-mono text-[#1b6c80] bg-white px-1.5 py-0.5 rounded border border-[#e8eaec]">
+              <span className="text-[10px] font-mono text-[#004cfd] bg-white px-1.5 py-0.5 rounded border border-[#e8eaec]">
                 {calc.result_prefix || '₹'} Quote
               </span>
             </div>

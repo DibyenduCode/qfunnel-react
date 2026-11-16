@@ -197,7 +197,7 @@ export const AnalyticsPage: React.FC = () => {
           <select
             value={selectedFunnelId}
             onChange={(e) => setSelectedFunnelId(e.target.value)}
-            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80] cursor-pointer"
+            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#004cfd] cursor-pointer"
           >
             {funnels.map((f: any) => (
               <option key={f.id} value={f.id}>
@@ -511,7 +511,7 @@ export const AnalyticsPage: React.FC = () => {
                   <select
                     value={selectedQuestionId}
                     onChange={(e) => setSelectedQuestionId(e.target.value)}
-                    className="h-7 px-2 rounded-[4px] border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+                    className="h-7 px-2 rounded-[4px] border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
                   >
                     {questionsList.map((q: any, i: number) => (
                       <option key={q.id} value={q.id}>

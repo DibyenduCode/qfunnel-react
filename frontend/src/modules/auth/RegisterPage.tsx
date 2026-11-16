@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { UserPlus, AlertCircle, Loader2 } from 'lucide-react';
+import { UserPlus, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { SeoHelmet } from '../../components/SeoHelmet';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [workspace, setWorkspace] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -32,6 +35,18 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMsg('');
+
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match. Please verify your password confirmation.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       await register(name, email, password, workspace);
@@ -100,15 +115,57 @@ export const RegisterPage: React.FC = () => {
 
       <div>
         <label className="block text-xs font-semibold text-[#131416] mb-1.5">Password</label>
-        <input
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Min 6 characters"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#1d5fd6] focus:ring-1 focus:ring-[#1d5fd6] outline-hidden transition"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Min 6 characters"
+            className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#004cfd] focus:ring-2 focus:ring-[#004cfd]/15 outline-hidden transition"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-[#131416] mb-1.5">Confirm Password</label>
+        <div className="relative">
+          <input
+            type={showConfirmPassword ? 'text' : 'password'}
+            required
+            minLength={6}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat password"
+            className={`w-full pl-3.5 pr-10 py-2.5 rounded-xl border bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:ring-2 outline-hidden transition ${
+              confirmPassword && confirmPassword !== password
+                ? 'border-[#fecaca] focus:border-[#c4242a] focus:ring-[#c4242a]/15'
+                : 'border-[#e2e5e9] focus:border-[#004cfd] focus:ring-[#004cfd]/15'
+            }`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            tabIndex={-1}
+            aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+          >
+            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {confirmPassword && confirmPassword !== password && (
+          <p className="text-[11px] text-[#c4242a] mt-1">Passwords do not match</p>
+        )}
       </div>
 
       <button

@@ -68,7 +68,7 @@ export const BookingNode = memo(({ data, selected }: NodeProps) => {
       {/* Footer / Output Handle */}
       <div className="px-3 py-2 bg-[#f4f6f8] border-t border-[#f0f1f2] flex items-center justify-between text-xs rounded-b-[12px] relative">
         <span className="text-[#5d5f60]">Post-booking step</span>
-        <div className="flex items-center gap-1 text-[#1b6c80] font-medium">
+        <div className="flex items-center gap-1 text-[#004cfd] font-medium">
           <span>Completed</span>
           <ArrowRight className="w-3 h-3" />
         </div>
@@ -77,7 +77,7 @@ export const BookingNode = memo(({ data, selected }: NodeProps) => {
           type="source"
           position={Position.Right}
           id="output"
-          className="!w-3 !h-3 !bg-[#1b6c80] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform"
+          className="!w-3 !h-3 !bg-[#004cfd] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform"
         />
       </div>
     </div>

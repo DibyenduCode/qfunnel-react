@@ -108,14 +108,14 @@ export const FormNode = memo(({ data, selected }: NodeProps) => {
       {!isMessage && (
         <div className="px-3 py-2 bg-[#f4f6f8] border-t border-[#f0f1f2] flex items-center justify-between text-xs rounded-b-[12px] relative">
           <span className="text-[#5d5f60] flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1b6c80]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#004cfd]" />
             <span>Forward on submit</span>
           </span>
           <Handle
             type="source"
             position={Position.Right}
             id="output"
-            className="!w-3 !h-3 !bg-[#1b6c80] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
+            className="!w-3 !h-3 !bg-[#004cfd] !border-2 !border-white !rounded-full hover:!scale-125 transition-transform !-right-1.5"
           />
         </div>
       )}

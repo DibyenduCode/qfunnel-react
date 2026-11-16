@@ -730,7 +730,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
               setTitle(e.target.value);
               commit({ title: e.target.value });
             }}
-            className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+            className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
           />
         </div>
 
@@ -741,17 +741,17 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
           <div className="space-y-4">
             {/* Variable Key (Calculator Mode) */}
             {(funnelMode === 'calculator' || inputType === 'slider') && (
-              <div className="p-2.5 rounded-[8px] bg-[#ebf4f6] border border-[#d0e4e8] flex items-center justify-between">
+              <div className="p-2.5 rounded-[8px] bg-[#eef4ff] border border-[#c7dcfe] flex items-center justify-between">
                 <div>
-                  <span className="block text-[11px] font-semibold text-[#1b6c80]">
+                  <span className="block text-[11px] font-semibold text-[#004cfd]">
                     Formula Variable
                   </span>
-                  <span className="text-[11px] text-[#1b6c80]/80">
+                  <span className="text-[11px] text-[#004cfd]/80">
                     Reference in formula: <strong>@{variableKey}</strong>
                   </span>
                 </div>
-                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-[6px] border border-[#d0e4e8]">
-                  <span className="text-xs font-bold text-[#1b6c80]">@</span>
+                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-[6px] border border-[#c7dcfe]">
+                  <span className="text-xs font-bold text-[#004cfd]">@</span>
                   <input
                     type="text"
                     value={variableKey}
@@ -922,7 +922,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   <button
                     type="button"
                     onClick={addOption}
-                    className="text-xs text-[#1b6c80] font-medium hover:underline flex items-center gap-1"
+                    className="text-xs text-[#004cfd] font-medium hover:underline flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Option
                   </button>
@@ -1042,7 +1042,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       setFormSubmitAction('redirect');
                       commit({ formSubmitAction: 'redirect' });
                     }}
-                    className="mt-0.5 accent-[#1b6c80]"
+                    className="mt-0.5 accent-[#004cfd]"
                   />
                   <div>
                     <span className="block font-medium text-xs text-[#131416]">Proceed to Next Step</span>
@@ -1060,7 +1060,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       setFormSubmitAction('message');
                       commit({ formSubmitAction: 'message' });
                     }}
-                    className="mt-0.5 accent-[#1b6c80]"
+                    className="mt-0.5 accent-[#004cfd]"
                   />
                   <div>
                     <span className="block font-medium text-xs text-[#131416]">Show Confirmation Message</span>
@@ -1077,7 +1077,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                 <button
                   type="button"
                   onClick={() => addPresetField('custom')}
-                  className="text-xs text-[#1b6c80] font-medium hover:underline"
+                  className="text-xs text-[#004cfd] font-medium hover:underline"
                 >
                   + Custom Field
                 </button>
@@ -1161,7 +1161,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                             setFormFields(updated);
                             commit({ formFields: updated });
                           }}
-                          className="w-3.5 h-3.5 rounded text-[#1b6c80] accent-[#1b6c80]"
+                          className="w-3.5 h-3.5 rounded text-[#004cfd] accent-[#004cfd]"
                         />
                         <span className="text-[#131416]">Required field</span>
                       </label>
@@ -1246,12 +1246,12 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   className="w-full px-3 py-2 rounded-[6px] border border-[#e8eaec] bg-white font-mono text-xs text-[#131416]"
                 />
                 <span className="text-[11px] text-[#5d5f60] block">
-                  Supports dynamic tokens: <code className="text-[#1b6c80] font-mono">{"{{formatted_quote}}"}</code>
+                  Supports dynamic tokens: <code className="text-[#004cfd] font-mono">{"{{formatted_quote}}"}</code>
                 </span>
               </div>
             ) : (
               /* Direct Connect WhatsApp / Call Settings */
-              <div className="p-3.5 rounded-[8px] border border-[#d0e4e8] bg-[#ebf4f6]/40 space-y-3">
+              <div className="p-3.5 rounded-[8px] border border-[#c7dcfe] bg-[#eef4ff]/40 space-y-3">
                 <span className="text-xs font-semibold text-[#131416] block">Direct Connect</span>
 
                 <div className="grid grid-cols-3 p-1 rounded-[6px] bg-[#f4f6f8] border border-[#e8eaec] text-xs">
@@ -1443,16 +1443,16 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       type="button"
                       onClick={() => imageFileInputRef.current?.click()}
                       disabled={uploadingImage}
-                      className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#1b6c80]/50 bg-[#1b6c80]/5 hover:bg-[#1b6c80]/10 text-xs font-medium text-[#1b6c80] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#004cfd]/50 bg-[#004cfd]/5 hover:bg-[#004cfd]/10 text-xs font-medium text-[#004cfd] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {uploadingImage ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1b6c80]" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#004cfd]" />
                           <span>Uploading image...</span>
                         </>
                       ) : (
                         <>
-                          <Upload className="w-3.5 h-3.5 text-[#1b6c80]" />
+                          <Upload className="w-3.5 h-3.5 text-[#004cfd]" />
                           <span>{destImageUrl ? 'Upload Different Image' : 'Upload Image File'}</span>
                         </>
                       )}
@@ -1478,7 +1478,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                         commit({ destImageUrl: e.target.value });
                       }}
                       placeholder="https://images.unsplash.com/... or /uploads/..."
-                      className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                      className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
                     />
                   </div>
 
@@ -1546,7 +1546,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
             <div className="p-3.5 rounded-[8px] border border-[#e8eaec] bg-[#f4f6f8] space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
                 <span className="font-semibold text-xs text-[#131416] flex items-center gap-1.5">
-                  <Calculator className="w-3.5 h-3.5 text-[#1b6c80]" />
+                  <Calculator className="w-3.5 h-3.5 text-[#004cfd]" />
                   <span>Calculator & Quote Engine</span>
                 </span>
                 <input
@@ -1556,7 +1556,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     setCalcEnabled(e.target.checked);
                     commit({ calcEnabled: e.target.checked });
                   }}
-                  className="w-4 h-4 rounded text-[#1b6c80] accent-[#1b6c80]"
+                  className="w-4 h-4 rounded text-[#004cfd] accent-[#004cfd]"
                 />
               </label>
 
@@ -1587,7 +1587,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                           key={qn.id}
                           type="button"
                           onClick={() => insertFormulaToken(`@${qn.data.variable_key || 'Q1'}`)}
-                          className="px-2 py-0.5 rounded-[4px] bg-white border border-[#d0e4e8] text-[#1b6c80] font-mono text-[11px] hover:bg-[#ebf4f6]"
+                          className="px-2 py-0.5 rounded-[4px] bg-white border border-[#c7dcfe] text-[#004cfd] font-mono text-[11px] hover:bg-[#eef4ff]"
                         >
                           @{qn.data.variable_key || 'Q1'} ({qn.data.title || 'Q'})
                         </button>
@@ -1661,7 +1661,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   commit({ contentBadgeText: e.target.value });
                 }}
                 placeholder="e.g. 🔥 LIMITED TIME ASSESSMENT"
-                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
               />
             </div>
 
@@ -1678,7 +1678,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   commit({ contentHeadline: e.target.value, title: e.target.value });
                 }}
                 placeholder="e.g. Why 80% of Marketing Teams Switched to High-Converting Funnels"
-                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs font-semibold text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs font-semibold text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
               />
             </div>
 
@@ -1695,7 +1695,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   commit({ contentSubheadline: e.target.value });
                 }}
                 placeholder="e.g. A tailored 60-second diagnostic designed for founders & creators"
-                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                className="w-full px-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
               />
             </div>
 
@@ -1785,16 +1785,16 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     type="button"
                     onClick={() => contentFileInputRef.current?.click()}
                     disabled={uploadingContentImg}
-                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#1b6c80]/50 bg-white hover:bg-[#1b6c80]/5 text-xs font-medium text-[#1b6c80] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-[6px] border border-dashed border-[#004cfd]/50 bg-white hover:bg-[#004cfd]/5 text-xs font-medium text-[#004cfd] transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {uploadingContentImg ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1b6c80]" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#004cfd]" />
                         <span>Uploading image...</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="w-3.5 h-3.5 text-[#1b6c80]" />
+                        <Upload className="w-3.5 h-3.5 text-[#004cfd]" />
                         <span>{contentImageUrl ? 'Upload Different Image' : 'Upload Image File'}</span>
                       </>
                     )}
@@ -1814,7 +1814,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       commit({ contentImageUrl: e.target.value });
                     }}
                     placeholder="Or enter Image URL: https://..."
-                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
                   />
 
                   {contentImageUrl && (
@@ -1864,7 +1864,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       commit({ contentVideoUrl: e.target.value });
                     }}
                     placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
-                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                    className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
                   />
                   <p className="text-[10px] text-[#5d5f60]">
                     Supports YouTube, Vimeo or direct MP4/WebM video links.
@@ -1887,7 +1887,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     setContentShowBenefits(e.target.checked);
                     commit({ contentShowBenefits: e.target.checked });
                   }}
-                  className="w-4 h-4 rounded border-gray-300 text-[#1b6c80] focus:ring-[#1b6c80] cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-300 text-[#004cfd] focus:ring-[#004cfd] cursor-pointer"
                 />
               </div>
 
@@ -1903,7 +1903,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                         value={b}
                         onChange={(e) => handleUpdateBenefit(idx, e.target.value)}
                         placeholder="e.g. 100% personalized assessment based on your answers"
-                        className="flex-1 px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#1b6c80] outline-none"
+                        className="flex-1 px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#004cfd] outline-none"
                       />
                       <button
                         type="button"
@@ -1918,7 +1918,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   <button
                     type="button"
                     onClick={handleAddBenefit}
-                    className="w-full py-1.5 px-3 rounded-[6px] border border-dashed border-[#1b6c80]/40 text-[#1b6c80] hover:bg-[#1b6c80]/5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                    className="w-full py-1.5 px-3 rounded-[6px] border border-dashed border-[#004cfd]/40 text-[#004cfd] hover:bg-[#004cfd]/5 text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer mt-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Benefit Point</span>
@@ -1940,7 +1940,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   commit({ contentBody: e.target.value });
                 }}
                 placeholder="Add supporting data, customer transformation details, or context before the next question..."
-                className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#1b6c80] focus:ring-1 focus:ring-[#1b6c80] outline-none"
+                className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:border-[#004cfd] focus:ring-1 focus:ring-[#004cfd] outline-none"
               />
             </div>
 
@@ -1958,7 +1958,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     setContentShowSocialProof(e.target.checked);
                     commit({ contentShowSocialProof: e.target.checked });
                   }}
-                  className="w-4 h-4 rounded border-gray-300 text-[#1b6c80] focus:ring-[#1b6c80] cursor-pointer"
+                  className="w-4 h-4 rounded border-gray-300 text-[#004cfd] focus:ring-[#004cfd] cursor-pointer"
                 />
               </div>
 
@@ -1976,7 +1976,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                         commit({ contentSocialProofText: e.target.value });
                       }}
                       placeholder="e.g. Rated 4.9/5 by 1,200+ marketing leaders"
-                      className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#1b6c80] outline-none"
+                      className="w-full px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs text-[#131416] focus:border-[#004cfd] outline-none"
                     />
                   </div>
                   <div className="p-2 rounded bg-amber-50/70 border border-amber-200/60 flex items-center gap-1.5 text-xs text-amber-900 font-medium">
@@ -2315,7 +2315,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       setGateTimestamp(val);
                       commit({ gateTimestamp: val });
                     }}
-                    className="w-full accent-[#1b6c80]"
+                    className="w-full accent-[#004cfd]"
                   />
                 </div>
 
@@ -2343,7 +2343,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                         setAllowSkipGate(e.target.checked);
                         commit({ allowSkipGate: e.target.checked });
                       }}
-                      className="w-4 h-4 rounded text-[#1b6c80] accent-[#1b6c80]"
+                      className="w-4 h-4 rounded text-[#004cfd] accent-[#004cfd]"
                     />
                     <span className="text-xs font-medium text-[#131416]">Allow visitor to skip gate</span>
                   </label>
@@ -2363,7 +2363,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                 <button
                   type="button"
                   onClick={() => addPresetField('custom')}
-                  className="text-xs text-[#1b6c80] font-medium hover:underline"
+                  className="text-xs text-[#004cfd] font-medium hover:underline"
                 >
                   + Custom Field
                 </button>
@@ -2447,7 +2447,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                             setFormFields(updated);
                             commit({ formFields: updated });
                           }}
-                          className="w-3.5 h-3.5 rounded text-[#1b6c80] accent-[#1b6c80]"
+                          className="w-3.5 h-3.5 rounded text-[#004cfd] accent-[#004cfd]"
                         />
                         <span className="text-[#131416]">Required field</span>
                       </label>
@@ -2512,7 +2512,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   setLoaderDuration(val);
                   commit({ loaderDuration: val });
                 }}
-                className="w-full accent-[#1b6c80]"
+                className="w-full accent-[#004cfd]"
               />
               <span className="text-[11px] text-[#5d5f60] block mt-1">
                 Visitor will see progress bar for {loaderDuration} seconds before auto-advancing.
@@ -2588,7 +2588,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   }}
                   className={`p-2 rounded-[6px] border text-center font-medium transition-colors ${
                     bookingEmbedMode === 'inline'
-                      ? 'border-[#1b6c80] bg-[#ebf4f6] text-[#1b6c80]'
+                      ? 'border-[#004cfd] bg-[#eef4ff] text-[#004cfd]'
                       : 'border-[#e8eaec] text-[#5d5f60] hover:bg-[#f4f6f8]'
                   }`}
                 >
@@ -2602,7 +2602,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                   }}
                   className={`p-2 rounded-[6px] border text-center font-medium transition-colors ${
                     bookingEmbedMode === 'popup'
-                      ? 'border-[#1b6c80] bg-[#ebf4f6] text-[#1b6c80]'
+                      ? 'border-[#004cfd] bg-[#eef4ff] text-[#004cfd]'
                       : 'border-[#e8eaec] text-[#5d5f60] hover:bg-[#f4f6f8]'
                   }`}
                 >
@@ -2620,7 +2620,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     setBookingPrefill(e.target.checked);
                     commit({ bookingPrefill: e.target.checked });
                   }}
-                  className="w-4 h-4 rounded text-[#1b6c80] accent-[#1b6c80]"
+                  className="w-4 h-4 rounded text-[#004cfd] accent-[#004cfd]"
                 />
                 <span className="text-xs font-medium text-[#131416]">
                   Auto-fill Name & Email from previous form step

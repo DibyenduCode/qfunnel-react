@@ -1099,7 +1099,7 @@ export const QuizRunnerPage: React.FC = () => {
             <div className="space-y-6">
               <div className="text-center space-y-2">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto border ${
-                  isDark ? 'bg-slate-800 text-cyan-400 border-slate-700' : 'bg-[#ebf4f6] text-[#1b6c80] border-[#d0e4e8]'
+                  isDark ? 'bg-slate-800 text-cyan-400 border-slate-700' : 'bg-[#eef4ff] text-[#004cfd] border-[#c7dcfe]'
                 }`}>
                   <Calendar className="w-6 h-6" />
                 </div>
@@ -1115,7 +1115,7 @@ export const QuizRunnerPage: React.FC = () => {
               {currentStep.booking_url ? (
                 currentStep.embed_mode === 'popup' ? (
                   <div className={`p-6 rounded-2xl text-center space-y-4 border ${
-                    isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-[#ebf4f6]/50 border-[#d0e4e8]'
+                    isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-[#eef4ff]/50 border-[#c7dcfe]'
                   }`}>
                     <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-[#131416]'}`}>
                       Click below to open our interactive booking calendar in a new window.
@@ -1254,7 +1254,7 @@ export const QuizRunnerPage: React.FC = () => {
                     <a
                       href={currentStep.result.quick_connect.call_url}
                       className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white text-xs font-bold transition ${
-                        isDark ? 'bg-cyan-700 hover:bg-cyan-600' : 'bg-[#1b6c80] hover:bg-[#155363]'
+                        isDark ? 'bg-cyan-700 hover:bg-cyan-600' : 'bg-[#004cfd] hover:bg-[#003ecc]'
                       }`}
                     >
                       <PhoneCall className="w-4 h-4" />
@@ -1272,7 +1272,7 @@ export const QuizRunnerPage: React.FC = () => {
                   <a
                     href={currentStep.result.destination_url}
                     className={`inline-flex items-center gap-1.5 text-xs font-semibold hover:underline ${
-                      isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-[#1b6c80]'
+                      isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-[#004cfd]'
                     }`}
                   >
                     <span>Proceed to External Destination</span>

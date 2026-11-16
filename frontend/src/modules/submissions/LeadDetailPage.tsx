@@ -240,7 +240,7 @@ export const LeadDetailPage: React.FC = () => {
 
         <div>
           <span className="text-[#5d5f60] block text-[11px] mb-0.5">Final Destination</span>
-          <span className="font-medium text-[#1b6c80] truncate block">
+          <span className="font-medium text-[#004cfd] truncate block">
             {session.destination_name || 'Pending completion'}
           </span>
           {session.destination_url && (
@@ -265,7 +265,7 @@ export const LeadDetailPage: React.FC = () => {
             <div className="bg-white border border-[#e8eaec] rounded-[8px] p-5 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[#f0f1f2]">
                 <h3 className="text-xs font-semibold text-[#131416] flex items-center gap-2">
-                  <Calculator className="w-3.5 h-3.5 text-[#1b6c80]" />
+                  <Calculator className="w-3.5 h-3.5 text-[#004cfd]" />
                   <span>{calculatorData?.result_label || 'Calculated Quote Result'}</span>
                 </h3>
                 <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-medium bg-[#ebedee] text-[#131416]">
@@ -323,7 +323,7 @@ export const LeadDetailPage: React.FC = () => {
                         key={vKey}
                         className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#f4f6f8] border border-[#e8eaec] text-xs font-mono"
                       >
-                        <span className="text-[#1b6c80]">@{vKey}</span>
+                        <span className="text-[#004cfd]">@{vKey}</span>
                         <span className="text-[#5d5f60]">=</span>
                         <span className="text-[#131416]">{String(vVal)}</span>
                       </div>
@@ -359,7 +359,7 @@ export const LeadDetailPage: React.FC = () => {
                       </span>
                       <a
                         href={quickConnect.call_url}
-                        className="text-[11px] text-[#1b6c80] hover:underline"
+                        className="text-[11px] text-[#004cfd] hover:underline"
                       >
                         Call link
                       </a>
@@ -589,11 +589,11 @@ export const LeadDetailPage: React.FC = () => {
               <div className="relative pl-5 space-y-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-[#e8eaec]">
                 {events.map((evt: any, idx: number) => {
                   const eventType = evt.event_type || '';
-                  let bulletBg = 'bg-[#1b6c80]';
+                  let bulletBg = 'bg-[#004cfd]';
                   if (eventType === 'video_started') bulletBg = 'bg-[#2f70bb]';
                   else if (eventType === 'video_gate_reached') bulletBg = 'bg-[#92400e]';
                   else if (eventType === 'video_gate_completed') bulletBg = 'bg-[#1e7b4f]';
-                  else if (eventType === 'video_completed') bulletBg = 'bg-[#1b6c80]';
+                  else if (eventType === 'video_completed') bulletBg = 'bg-[#004cfd]';
                   else if (eventType === 'condition_routed') bulletBg = 'bg-[#c2410c]';
 
                   let eventLabel = eventType.replace(/_/g, ' ');

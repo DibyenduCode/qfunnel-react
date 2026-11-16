@@ -179,7 +179,7 @@ export const TeamPage: React.FC = () => {
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="Dr. Sarah Chen"
-                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
                 />
               </div>
 
@@ -191,7 +191,7 @@ export const TeamPage: React.FC = () => {
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="sarah@apexhealth.org"
-                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
                 />
               </div>
 
@@ -200,7 +200,7 @@ export const TeamPage: React.FC = () => {
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
                 >
                   <option value="editor">Editor (Can edit funnels & view leads)</option>
                   <option value="admin">Admin (Can manage team & settings)</option>

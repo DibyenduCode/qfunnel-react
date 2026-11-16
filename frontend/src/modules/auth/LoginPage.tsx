@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { LogIn, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { SeoHelmet } from '../../components/SeoHelmet';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -83,14 +84,25 @@ export const LoginPage: React.FC = () => {
         <div className="flex items-center justify-between mb-1.5">
           <label className="block text-xs font-semibold text-[#131416]">Password</label>
         </div>
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#1d5fd6] focus:ring-1 focus:ring-[#1d5fd6] outline-hidden transition"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-[#e2e5e9] bg-[#f8fafc] text-xs text-[#131416] focus:bg-white focus:border-[#004cfd] focus:ring-2 focus:ring-[#004cfd]/15 outline-hidden transition"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between text-xs pt-1">

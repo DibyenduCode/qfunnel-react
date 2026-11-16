@@ -174,7 +174,7 @@ export const DashboardPage: React.FC = () => {
   const stageDistribution = metrics?.stage_distribution || {};
   const stageLabels = stageDistribution.labels || [];
   const stageDataPoints = stageDistribution.data || [];
-  const stageColors = ['#1b6c80', '#2f70bb', '#a86f0c', '#5d5f60', '#cdced1'];
+  const stageColors = ['#004cfd', '#2f70bb', '#a86f0c', '#5d5f60', '#cdced1'];
 
   const stageChartData = {
     labels: stageLabels,
@@ -370,7 +370,7 @@ export const DashboardPage: React.FC = () => {
             <h2 className="text-sm font-semibold text-[#131416]">Recent funnels</h2>
             <p className="text-xs text-[#5d5f60]">Jump into the canvas builder or configure routes</p>
           </div>
-          <Link to="/admin/funnels" className="text-xs font-medium text-[#1b6c80] hover:underline flex items-center gap-1">
+          <Link to="/admin/funnels" className="text-xs font-medium text-[#004cfd] hover:underline flex items-center gap-1">
             <span>View all</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>

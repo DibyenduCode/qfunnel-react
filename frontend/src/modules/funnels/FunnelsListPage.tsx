@@ -177,7 +177,7 @@ export const FunnelsListPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search funnels..."
-            className="w-full pl-8 pr-3 h-8 rounded-md border border-[#cdced1] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+            className="w-full pl-8 pr-3 h-8 rounded-md border border-[#cdced1] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
           />
         </form>
 
@@ -185,7 +185,7 @@ export const FunnelsListPage: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-2.5 h-8 rounded-md border border-[#cdced1] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+            className="px-2.5 h-8 rounded-md border border-[#cdced1] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
           >
             <option value="">All statuses</option>
             <option value="published">Published</option>

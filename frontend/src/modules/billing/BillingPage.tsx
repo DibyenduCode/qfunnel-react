@@ -218,7 +218,7 @@ export const BillingPage: React.FC = () => {
       {/* Current Plan Overview Card */}
       <div className="bg-white border border-[#e8eaec] rounded-[12px] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <span className="text-xs font-medium text-[#1b6c80] block mb-1">
+          <span className="text-xs font-medium text-[#004cfd] block mb-1">
             Current Subscription
           </span>
           <h1 className="text-xl font-semibold text-[#131416]">

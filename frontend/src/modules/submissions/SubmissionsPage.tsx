@@ -82,7 +82,7 @@ export const SubmissionsPage: React.FC = () => {
   // Stages Modal
   const [isStagesModalOpen, setIsStagesModalOpen] = useState(false);
   const [newStageName, setNewStageName] = useState('');
-  const [newStageColor, setNewStageColor] = useState('#1b6c80');
+  const [newStageColor, setNewStageColor] = useState('#004cfd');
   const [creatingStage, setCreatingStage] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -396,7 +396,7 @@ export const SubmissionsPage: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, email, phone, or ID..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] placeholder-[#5d5f60] focus:outline-none focus:border-[#1b6c80]"
+              className="w-full pl-9 pr-3 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] placeholder-[#5d5f60] focus:outline-none focus:border-[#004cfd]"
             />
           </div>
 
@@ -404,7 +404,7 @@ export const SubmissionsPage: React.FC = () => {
           <select
             value={selectedFunnel}
             onChange={(e) => setSelectedFunnel(e.target.value)}
-            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
           >
             <option value="">All Funnels</option>
             {funnels.map((f) => (
@@ -418,7 +418,7 @@ export const SubmissionsPage: React.FC = () => {
           <select
             value={selectedLeadStatus}
             onChange={(e) => setSelectedLeadStatus(e.target.value)}
-            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
           >
             <option value="">All Lead Stages</option>
             {leadStages.map((st) => (
@@ -432,7 +432,7 @@ export const SubmissionsPage: React.FC = () => {
           <select
             value={selectedDateRange}
             onChange={(e) => setSelectedDateRange(e.target.value)}
-            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+            className="h-8 px-2.5 rounded-[6px] border border-[#e8eaec] text-xs font-medium text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
           >
             <option value="">All Time</option>
             <option value="today">Today</option>
@@ -548,7 +548,7 @@ export const SubmissionsPage: React.FC = () => {
                         submissions.length > 0 && selectedIds.length === submissions.length
                       }
                       onChange={handleToggleSelectAll}
-                      className="w-3.5 h-3.5 rounded text-[#1b6c80] accent-[#1b6c80] border-[#cdced1]"
+                      className="w-3.5 h-3.5 rounded text-[#004cfd] accent-[#004cfd] border-[#cdced1]"
                     />
                   </th>
                   <th className="py-2.5 px-3 min-w-[200px]">Lead & Contact</th>
@@ -592,7 +592,7 @@ export const SubmissionsPage: React.FC = () => {
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleToggleRow(sub.id)}
-                          className="w-3.5 h-3.5 rounded text-[#1b6c80] accent-[#1b6c80] border-[#cdced1]"
+                          className="w-3.5 h-3.5 rounded text-[#004cfd] accent-[#004cfd] border-[#cdced1]"
                         />
                       </td>
 
@@ -896,7 +896,7 @@ export const SubmissionsPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span
                           className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: stage.color || '#1b6c80' }}
+                          style={{ backgroundColor: stage.color || '#004cfd' }}
                         />
                         <span className="font-medium text-[#131416]">{stage.name}</span>
                         <span className="text-[10px] text-[#5d5f60] font-mono">({stage.slug})</span>
@@ -931,7 +931,7 @@ export const SubmissionsPage: React.FC = () => {
                     value={newStageName}
                     onChange={(e) => setNewStageName(e.target.value)}
                     placeholder="e.g. Qualified Specialist"
-                    className="flex-1 px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                    className="flex-1 px-2.5 py-1.5 rounded-[6px] border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
                   />
                   <input
                     type="color"

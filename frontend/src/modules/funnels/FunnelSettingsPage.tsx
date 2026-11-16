@@ -122,7 +122,7 @@ export const FunnelSettingsPage: React.FC = () => {
       const pf = res.plan_features || {};
       setPlanFeatures(pf);
 
-      setAccentColor(s.accent_color || '#1b6c80');
+      setAccentColor(s.accent_color || '#004cfd');
       setTheme(s.theme || 'light');
       setCompanyName(s.company_name || '');
       setLogoUrl(s.logo_url || '');
@@ -295,13 +295,13 @@ export const FunnelSettingsPage: React.FC = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-[#131416] mb-1">Public Slug</label>
-              <div className="flex rounded-xl border border-[#e8eaec] overflow-hidden focus-within:border-[#1b6c80]">
+              <div className="flex rounded-xl border border-[#e8eaec] overflow-hidden focus-within:border-[#004cfd]">
                 <span className="px-3 py-2 bg-[#f9fbfc] text-[11px] text-[#5c6066] border-r border-[#e8eaec]">
                   /quiz/
                 </span>
@@ -322,7 +322,7 @@ export const FunnelSettingsPage: React.FC = () => {
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+              className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
             />
           </div>
         </div>
@@ -924,7 +924,7 @@ export const FunnelSettingsPage: React.FC = () => {
       {/* Embed Code Section */}
       <div className="bg-white border border-[#e8eaec] rounded-2xl p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <Code className="w-5 h-5 text-[#1b6c80]" />
+          <Code className="w-5 h-5 text-[#004cfd]" />
           <h2 className="text-sm font-bold text-[#131416]">Embed on Any Website</h2>
         </div>
         <p className="text-xs text-[#5c6066]">

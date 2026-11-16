@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api, resolveMediaUrl } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
-import { ShieldCheck, User, KeyRound, CheckCircle, AlertTriangle, Save, Lock, Upload, Trash2, Loader2 } from 'lucide-react';
+import { ShieldCheck, User, KeyRound, CheckCircle, AlertTriangle, Save, Lock, Upload, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export const SuperadminProfile: React.FC = () => {
   const { user, checkAuth } = useAuthStore();
@@ -10,6 +10,11 @@ export const SuperadminProfile: React.FC = () => {
   const [profileErr, setProfileErr] = useState('');
   const [passwordMsg, setPasswordMsg] = useState('');
   const [passwordErr, setPasswordErr] = useState('');
+
+  // Password visibility states
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Profile Form
   const [name, setName] = useState('');
@@ -323,39 +328,72 @@ export const SuperadminProfile: React.FC = () => {
         <form onSubmit={handleUpdatePassword} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-[#131416] mb-1">Current Password *</label>
-            <input
-              type="password"
-              required
-              placeholder="Enter your current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#1d5fd6] transition"
-            />
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? 'text' : 'password'}
+                required
+                placeholder="Enter your current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full pl-3 pr-10 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#004cfd] focus:ring-2 focus:ring-[#004cfd]/15 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                tabIndex={-1}
+                aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+              >
+                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-[#131416] mb-1">New Password (Min 8 chars) *</label>
-              <input
-                type="password"
-                required
-                placeholder="New strong password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#1d5fd6] transition"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  required
+                  placeholder="New strong password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full pl-3 pr-10 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#004cfd] focus:ring-2 focus:ring-[#004cfd]/15 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  tabIndex={-1}
+                  aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+                >
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#131416] mb-1">Confirm New Password *</label>
-              <input
-                type="password"
-                required
-                placeholder="Repeat new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#1d5fd6] transition"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Repeat new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-3 pr-10 py-2 rounded-xl border border-[#e2e5e9] text-xs text-[#131416] focus:outline-hidden focus:border-[#004cfd] focus:ring-2 focus:ring-[#004cfd]/15 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  tabIndex={-1}
+                  aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8b919a] hover:text-[#131416] transition-colors rounded-md"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
 

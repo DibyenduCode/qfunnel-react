@@ -105,7 +105,7 @@ export const WebhooksPage: React.FC = () => {
                 value={targetUrl}
                 onChange={(e) => setTargetUrl(e.target.value)}
                 placeholder="https://hooks.zapier.com/hooks/catch/..."
-                className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
               />
             </div>
 
@@ -115,7 +115,7 @@ export const WebhooksPage: React.FC = () => {
                 <select
                   value={eventType}
                   onChange={(e) => setEventType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#1b6c80]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] bg-white focus:outline-none focus:border-[#004cfd]"
                 >
                   <option value="all">All Events</option>
                   <option value="lead.created">lead.created</option>
@@ -131,7 +131,7 @@ export const WebhooksPage: React.FC = () => {
                   value={secret}
                   onChange={(e) => setSecret(e.target.value)}
                   placeholder="whsec_..."
-                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#1b6c80]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#e8eaec] text-xs text-[#131416] focus:outline-none focus:border-[#004cfd]"
                 />
               </div>
             </div>
