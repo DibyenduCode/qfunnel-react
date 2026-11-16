@@ -1155,7 +1155,7 @@ CREATE TABLE `users` (
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'System Administrator','superadmin@qfunnel.local','/qfunnel2/uploads/avatars/usr_1_c35f1d6610bd1fc3.png','$2y$12$pzG21tjWQluThKz8jAlEueuuThUXrpQYtHci1I0ZAno1Dz9HTPNmy','2026-11-14 13:33:21',1,'active','2026-11-16 18:07:10','2026-11-01 01:09:46','2026-11-16 18:07:10');
+(1,'System Administrator','superadmin@qfunnel.local','/uploads/avatars/usr_1_c35f1d6610bd1fc3.png','$2y$12$pzG21tjWQluThKz8jAlEueuuThUXrpQYtHci1I0ZAno1Dz9HTPNmy','2026-11-14 13:33:21',1,'active','2026-11-16 18:07:10','2026-11-01 01:09:46','2026-11-16 18:07:10');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 

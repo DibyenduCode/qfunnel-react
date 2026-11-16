@@ -7,6 +7,9 @@
     # Block sensitive internal directories and files
     RewriteRule ^(\.env|app|config|database|storage|docs-internal|tests) - [F,L,NC]
 
+    # Map legacy /qfunnel2/uploads to public/uploads
+    RewriteRule ^qfunnel2/uploads/(.*)$ public/uploads/$1 [L,NC]
+
     # If request is not already targeting public/, route into public/
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]

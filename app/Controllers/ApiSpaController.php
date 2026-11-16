@@ -1426,23 +1426,73 @@ class ApiSpaController
         }
 
         $ext = $allowed[$mime];
-        $targetDir = realpath(__DIR__ . '/../../public') . '/uploads/avatars';
-        if (!is_dir($targetDir)) {
-            @mkdir($targetDir, 0755, true);
+
+        // Safe upload directory discovery that works on both cPanel and localhost
+        $uploadBaseCandidates = [
+            dirname(__DIR__, 2) . '/public/uploads/avatars',
+            dirname(__DIR__, 2) . '/uploads/avatars',
+            rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\') . '/uploads/avatars',
+            rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\') . '/public/uploads/avatars',
+        ];
+
+        $targetDir = null;
+        foreach ($uploadBaseCandidates as $candidate) {
+            if (!empty($candidate)) {
+                if (!is_dir($candidate)) {
+                    @mkdir($candidate, 0775, true);
+                }
+                if (is_dir($candidate) && is_writable($candidate)) {
+                    $targetDir = $candidate;
+                    break;
+                }
+            }
         }
+
+        if (!$targetDir) {
+            $targetDir = dirname(__DIR__, 2) . '/public/uploads/avatars';
+            if (!is_dir($targetDir)) {
+                @mkdir($targetDir, 0775, true);
+            }
+        }
+        @chmod($targetDir, 0775);
 
         $fileName = 'usr_' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
         $targetPath = $targetDir . '/' . $fileName;
 
-        $saved = is_uploaded_file($uploaded['tmp_name'])
-            ? @move_uploaded_file($uploaded['tmp_name'], $targetPath)
-            : @copy($uploaded['tmp_name'], $targetPath);
-
+        $tmpFile = $uploaded['tmp_name'];
+        $saved = false;
+        if (is_uploaded_file($tmpFile)) {
+            $saved = @move_uploaded_file($tmpFile, $targetPath);
+        }
         if (!$saved) {
-            return Response::error("Failed to save avatar image.", "UPLOAD_FAILED", null, 500);
+            $saved = @copy($tmpFile, $targetPath);
+        }
+        if (!$saved) {
+            $content = @file_get_contents($tmpFile);
+            if ($content !== false && @file_put_contents($targetPath, $content) !== false) {
+                $saved = true;
+            }
         }
 
-        $avatarUrl = url('/uploads/avatars/' . $fileName);
+        if ($saved) {
+            @chmod($targetPath, 0664);
+            // Also mirror to root /uploads/avatars if different
+            $altDir = dirname(__DIR__, 2) . '/uploads/avatars';
+            if ($altDir !== $targetDir) {
+                if (!is_dir($altDir)) {
+                    @mkdir($altDir, 0775, true);
+                }
+                if (is_dir($altDir)) {
+                    @copy($targetPath, $altDir . '/' . $fileName);
+                }
+            }
+        } else {
+            $err = error_get_last();
+            Logger::error("Failed to save avatar image to {$targetPath}. Error: " . ($err['message'] ?? 'none'));
+            return Response::error("Failed to save avatar image. Please check directory permissions on uploads/avatars.", "UPLOAD_FAILED", null, 500);
+        }
+
+        $avatarUrl = '/uploads/avatars/' . $fileName;
         Database::execute("UPDATE users SET avatar_url = ? WHERE id = ?", [$avatarUrl, $userId]);
 
         $updatedUser = Database::fetchOne("SELECT id, name, email, avatar_url, is_platform_admin, status FROM users WHERE id = ?", [$userId]);

@@ -149,6 +149,34 @@ if (!$isApiRoute) {
         }
     }
 
+    // Serve uploaded media (avatars, logos, gateways) even if prefixed with /qfunnel2/
+    if (preg_match('#^/(?:qfunnel2/)?(?:dist/)?(uploads/.+)$#', $path, $matches)) {
+        $relativePath = $matches[1];
+        $targetFile = null;
+        if (file_exists(__DIR__ . '/' . $relativePath)) {
+            $targetFile = __DIR__ . '/' . $relativePath;
+        } elseif (file_exists(__DIR__ . '/../' . $relativePath)) {
+            $targetFile = __DIR__ . '/../' . $relativePath;
+        }
+
+        if ($targetFile && file_exists($targetFile)) {
+            $ext = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+            $mimeMap = [
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'webp' => 'image/webp',
+                'svg' => 'image/svg+xml',
+                'gif' => 'image/gif',
+                'ico' => 'image/x-icon',
+            ];
+            header('Content-Type: ' . ($mimeMap[$ext] ?? 'application/octet-stream'));
+            header('Cache-Control: public, max-age=86400');
+            readfile($targetFile);
+            exit;
+        }
+    }
+
     // Dynamic XML Sitemap
     if ($path === '/sitemap.xml' || $path === '/qfunnel2/sitemap.xml') {
         header('Content-Type: application/xml; charset=UTF-8');

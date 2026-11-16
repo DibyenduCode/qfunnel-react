@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BrandLogo } from '../components/BrandLogo';
@@ -29,6 +29,11 @@ export const AdminLayout: React.FC = () => {
 
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar_url]);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, chip: 'bg-[#dcf1ff] text-[#1d5fd6]' },
@@ -287,10 +292,11 @@ export const AdminLayout: React.FC = () => {
                 className="flex items-center gap-2.5 min-w-0 group hover:opacity-85 transition-opacity"
                 title="Profile & Workspace Settings"
               >
-                {user?.avatar_url ? (
+                {user?.avatar_url && !avatarError ? (
                   <img
                     src={resolveMediaUrl(user.avatar_url)}
                     alt={user.name || 'User'}
+                    onError={() => setAvatarError(true)}
                     className="w-7 h-7 rounded-lg object-cover border border-[#e2e5e9] shrink-0"
                   />
                 ) : (

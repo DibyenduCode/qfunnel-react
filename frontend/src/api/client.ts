@@ -24,16 +24,17 @@ export const resolveUrl = (endpoint: string): string => {
 
 export const resolveMediaUrl = (url: string | null | undefined): string => {
   if (!url) return '';
-  const trimmed = url.trim();
-  if (!trimmed) return '';
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
-    return trimmed;
-  }
-  if (trimmed.startsWith('/qfunnel2/')) {
-    return trimmed;
+  let clean = url.trim();
+  if (!clean) return '';
+  if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('blob:') || clean.startsWith('data:')) {
+    return clean;
   }
   const base = getBaseApiUrl();
-  const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  // Strip legacy local subfolder /qfunnel2 if not running under /qfunnel2
+  if (!base.startsWith('/qfunnel2') && clean.startsWith('/qfunnel2/')) {
+    clean = clean.replace(/^\/qfunnel2/, '');
+  }
+  const normalized = clean.startsWith('/') ? clean : `/${clean}`;
   return `${base}${normalized}`;
 };
 

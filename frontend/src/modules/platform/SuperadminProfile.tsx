@@ -15,9 +15,14 @@ export const SuperadminProfile: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [avatarUrl]);
 
   // Password Form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -177,10 +182,11 @@ export const SuperadminProfile: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#edf0f3]">
           <div className="flex items-center gap-3.5">
             <div className="relative group shrink-0">
-              {avatarUrl ? (
+              {avatarUrl && !avatarLoadFailed ? (
                 <img
                   src={resolveMediaUrl(avatarUrl)}
                   alt={name || 'Super Admin'}
+                  onError={() => setAvatarLoadFailed(true)}
                   className="w-12 h-12 rounded-xl object-cover border border-[#e2e5e9] bg-white shadow-xs"
                 />
               ) : (

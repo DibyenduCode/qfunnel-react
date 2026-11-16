@@ -8,6 +8,9 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
 
+    # Map legacy /qfunnel2/uploads to uploads directly
+    RewriteRule ^qfunnel2/uploads/(.*)$ uploads/$1 [L,NC]
+
     # Serve existing files and directories directly
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

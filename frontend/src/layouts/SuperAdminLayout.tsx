@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BrandLogo } from '../components/BrandLogo';
@@ -27,6 +27,11 @@ export const SuperAdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar_url]);
 
   const navigation = [
     { name: 'Platform Overview', href: '/admin/platform', icon: LayoutDashboard, chip: 'bg-[#dcf1ff] text-[#1d5fd6]' },
@@ -118,10 +123,11 @@ export const SuperAdminLayout: React.FC = () => {
                 className="flex items-center gap-2.5 min-w-0 group hover:opacity-85 transition-opacity"
                 title="Super Admin Profile & Security"
               >
-                {user?.avatar_url ? (
+                {user?.avatar_url && !avatarError ? (
                   <img
                     src={resolveMediaUrl(user.avatar_url)}
                     alt={user.name || 'Super Admin'}
+                    onError={() => setAvatarError(true)}
                     className="w-7 h-7 rounded-lg object-cover border border-[#e2e5e9] shrink-0"
                   />
                 ) : (
