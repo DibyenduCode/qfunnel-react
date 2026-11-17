@@ -6,14 +6,22 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Database;
 use App\Services\UsageLimitService;
+use App\Services\RateLimiterService;
 
 class ApiController
 {
     /**
-     * Authenticate tenant via Bearer token or X-API-Key header
+     * Authenticate tenant via Bearer token or X-API-Key header with rate limiting
      */
     private function authenticate(Request $request): ?array
     {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+        // 1. IP-level brute-force defense (max 30 auth probes / min)
+        if (!RateLimiterService::check('api_auth_probe', $ip, 30, 60)) {
+            return ['_error' => 'Too many requests from this IP. Please wait 1 minute before retrying.', '_status' => 429];
+        }
+
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $apiKey = '';
 
@@ -29,7 +37,13 @@ class ApiController
             return null;
         }
 
-        return Database::fetchOne("SELECT * FROM tenants WHERE api_key = ? AND status = 'active'", [$apiKey]);
+        // 2. Token-level rate limiting (max 60 requests / min per valid or invalid API key)
+        if (!RateLimiterService::check('api_key_quota', $apiKey, 60, 60)) {
+            return ['_error' => 'Too Many Requests: REST API rate limit exceeded (60 requests/minute).', '_status' => 429];
+        }
+
+        $tenant = Database::fetchOne("SELECT * FROM tenants WHERE api_key = ? AND status = 'active'", [$apiKey]);
+        return $tenant ?: null;
     }
 
     /**
@@ -40,6 +54,9 @@ class ApiController
         $tenant = $this->authenticate($request);
         if (!$tenant) {
             return Response::json(['error' => 'Unauthorized: Invalid or missing API Key. Pass via Authorization: Bearer <key> or X-API-Key header.'], 401);
+        }
+        if (isset($tenant['_error'])) {
+            return Response::json(['error' => $tenant['_error']], (int)($tenant['_status'] ?? 429));
         }
 
         $tenantId = (int)$tenant['id'];
@@ -77,6 +94,9 @@ class ApiController
         if (!$tenant) {
             return Response::json(['error' => 'Unauthorized: Invalid or missing API Key.'], 401);
         }
+        if (isset($tenant['_error'])) {
+            return Response::json(['error' => $tenant['_error']], (int)($tenant['_status'] ?? 429));
+        }
 
         $tenantId = (int)$tenant['id'];
         if (!UsageLimitService::hasFeature($tenantId, 'api_access')) {
@@ -106,6 +126,9 @@ class ApiController
         $tenant = $this->authenticate($request);
         if (!$tenant) {
             return Response::json(['error' => 'Unauthorized: Invalid or missing API Key.'], 401);
+        }
+        if (isset($tenant['_error'])) {
+            return Response::json(['error' => $tenant['_error']], (int)($tenant['_status'] ?? 429));
         }
 
         $tenantId = (int)$tenant['id'];

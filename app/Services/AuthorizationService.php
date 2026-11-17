@@ -15,13 +15,13 @@ class AuthorizationService
     public static function canManageWorkspace(?string $role = null): bool
     {
         $role = $role ?? TenantContextService::getCurrentRole();
-        return $role === 'owner' || self::isPlatformAdmin();
+        return in_array($role, ['owner', 'admin'], true) || self::isPlatformAdmin();
     }
 
     public static function canManageTeam(?string $role = null): bool
     {
         $role = $role ?? TenantContextService::getCurrentRole();
-        return $role === 'owner' || self::isPlatformAdmin();
+        return in_array($role, ['owner', 'admin'], true) || self::isPlatformAdmin();
     }
 
     public static function canCreateFunnel(?string $role = null): bool

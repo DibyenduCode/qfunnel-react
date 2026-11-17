@@ -28,6 +28,7 @@ use App\Services\SupportTicketService;
 use App\Services\MailService;
 use App\Services\EmailVerificationService;
 use App\Services\CashfreeService;
+use App\Services\RateLimiterService;
 use App\Services\FunnelGraphService;
 use App\Services\QuizEngineService;
 
@@ -76,6 +77,11 @@ class ApiSpaController
 
     public function register(Request $request): Response
     {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        if (!RateLimiterService::check('register', $ip, 5, 3600)) {
+            return Response::error("Too many account registrations from this IP address. Please try again after 1 hour.", "RATE_LIMIT_EXCEEDED", null, 429);
+        }
+
         $name = trim((string)$request->input('name', ''));
         $email = trim((string)$request->input('email', ''));
         $password = (string)$request->input('password', '');
@@ -332,6 +338,10 @@ class ApiSpaController
 
     public function updateFunnelSettings(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied to update funnel settings.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -426,6 +436,10 @@ class ApiSpaController
 
     public function uploadFunnelLogo(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied to edit funnel assets.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -512,6 +526,10 @@ class ApiSpaController
 
     public function uploadFunnelMedia(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied to edit funnel assets.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
 
         try {
@@ -665,6 +683,10 @@ class ApiSpaController
 
     public function duplicateFunnel(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canCreateFunnel()) {
+            return Response::error("Permission denied to duplicate funnels.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -678,6 +700,10 @@ class ApiSpaController
 
     public function publishFunnel(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canPublishFunnel()) {
+            return Response::error("Permission denied to publish funnels.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -691,6 +717,10 @@ class ApiSpaController
 
     public function unpublishFunnel(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canPublishFunnel()) {
+            return Response::error("Permission denied to unpublish funnels.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -704,6 +734,10 @@ class ApiSpaController
 
     public function deleteFunnel(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canDeleteFunnel()) {
+            return Response::error("Permission denied to delete funnels.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
 
@@ -759,6 +793,10 @@ class ApiSpaController
 
     public function updateFunnelMode(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied to modify funnel mode.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
         $mode = $request->input('funnel_mode');
@@ -781,6 +819,10 @@ class ApiSpaController
 
     public function saveFunnelFormFields(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canEditFunnel()) {
+            return Response::error("Permission denied to modify lead capture fields.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $user = current_user();
         $fields = $request->input('fields', []);
@@ -877,6 +919,9 @@ class ApiSpaController
             $count = SubmissionService::bulkUpdateLeadStatus($tenantId, $sessionIds, $newStatus);
             return Response::success(['count' => $count], "{$count} leads updated.");
         } elseif ($action === 'delete') {
+            if (!AuthorizationService::canManageWorkspace()) {
+                return Response::error("Permission denied: Workspace management privileges required to delete leads.", "FORBIDDEN", null, 403);
+            }
             $count = SubmissionService::bulkDelete($tenantId, $sessionIds);
             return Response::success(['count' => $count], "{$count} leads deleted.");
         }
@@ -886,6 +931,17 @@ class ApiSpaController
 
     public function exportSubmissions(Request $request): void
     {
+        if (!AuthorizationService::canExportSubmissions()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Permission denied: Only workspace owners and admins can export lead data.',
+                'error_code' => 'FORBIDDEN'
+            ]);
+            exit;
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
 
         if (!AuthorizationService::isPlatformAdmin() && !UsageLimitService::hasFeature($tenantId, 'csv_export')) {
@@ -925,6 +981,10 @@ class ApiSpaController
 
     public function createLeadStage(Request $request): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $name = trim((string)$request->input('name'));
         $color = (string)$request->input('color', '#6366F1');
@@ -939,6 +999,10 @@ class ApiSpaController
 
     public function deleteLeadStage(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         LeadStageService::deleteStage($tenantId, (int)$id);
         return Response::success(null, "Stage deleted.");
@@ -972,6 +1036,10 @@ class ApiSpaController
 
     public function inviteTeamMember(Request $request): Response
     {
+        if (!AuthorizationService::canManageTeam()) {
+            return Response::error("Permission denied: Only workspace owners and admins can invite team members.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
 
         if (!AuthorizationService::isPlatformAdmin()) {
@@ -1071,11 +1139,20 @@ class ApiSpaController
 
     public function updateTeamMember(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canManageTeam()) {
+            return Response::error("Permission denied: Only workspace owners and admins can update team members.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         $role = (string)$request->input('role');
 
         if (!in_array($role, ['owner', 'admin', 'editor', 'analyst'], true)) {
             return Response::error("Invalid role.", "INVALID_ROLE", null, 400);
+        }
+
+        $currentRole = TenantContextService::getCurrentRole();
+        if ($role === 'owner' && $currentRole !== 'owner' && !AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Only the workspace owner can transfer ownership.", "FORBIDDEN", null, 403);
         }
 
         Database::execute("UPDATE tenant_memberships SET role = ? WHERE id = ? AND tenant_id = ?", [$role, (int)$id, $tenantId]);
@@ -1084,7 +1161,20 @@ class ApiSpaController
 
     public function removeTeamMember(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canManageTeam()) {
+            return Response::error("Permission denied: Only workspace owners and admins can remove team members.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
+        $target = Database::fetchOne("SELECT role, user_id FROM tenant_memberships WHERE id = ? AND tenant_id = ?", [(int)$id, $tenantId]);
+        if (!$target) {
+            return Response::error("Member not found in this workspace.", "NOT_FOUND", null, 404);
+        }
+
+        if ($target['role'] === 'owner' && !AuthorizationService::isPlatformAdmin()) {
+            return Response::error("The workspace owner cannot be removed.", "ACTION_NOT_ALLOWED", null, 400);
+        }
+
         Database::execute("DELETE FROM tenant_memberships WHERE id = ? AND tenant_id = ?", [(int)$id, $tenantId]);
         return Response::success(null, "Member removed.");
     }
@@ -1122,6 +1212,10 @@ class ApiSpaController
 
     public function createWebhook(Request $request): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
 
         if (!AuthorizationService::isPlatformAdmin() && !UsageLimitService::hasFeature($tenantId, 'webhooks')) {
@@ -1147,6 +1241,10 @@ class ApiSpaController
 
     public function deleteWebhook(Request $request, string $id): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         Database::execute("DELETE FROM webhook_endpoints WHERE id = ? AND tenant_id = ?", [(int)$id, $tenantId]);
         return Response::success(null, "Webhook deleted.");
@@ -1435,6 +1533,10 @@ class ApiSpaController
 
     public function updateWorkspace(Request $request): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         if (!$tenantId) {
             return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
@@ -1460,6 +1562,10 @@ class ApiSpaController
 
     public function uploadWorkspaceLogo(Request $request): Response
     {
+        if (!AuthorizationService::canManageWorkspace()) {
+            return Response::error("Permission denied: Workspace management privileges required.", "FORBIDDEN", null, 403);
+        }
+
         $tenantId = TenantContextService::getActiveTenantId();
         if (!$tenantId) {
             return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
@@ -1734,6 +1840,11 @@ class ApiSpaController
 
     public function quizInit(Request $request, string $slug): Response
     {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        if (!RateLimiterService::check('quiz_init', $ip, 60, 60)) {
+            return Response::error("Too many quiz requests from this IP. Please wait a moment before trying again.", 'RATE_LIMIT_EXCEEDED', null, 429);
+        }
+
         $funnel = FunnelService::getPublishedFunnelBySlug($slug);
         if ($funnel && ($funnel['tenant_status'] ?? 'active') === 'suspended') {
             return Response::error("This quiz is temporarily paused by the organizer.", 'QUIZ_PAUSED', null, 503);
@@ -2280,11 +2391,34 @@ class ApiSpaController
 
     public function cronBillingEvaluation(Request $request): Response
     {
-        $cronKey = (string)PlatformSettingService::get('cron_secret_key', 'filterfunnel_cron_secret');
-        $providedKey = (string)$request->query('key', $request->input('key', ''));
+        $configuredKey = (string)(\App\Core\Env::get('CRON_SECRET') ?: PlatformSettingService::get('cron_secret_key', ''));
 
-        if (!empty($cronKey) && $providedKey !== $cronKey && $providedKey !== 'leadcollector_cron_secret') {
-            return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $providedKey = '';
+        if (preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
+            $providedKey = $matches[1];
+        } elseif (!empty($_SERVER['HTTP_X_CRON_KEY'])) {
+            $providedKey = (string)$_SERVER['HTTP_X_CRON_KEY'];
+        } else {
+            $providedKey = (string)$request->query('key', $request->input('key', ''));
+        }
+
+        if (!empty($configuredKey)) {
+            if (empty($providedKey) || !hash_equals($configuredKey, $providedKey)) {
+                return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
+            }
+        } elseif (!empty($providedKey)) {
+            $validDefaults = ['filterfunnel_cron_secret', 'leadcollector_cron_secret'];
+            $matched = false;
+            foreach ($validDefaults as $def) {
+                if (hash_equals($def, $providedKey)) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if (!$matched) {
+                return Response::error("Invalid cron security key.", "UNAUTHORIZED", null, 403);
+            }
         }
 
         $result = SubscriptionService::runBillingCycleEvaluation();
@@ -2857,6 +2991,11 @@ class ApiSpaController
 
     public function publicSubmitSupportTicket(Request $request): Response
     {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        if (!RateLimiterService::check('support_ticket', $ip, 5, 600)) {
+            return Response::error("Too many support requests submitted. Please wait 10 minutes before submitting another ticket.", "RATE_LIMIT_EXCEEDED", null, 429);
+        }
+
         try {
             $data = [
                 'name' => (string)$request->input('name', ''),
