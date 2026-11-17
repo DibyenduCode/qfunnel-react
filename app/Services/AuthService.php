@@ -12,9 +12,40 @@ class AuthService
     public static function attempt(string $email, string $password): array
     {
         $email = trim(strtolower($email));
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+        // Rate Limiting Check (Max 5 failed attempts per 15-minute window per IP or email)
+        $maxAttempts = 5;
+        $lockoutMinutes = 15;
+
+        try {
+            // Clean up stale attempts older than 15 minutes
+            Database::execute(
+                "DELETE FROM login_attempts WHERE attempted_at < DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+                [$lockoutMinutes]
+            );
+
+            $recentFails = Database::fetchOne(
+                "SELECT COUNT(*) as fail_count FROM login_attempts WHERE (ip_address = ? OR email = ?) AND attempted_at >= DATE_SUB(NOW(), INTERVAL ? MINUTE)",
+                [$ip, $email, $lockoutMinutes]
+            );
+
+            $failCount = (int)($recentFails['fail_count'] ?? 0);
+            if ($failCount >= $maxAttempts) {
+                Logger::warning("Rate limit exceeded for login attempt: {$email} from IP {$ip}");
+                return [
+                    'success' => false,
+                    'error' => "Too many failed login attempts. For security reasons, please wait {$lockoutMinutes} minutes before trying again."
+                ];
+            }
+        } catch (\Throwable $e) {
+            Logger::error("Rate limit check error: " . $e->getMessage());
+        }
+
         $user = Database::fetchOne("SELECT * FROM users WHERE email = ?", [$email]);
 
         if (!$user) {
+            self::recordFailedLogin($ip, $email);
             return ['success' => false, 'error' => 'Invalid email or password.'];
         }
 
@@ -23,8 +54,14 @@ class AuthService
         }
 
         if (!password_verify($password, $user['password_hash'])) {
+            self::recordFailedLogin($ip, $email);
             return ['success' => false, 'error' => 'Invalid email or password.'];
         }
+
+        // Login success: clear failed attempts
+        try {
+            Database::execute("DELETE FROM login_attempts WHERE ip_address = ? OR email = ?", [$ip, $email]);
+        } catch (\Throwable $e) {}
 
         // Login success: regenerate session
         Session::regenerate();
@@ -45,6 +82,18 @@ class AuthService
         Logger::info("User login successful: {$user['email']}");
 
         return ['success' => true, 'user' => $user];
+    }
+
+    private static function recordFailedLogin(string $ip, string $email): void
+    {
+        try {
+            Database::execute(
+                "INSERT INTO login_attempts (ip_address, email, attempted_at) VALUES (?, ?, NOW())",
+                [$ip, $email]
+            );
+        } catch (\Throwable $e) {
+            Logger::error("Failed to record login attempt: " . $e->getMessage());
+        }
     }
 
     public static function register(string $name, string $email, string $password, string $workspaceName, bool $autoVerify = false): array

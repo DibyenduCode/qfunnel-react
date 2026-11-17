@@ -396,6 +396,34 @@ class ApiSpaController
         }
     }
 
+    private function isSvgSafe(string $filePath): bool
+    {
+        $content = @file_get_contents($filePath);
+        if ($content === false || trim($content) === '') {
+            return false;
+        }
+
+        $dangerousPatterns = [
+            '/<script\b/i',
+            '/<foreignObject\b/i',
+            '/<iframe\b/i',
+            '/<object\b/i',
+            '/<embed\b/i',
+            '/javascript\s*:/i',
+            '/data\s*:\s*text\/html/i',
+            '/\bon[a-z]{3,}\s*=/i',
+            '/<animate\b[^>]*\bvalues\s*=\s*[\'"][^"\']*javascript/i',
+        ];
+
+        foreach ($dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function uploadFunnelLogo(Request $request, string $id): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
@@ -435,8 +463,19 @@ class ApiSpaController
                 return Response::error("Logo file size must be less than 5MB.", "FILE_TOO_LARGE", null, 400);
             }
 
-            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
-            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $mimeToExt = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/svg+xml' => 'svg',
+                'image/gif' => 'gif',
+            ];
+            $cleanExt = $mimeToExt[$mimeType] ?? 'png';
+
+            if ($cleanExt === 'svg' && !$this->isSvgSafe($uploadedFile['tmp_name'])) {
+                return Response::error("SVG file contains unsafe scripts or embedded objects.", "UNSAFE_SVG", null, 400);
+            }
+
             $fileName = 'logo_' . (int)$id . '_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
             $targetDir = dirname(__DIR__, 2) . '/public/uploads/logos';
             if (!is_dir($targetDir)) {
@@ -509,8 +548,19 @@ class ApiSpaController
                 return Response::error("Image file size must be less than 10MB.", "FILE_TOO_LARGE", null, 400);
             }
 
-            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
-            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $mimeToExt = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/svg+xml' => 'svg',
+                'image/gif' => 'gif',
+            ];
+            $cleanExt = $mimeToExt[$mimeType] ?? 'png';
+
+            if ($cleanExt === 'svg' && !$this->isSvgSafe($uploadedFile['tmp_name'])) {
+                return Response::error("SVG file contains unsafe scripts or embedded objects.", "UNSAFE_SVG", null, 400);
+            }
+
             $fileName = 'media_' . (int)$id . '_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
             $targetDir = dirname(__DIR__, 2) . '/public/uploads/media';
             if (!is_dir($targetDir)) {
@@ -572,8 +622,19 @@ class ApiSpaController
                 return Response::error("Image file size must be less than 10MB.", "FILE_TOO_LARGE", null, 400);
             }
 
-            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
-            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $mimeToExt = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/svg+xml' => 'svg',
+                'image/gif' => 'gif',
+            ];
+            $cleanExt = $mimeToExt[$mimeType] ?? 'png';
+
+            if ($cleanExt === 'svg' && !$this->isSvgSafe($uploadedFile['tmp_name'])) {
+                return Response::error("SVG file contains unsafe scripts or embedded objects.", "UNSAFE_SVG", null, 400);
+            }
+
             $fileName = 'media_t' . (int)$tenantId . '_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
             $targetDir = dirname(__DIR__, 2) . '/public/uploads/media';
             if (!is_dir($targetDir)) {
@@ -1430,6 +1491,9 @@ class ApiSpaController
         }
 
         $ext = $allowed[$mime];
+        if ($ext === 'svg' && !$this->isSvgSafe($uploaded['tmp_name'])) {
+            return Response::error("SVG file contains unsafe scripts or embedded objects.", "UNSAFE_SVG", null, 400);
+        }
         $targetDir = realpath(__DIR__ . '/../../public') . '/uploads/workspaces';
         if (!is_dir($targetDir)) {
             @mkdir($targetDir, 0755, true);
@@ -2599,8 +2663,18 @@ class ApiSpaController
                 return Response::error("QR code file size must be less than 5MB.", "FILE_TOO_LARGE", null, 400);
             }
 
-            $ext = pathinfo($uploadedFile['name'], PATHINFO_EXTENSION) ?: 'png';
-            $cleanExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext));
+            $mimeToExt = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/svg+xml' => 'svg',
+            ];
+            $cleanExt = $mimeToExt[$mimeType] ?? 'png';
+
+            if ($cleanExt === 'svg' && !$this->isSvgSafe($uploadedFile['tmp_name'])) {
+                return Response::error("SVG file contains unsafe scripts or embedded objects.", "UNSAFE_SVG", null, 400);
+            }
+
             $fileName = 'qr_payment_' . bin2hex(random_bytes(6)) . '.' . $cleanExt;
             $targetDir = dirname(__DIR__, 2) . '/public/uploads/gateways';
             if (!is_dir($targetDir)) {

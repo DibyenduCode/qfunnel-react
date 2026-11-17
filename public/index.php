@@ -89,13 +89,44 @@ try {
     die("Service temporarily unavailable. Please verify database configuration.");
 }
 
-// 5. CORS & Preflight Handling for SPA (Vite Dev & Production)
+// 5. Security Headers & CORS Handling
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
-if (in_array($origin, $allowedOrigins, true) || Env::get('APP_ENV') === 'development' || !empty($origin)) {
-    if ($origin) {
-        header("Access-Control-Allow-Origin: {$origin}");
+$appUrl = Env::get('APP_URL', '');
+$appHost = $appUrl ? parse_url($appUrl, PHP_URL_HOST) : null;
+$originHost = $origin ? parse_url($origin, PHP_URL_HOST) : null;
+$serverHost = !empty($_SERVER['HTTP_HOST']) ? explode(':', $_SERVER['HTTP_HOST'])[0] : '';
+
+$isDev = (Env::get('APP_ENV') === 'development');
+$allowedDevOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+];
+
+$isAllowedOrigin = false;
+if ($origin) {
+    if (in_array($origin, $allowedDevOrigins, true)) {
+        $isAllowedOrigin = true;
+    } elseif ($originHost && ($originHost === $serverHost || ($appHost && $originHost === $appHost))) {
+        $isAllowedOrigin = true;
     }
+}
+
+// Public lead submission endpoints can be embedded externally without credentials
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$isPublicRoute = str_contains($requestUri, '/api/public/');
+
+if ($isPublicRoute) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Accept, X-Requested-With");
+} elseif ($isAllowedOrigin) {
+    header("Access-Control-Allow-Origin: {$origin}");
     header("Access-Control-Allow-Credentials: true");
     header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-Api-Key");

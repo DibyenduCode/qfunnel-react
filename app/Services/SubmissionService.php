@@ -330,18 +330,27 @@ class SubmissionService
         $fp = fopen('php://temp', 'r+');
         fputcsv($fp, ['Session ID', 'Funnel', 'Lead Name', 'Email', 'Phone', 'Lead CRM Status', 'Instant Quote', 'Quiz Status', 'Submission Date', 'Destination Reached']);
 
+        // Prevent CSV / Excel Formula Injection (CWE-1236)
+        $sanitizeCsv = static function ($val): string {
+            $str = (string)($val ?? '');
+            if ($str !== '' && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                return "'" . $str;
+            }
+            return $str;
+        };
+
         foreach ($rows as $r) {
             fputcsv($fp, [
                 $r['session_id'],
-                $r['funnel_name'],
-                $r['full_name'] ?: 'N/A',
-                $r['email'] ?: 'N/A',
-                $r['phone'] ?: 'N/A',
+                $sanitizeCsv($r['funnel_name']),
+                $sanitizeCsv($r['full_name'] ?: 'N/A'),
+                $sanitizeCsv($r['email'] ?: 'N/A'),
+                $sanitizeCsv($r['phone'] ?: 'N/A'),
                 strtoupper($r['lead_status'] ?? 'NEW'),
-                !empty($r['formatted_quote']) ? $r['formatted_quote'] : ($r['calculated_value'] !== null ? (string)$r['calculated_value'] : 'N/A'),
+                $sanitizeCsv(!empty($r['formatted_quote']) ? $r['formatted_quote'] : ($r['calculated_value'] !== null ? (string)$r['calculated_value'] : 'N/A')),
                 ucfirst(str_replace('_', ' ', $r['status'])),
                 $r['created_at'] ?? '',
-                $r['destination_name'] ?: 'N/A',
+                $sanitizeCsv($r['destination_name'] ?: 'N/A'),
             ]);
         }
 

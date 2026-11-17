@@ -164,9 +164,12 @@ class WebhookService
             return false;
         }
 
-        // In production, strictly reject private, reserved, and loopback IP addresses
-        if (\App\Core\Env::get('APP_ENV') === 'production') {
-            $host = $parsed['host'];
+        // Strictly reject private, reserved, and loopback IP addresses (secure by default)
+        if (\App\Core\Env::get('APP_ENV') !== 'development') {
+            $host = strtolower($parsed['host']);
+            if (in_array($host, ['localhost', '127.0.0.1', '::1', '0.0.0.0'], true)) {
+                return false;
+            }
             $ip = gethostbyname($host);
             if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                 return false;

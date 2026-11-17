@@ -201,6 +201,32 @@ LOCK TABLES `email_verifications` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `login_attempts`
+--
+
+DROP TABLE IF EXISTS `login_attempts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `login_attempts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` varchar(45) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `attempted_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_login_rate` (`ip_address`,`email`,`attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `login_attempts`
+--
+
+LOCK TABLES `login_attempts` WRITE;
+/*!40000 ALTER TABLE `login_attempts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `login_attempts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `form_field_options`
 --
 
@@ -569,7 +595,10 @@ INSERT INTO `migrations` VALUES
 (11,'010_video_gate_node.sql','2026-11-01 01:09:26'),
 (12,'011_conditional_router_node.sql','2026-11-14 13:31:15'),
 (13,'012_add_content_node_type.sql','2026-11-14 13:31:15'),
-(14,'013_email_smtp_verification_and_templates.sql','2026-11-14 13:33:22');
+(14,'013_email_smtp_verification_and_templates.sql','2026-11-14 13:33:22'),
+(15,'014_workspace_logo_and_user_avatar.sql','2026-11-15 07:30:00'),
+(16,'015_support_tickets_and_channels.sql','2026-11-16 17:40:00'),
+(17,'016_login_rate_limiting.sql','2026-11-18 01:25:00');
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 

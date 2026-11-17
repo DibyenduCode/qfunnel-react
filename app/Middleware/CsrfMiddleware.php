@@ -13,7 +13,10 @@ class CsrfMiddleware
         $method = $request->method();
         if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true)) {
             // Check CSRF token from header or body
-            $token = $request->header('x-csrf-token') ?? $request->input('_csrf_token');
+            $token = $request->header('x-csrf-token') 
+                ?? $request->header('x-xsrf-token') 
+                ?? $request->input('_csrf_token') 
+                ?? $request->input('csrf_token');
 
             if (!Session::validateCsrfToken($token)) {
                 if ($request->isAjax()) {

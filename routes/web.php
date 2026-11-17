@@ -6,6 +6,7 @@ use App\Core\Router;
 use App\Controllers\ApiSpaController;
 use App\Controllers\ApiController;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\CsrfMiddleware;
 use App\Middleware\TenantMiddleware;
 use App\Middleware\PlatformAdminMiddleware;
 
@@ -61,7 +62,7 @@ $router->get('/api/v1/submissions', [ApiController::class, 'submissions']);
 // ==========================================
 // AUTHENTICATED SPA API ENDPOINTS
 // ==========================================
-$router->group([AuthMiddleware::class], function (Router $router) {
+$router->group([AuthMiddleware::class, CsrfMiddleware::class], function (Router $router) {
 
     // Tenant-Scoped Workspace API Group
     $router->group([TenantMiddleware::class], function (Router $router) {

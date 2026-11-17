@@ -37,6 +37,7 @@ storage/framework/*
 !storage/framework/.gitkeep
 public/uploads/*
 !public/uploads/.gitkeep
+!public/uploads/.htaccess
 !public/uploads/logos/.gitkeep
 
 # IDEs & OS Files
@@ -49,6 +50,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+*.txt
 
 # Agent & Skills local cache
 .taste-skill/
