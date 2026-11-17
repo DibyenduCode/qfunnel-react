@@ -152,9 +152,9 @@ class UsageLimitService
         );
 
         $limits = [
-            'max_funnels' => 3,
-            'max_submissions_per_month' => 200,
-            'max_team_members' => 2,
+            'max_funnels' => 5,
+            'max_submissions_per_month' => 1000,
+            'max_team_members' => 3,
             'plan_name' => 'Starter Trial',
             'plan_slug' => 'starter',
             'status' => 'trial',
@@ -187,6 +187,10 @@ class UsageLimitService
         $limits = self::getTenantLimits($tenantId);
         $currentCount = (int) Database::fetchColumn("SELECT COUNT(*) FROM funnels WHERE tenant_id = ? AND status != 'archived'", [$tenantId]);
 
+        if (AuthorizationService::isPlatformAdmin()) {
+            return ['allowed' => true, 'current' => $currentCount, 'limit' => -1];
+        }
+
         if ($limits['max_funnels'] > 0 && $currentCount >= $limits['max_funnels']) {
             return [
                 'allowed' => false,
@@ -203,6 +207,10 @@ class UsageLimitService
     {
         $limits = self::getTenantLimits($tenantId);
         $currentCount = (int) Database::fetchColumn("SELECT COUNT(*) FROM tenant_memberships WHERE tenant_id = ?", [$tenantId]);
+
+        if (AuthorizationService::isPlatformAdmin()) {
+            return ['allowed' => true, 'current' => $currentCount, 'limit' => -1];
+        }
 
         if ($limits['max_team_members'] > 0 && $currentCount >= $limits['max_team_members']) {
             return [

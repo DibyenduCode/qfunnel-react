@@ -239,10 +239,14 @@ export const AdminLayout: React.FC = () => {
 
           {/* Quota & Usage Widget */}
           {(() => {
-            const isUnlimited = !limits || limits.max_funnels <= 0 || limits.plan_slug === 'pro';
-            const currentFunnels = limits?.current_funnels ?? 0;
-            const maxFunnels = limits?.max_funnels ?? 1;
-            const pct = maxFunnels > 0 ? Math.min(100, Math.max(4, Math.round((currentFunnels / maxFunnels) * 100))) : 0;
+            if (!limits && !isPlatformAdmin) {
+              return null;
+            }
+
+            const isUnlimited = isPlatformAdmin || !limits || limits.max_funnels <= 0 || ['pro', 'enterprise', 'lifetime-pro-deal'].includes(limits.plan_slug || '');
+            const currentFunnels = Number(limits?.current_funnels ?? 0);
+            const maxFunnels = Math.max(1, Number(limits?.max_funnels ?? 5));
+            const pct = currentFunnels > 0 ? Math.min(100, Math.max(4, Math.round((currentFunnels / maxFunnels) * 100))) : 0;
 
             return (
               <div className="px-3 pb-3">
@@ -250,7 +254,7 @@ export const AdminLayout: React.FC = () => {
                   <div className="flex items-center justify-between text-[11px]">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="font-bold text-[#131416] truncate">
-                        {limits?.plan_name ? `${limits.plan_name} Plan` : 'Pro Plan'}
+                        {isPlatformAdmin ? 'Admin Access' : limits?.plan_name ? `${limits.plan_name} Plan` : 'Starter Plan'}
                       </span>
                       {isUnlimited && (
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#dcfae5] text-[#2f7a45] uppercase tracking-wider shrink-0">
