@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Funnel } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import { SeoHelmet } from '../../components/SeoHelmet';
 import {
   GitFork,
@@ -342,23 +343,25 @@ export const FunnelsListPage: React.FC = () => {
                   >
                     <Settings className="w-3.5 h-3.5" />
                   </Link>
-                  <button
-                    onClick={() => handleDuplicate(f.id)}
-                    disabled={actionLoadingId === f.id}
-                    className="p-1.5 text-[#5d5f60] hover:text-[#1d5fd6] rounded-lg hover:bg-[#dcf1ff]/40 transition disabled:opacity-50"
-                    title={!Boolean(features?.funnel_cloning || isPlatformAdmin) ? 'Upgrade to Pro to Clone Funnels' : 'Duplicate Funnel'}
-                  >
-                    {actionLoadingId === f.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1d5fd6]" />
-                    ) : !Boolean(features?.funnel_cloning || isPlatformAdmin) ? (
-                      <span className="flex items-center gap-0.5">
-                        <Copy className="w-3.5 h-3.5 opacity-60" />
-                        <span className="text-[9px] font-bold text-[#1d5fd6] bg-[#dcf1ff] px-1 rounded">PRO</span>
-                      </span>
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                  <ProFeatureTooltip feature="funnel_cloning" position="top">
+                    <button
+                      onClick={() => handleDuplicate(f.id)}
+                      disabled={actionLoadingId === f.id}
+                      className="p-1.5 text-[#5d5f60] hover:text-[#1d5fd6] rounded-lg hover:bg-[#dcf1ff]/40 transition disabled:opacity-50 cursor-pointer"
+                      title={!Boolean(features?.funnel_cloning || isPlatformAdmin) ? 'Upgrade to Pro to Clone Funnels' : 'Duplicate Funnel'}
+                    >
+                      {actionLoadingId === f.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1d5fd6]" />
+                      ) : !Boolean(features?.funnel_cloning || isPlatformAdmin) ? (
+                        <span className="flex items-center gap-0.5">
+                          <Copy className="w-3.5 h-3.5 opacity-60" />
+                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1 rounded font-mono">PRO</span>
+                        </span>
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </ProFeatureTooltip>
                   {f.status === 'published' && (
                     <a
                       href={`/quiz/${f.slug}`}

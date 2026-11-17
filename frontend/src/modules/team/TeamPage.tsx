@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UserPlus, Trash2, Loader2, Lock, AlertTriangle } from 'lucide-react';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 
 export const TeamPage: React.FC = () => {
   const { limits, isPlatformAdmin, refreshLimits } = useAuthStore();
@@ -89,13 +90,34 @@ export const TeamPage: React.FC = () => {
           <p className="text-xs text-[#5c6066] mt-0.5">Manage collaborators, editors, and analyst permissions</p>
         </div>
 
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
+        <ProFeatureTooltip
+          isLocked={isAtSeatLimit}
+          featureName="Team Member Seats"
+          description={`You have reached your workspace seat limit of ${limits?.max_team_members || 3} members. Upgrade to Pro to add up to 10 or unlimited team members.`}
+          position="bottom"
         >
-          <UserPlus className="w-4 h-4" />
-          <span>Invite Member</span>
-        </button>
+          <button
+            onClick={() => {
+              if (isAtSeatLimit) {
+                return;
+              }
+              setShowInviteModal(true);
+            }}
+            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition self-start sm:self-auto shadow-xs cursor-pointer ${
+              isAtSeatLimit
+                ? 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+                : 'bg-[#1d5fd6] text-white hover:bg-[#1853bf]'
+            }`}
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Invite Member</span>
+            {isAtSeatLimit && (
+              <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-100 text-amber-800 border border-amber-300 font-bold font-mono">
+                PRO
+              </span>
+            )}
+          </button>
+        </ProFeatureTooltip>
       </div>
 
       {/* Members Table */}

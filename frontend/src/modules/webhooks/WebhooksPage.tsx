@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import { Webhook, Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
 
 export const WebhooksPage: React.FC = () => {
@@ -73,24 +74,26 @@ export const WebhooksPage: React.FC = () => {
           <p className="text-xs text-[#5c6066] mt-0.5">Stream live leads and funnel events to Zapier, Make, or your custom CRM</p>
         </div>
 
-        <button
-          onClick={() => {
-            if (!canUseWebhooks) {
-              setUpgradeModalOpen(true);
-              return;
-            }
-            setShowCreate(!showCreate);
-          }}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Webhook</span>
-          {!canUseWebhooks && (
-            <span className="px-1.5 py-0.2 rounded text-[9px] bg-white/20 text-white font-bold">
-              PRO
-            </span>
-          )}
-        </button>
+        <ProFeatureTooltip feature="webhooks" position="bottom">
+          <button
+            onClick={() => {
+              if (!canUseWebhooks) {
+                setUpgradeModalOpen(true);
+                return;
+              }
+              setShowCreate(!showCreate);
+            }}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Webhook</span>
+            {!canUseWebhooks && (
+              <span className="px-1.5 py-0.2 rounded text-[9px] bg-white/20 text-white font-bold font-mono">
+                PRO
+              </span>
+            )}
+          </button>
+        </ProFeatureTooltip>
       </div>
 
       {showCreate && (

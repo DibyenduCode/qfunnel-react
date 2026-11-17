@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api, resolveMediaUrl } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import {
   ArrowLeft,
   Save,
@@ -658,29 +659,28 @@ export const FunnelSettingsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-[#1d5fd6]" />
                 <h2 className="text-sm font-bold text-[#131416]">Ad Pixels & Conversion Tracking</h2>
-                {!hasTrackingPixels && (
-                  <span className="px-1.5 py-0.2 rounded text-[9px] bg-[#dcf1ff] text-[#1d5fd6] font-bold">
-                    PRO
-                  </span>
-                )}
+                <ProFeatureTooltip feature="custom_tracking_pixels" inlineBadge position="bottom" />
               </div>
               <p className="text-xs text-[#5d5f60] mt-0.5">Track PageView and Lead conversion events automatically across your paid ad campaigns</p>
             </div>
             {!hasTrackingPixels ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setUpgradeFeature({
-                    name: 'Ad Tracking Pixels (Meta, Google, TikTok)',
-                    desc: 'Automatically inject Meta Pixel, Google Analytics 4, and TikTok Pixel IDs to track quiz starts and lead conversion events on ad platforms.',
-                    plan: 'Pro',
-                  });
-                  setUpgradeModalOpen(true);
-                }}
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1d5fd6] text-white hover:bg-[#1853bf] transition shadow-xs"
-              >
-                Upgrade to Pro
-              </button>
+              <ProFeatureTooltip feature="custom_tracking_pixels" position="left">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUpgradeFeature({
+                      name: 'Ad Tracking Pixels (Meta, Google, TikTok)',
+                      desc: 'Automatically inject Meta Pixel, Google Analytics 4, and TikTok Pixel IDs to track quiz starts and lead conversion events on ad platforms.',
+                      plan: 'Pro',
+                    });
+                    setUpgradeModalOpen(true);
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1d5fd6] text-white hover:bg-[#1853bf] transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Upgrade to Pro</span>
+                </button>
+              </ProFeatureTooltip>
             ) : (
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#dcfae5] text-[#2f7a45]">
                 Ad ROI
@@ -777,15 +777,15 @@ export const FunnelSettingsPage: React.FC = () => {
               <h2 className="text-sm font-bold text-[#131416]">100% White-Labeling & Legal Footers</h2>
               <p className="text-xs text-[#5d5f60] mt-0.5">Custom copyright notice, legal terms, and watermark removal</p>
             </div>
-            {hasWhiteLabel ? (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#dcfae5] text-[#2f7a45] uppercase tracking-wider">
-                Unlocked
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#fef3c7] text-[#b45309] uppercase tracking-wider">
-                Pro Plan Required
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {hasWhiteLabel ? (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#dcfae5] text-[#2f7a45] uppercase tracking-wider">
+                  Unlocked
+                </span>
+              ) : (
+                <ProFeatureTooltip feature="white_label" inlineBadge position="left" />
+              )}
+            </div>
           </div>
 
           {/* White-Label Toggle Box */}

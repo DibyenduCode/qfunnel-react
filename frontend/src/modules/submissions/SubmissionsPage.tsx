@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { Submission, LeadStage } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import {
   Users,
   Search,
@@ -369,18 +370,19 @@ export const SubmissionsPage: React.FC = () => {
               <span>Export CSV</span>
             </a>
           ) : (
-            <button
-              type="button"
-              onClick={() => setUpgradeModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-medium text-[#131416] hover:bg-[#f4f6f8] transition-colors"
-              title="Upgrade to Pro to export leads as CSV"
-            >
-              <Download className="w-3.5 h-3.5 text-[#5d5f60]" />
-              <span>Export CSV</span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] bg-[#dcf1ff] text-[#1d5fd6] font-bold">
-                PRO
-              </span>
-            </button>
+            <ProFeatureTooltip feature="csv_export" position="bottom">
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-medium text-[#131416] hover:bg-[#f4f6f8] transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-[#5d5f60]" />
+                <span>Export CSV</span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-50 text-amber-700 border border-amber-200 font-bold font-mono">
+                  PRO
+                </span>
+              </button>
+            </ProFeatureTooltip>
           )}
         </div>
       </div>

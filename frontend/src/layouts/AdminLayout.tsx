@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BrandLogo } from '../components/BrandLogo';
+import { ProFeatureTooltip } from '../components/ProFeatureTooltip';
 import { resolveMediaUrl } from '../api/client';
 import {
   LayoutDashboard,
@@ -198,23 +199,29 @@ export const AdminLayout: React.FC = () => {
               const isActive = location.pathname.startsWith(item.href);
               const Icon = item.icon;
               return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMobileSidebarOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 h-9 rounded-xl text-xs transition ${
-                    isActive
-                      ? 'bg-[#1d5fd6] text-white font-semibold shadow-xs'
-                      : 'text-[#131416] hover:bg-[#f4f6f8] font-medium'
-                  }`}
-                >
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition ${
-                    isActive ? 'bg-white/20 text-white' : item.chip
-                  }`}>
-                    <Icon className="w-3.5 h-3.5 stroke-[2]" />
-                  </div>
-                  <span className="truncate">{item.name}</span>
-                </Link>
+                <div key={item.name} className="relative flex items-center">
+                  <Link
+                    to={item.href}
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={`flex items-center gap-2.5 px-3 h-9 rounded-xl text-xs transition flex-1 min-w-0 ${
+                      isActive
+                        ? 'bg-[#1d5fd6] text-white font-semibold shadow-xs'
+                        : 'text-[#131416] hover:bg-[#f4f6f8] font-medium'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition ${
+                      isActive ? 'bg-white/20 text-white' : item.chip
+                    }`}>
+                      <Icon className="w-3.5 h-3.5 stroke-[2]" />
+                    </div>
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                  {item.name === 'Webhooks' && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <ProFeatureTooltip feature="webhooks" inlineBadge position="right" />
+                    </div>
+                  )}
+                </div>
               );
             })}
 

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
+import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import { GitFork, Calculator, ArrowLeft, Plus, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 
 export const CreateFunnelPage: React.FC = () => {
@@ -137,48 +138,50 @@ export const CreateFunnelPage: React.FC = () => {
                 </div>
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (!canUseCalculator) {
-                    setUpgradeModalOpen(true);
-                    return;
-                  }
-                  setMode('calculator');
-                }}
-                className={`p-4 rounded-xl border text-left transition flex flex-col justify-between ${
-                  mode === 'calculator'
-                    ? 'border-[#1d5fd6] bg-[#dcf1ff]/40 ring-1 ring-[#1d5fd6]'
-                    : 'border-[#e8eaec] hover:bg-[#f9fbfc]'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#dcfae5] text-[#04250e] flex items-center justify-center">
-                    <Calculator className="w-4 h-4" />
-                  </div>
-                  {mode === 'calculator' ? (
-                    <span className="w-2 h-2 rounded-full bg-[#1d5fd6]" />
-                  ) : !canUseCalculator ? (
-                    <span className="px-1.5 py-0.2 rounded text-[9px] bg-[#dcf1ff] text-[#1d5fd6] font-bold">
-                      PRO
-                    </span>
-                  ) : null}
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="block text-xs font-semibold text-[#131416]">Price / Quote Calculator</span>
-                    {!canUseCalculator && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-[#1d5fd6] font-semibold">
-                        <Sparkles className="w-2.5 h-2.5" />
-                        <span>Pro Plan</span>
+              <ProFeatureTooltip feature="calculator_mode" position="top" className="w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canUseCalculator) {
+                      setUpgradeModalOpen(true);
+                      return;
+                    }
+                    setMode('calculator');
+                  }}
+                  className={`w-full p-4 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                    mode === 'calculator'
+                      ? 'border-[#1d5fd6] bg-[#dcf1ff]/40 ring-1 ring-[#1d5fd6]'
+                      : 'border-[#e8eaec] hover:bg-[#f9fbfc]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#dcfae5] text-[#04250e] flex items-center justify-center">
+                      <Calculator className="w-4 h-4" />
+                    </div>
+                    {mode === 'calculator' ? (
+                      <span className="w-2 h-2 rounded-full bg-[#1d5fd6]" />
+                    ) : !canUseCalculator ? (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-50 text-amber-700 border border-amber-200 font-bold font-mono">
+                        PRO
                       </span>
-                    )}
+                    ) : null}
                   </div>
-                  <span className="block text-[11px] text-[#5c6066] mt-0.5">
-                    Evaluates user choices with mathematical formulas to output real-time estimates.
-                  </span>
-                </div>
-              </button>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="block text-xs font-semibold text-[#131416]">Price / Quote Calculator</span>
+                      {!canUseCalculator && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#1d5fd6] font-semibold">
+                          <Sparkles className="w-2.5 h-2.5" />
+                          <span>Pro Plan</span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="block text-[11px] text-[#5c6066] mt-0.5">
+                      Evaluates user choices with mathematical formulas to output real-time estimates.
+                    </span>
+                  </div>
+                </button>
+              </ProFeatureTooltip>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ProFeatureTooltip } from '../../../components/ProFeatureTooltip';
 import {
   ArrowLeft,
   Save,
@@ -125,19 +126,21 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Quiz</span>
           </button>
-          <button
-            type="button"
-            onClick={() => onModeChange('calculator')}
-            className={`px-2 py-0.5 rounded font-normal transition flex items-center gap-1 ${
-              funnelMode === 'calculator'
-                ? 'bg-[#1d5fd6] text-white font-medium shadow-xs'
-                : 'text-[#5d5f60] hover:text-[#131416]'
-            }`}
-            title="Calculator math formula & quote generation"
-          >
-            <Calculator className="w-3.5 h-3.5 text-amber-300" />
-            <span>Calculator</span>
-          </button>
+          <ProFeatureTooltip feature="calculator_mode" position="bottom">
+            <button
+              type="button"
+              onClick={() => onModeChange('calculator')}
+              className={`px-2 py-0.5 rounded font-normal transition flex items-center gap-1 cursor-pointer ${
+                funnelMode === 'calculator'
+                  ? 'bg-[#1d5fd6] text-white font-medium shadow-xs'
+                  : 'text-[#5d5f60] hover:text-[#131416]'
+              }`}
+              title="Calculator math formula & quote generation"
+            >
+              <Calculator className="w-3.5 h-3.5 text-amber-300" />
+              <span>Calculator</span>
+            </button>
+          </ProFeatureTooltip>
         </div>
       </div>
 
