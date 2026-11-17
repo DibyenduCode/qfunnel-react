@@ -246,11 +246,11 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div className="space-y-1">
             <div className="text-2xl sm:text-3xl font-extrabold text-[#131416] tracking-tight">
-              {metrics?.published_funnels ?? metrics?.total_funnels ?? usage?.funnels?.used ?? 0}
+              {usage?.funnels?.used ?? metrics?.total_funnels ?? metrics?.published_funnels ?? 0}
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-[#0a3a80] font-medium">
               <span className="px-1.5 py-0.5 rounded bg-[#dcf1ff] border border-[#b9e6fe]">
-                {metrics?.total_funnels ?? 0} total · Limit: {usage?.funnels?.is_unlimited || !usage?.funnels?.limit || usage?.funnels?.limit <= 0 ? 'Unlimited' : usage.funnels.limit}
+                {metrics?.published_funnels ?? 0} published · Limit: {usage?.funnels?.is_unlimited || !usage?.funnels?.limit || usage?.funnels?.limit <= 0 ? 'Unlimited' : usage.funnels.limit}
               </span>
             </div>
           </div>

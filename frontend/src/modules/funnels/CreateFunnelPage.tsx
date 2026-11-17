@@ -3,10 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
-import { GitFork, Calculator, ArrowLeft, Plus, Loader2, Sparkles } from 'lucide-react';
+import { GitFork, Calculator, ArrowLeft, Plus, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 
 export const CreateFunnelPage: React.FC = () => {
-  const { features, isPlatformAdmin } = useAuthStore();
+  const { features, isPlatformAdmin, limits, refreshLimits } = useAuthStore();
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -15,9 +15,20 @@ export const CreateFunnelPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState({
+    name: 'Interactive Calculator & Instant Quotes',
+    desc: 'Dynamic formula calculation, pricing estimators, and instant quote cards are available on Pro and Growth plans. Upgrade to build formula-driven quiz funnels.',
+    plan: 'Pro'
+  });
 
   const navigate = useNavigate();
   const canUseCalculator = Boolean(features?.calculator_mode || isPlatformAdmin);
+  const isAtLimit = Boolean(
+    !isPlatformAdmin &&
+    limits &&
+    limits.max_funnels > 0 &&
+    (limits.current_funnels ?? 0) >= limits.max_funnels
+  );
 
   const handleNameChange = (val: string) => {
     setName(val);
@@ -28,6 +39,16 @@ export const CreateFunnelPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAtLimit) {
+      setUpgradeFeature({
+        name: `Funnel Limit Reached (${limits?.current_funnels}/${limits?.max_funnels})`,
+        desc: `You have reached the limit of ${limits?.max_funnels} funnels on your ${limits?.plan_name || 'current'} plan. Upgrade to unlock more active funnels.`,
+        plan: 'Pro'
+      });
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     setSubmitting(true);
     setError('');
 
@@ -40,6 +61,8 @@ export const CreateFunnelPage: React.FC = () => {
         template: starterMode,
         blank_canvas: starterMode === 'blank',
       });
+      // Instantly update live quota counters
+      await refreshLimits();
       navigate(`/admin/funnels/${funnel.id}/builder`);
     } catch (err: any) {
       setError(err.message || 'Failed to create funnel.');
@@ -57,6 +80,28 @@ export const CreateFunnelPage: React.FC = () => {
       <div className="bg-white border border-[#e8eaec] rounded-2xl p-6 sm:p-8">
         <h1 className="text-lg font-bold text-[#131416]">Create a New Funnel</h1>
         <p className="text-xs text-[#5c6066] mt-1">Configure your funnel type and metadata</p>
+
+        {isAtLimit && (
+          <div className="mt-4 p-4 rounded-xl bg-[#fffbeb] border border-[#fde68a] text-[#92400e] text-xs flex items-start justify-between gap-3 shadow-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-[#d97706] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-[#92400e]">
+                  Funnel Limit Reached ({limits?.current_funnels} of {limits?.max_funnels} used)
+                </p>
+                <p className="text-[11px] text-[#b45309] mt-0.5">
+                  Your {limits?.plan_name || 'Starter'} plan includes {limits?.max_funnels} funnels. Upgrade your subscription to create additional funnels.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/admin/billing"
+              className="px-3 py-1.5 rounded-lg bg-[#d97706] hover:bg-[#b45309] text-white text-[11px] font-bold shrink-0 transition"
+            >
+              Upgrade Plan
+            </Link>
+          </div>
+        )}
 
         {error && (
           <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
@@ -241,9 +286,9 @@ export const CreateFunnelPage: React.FC = () => {
       <UpgradeModal
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
-        featureName="Interactive Calculator & Instant Quotes"
-        description="Dynamic formula calculation, pricing estimators, and instant quote cards are available on Pro and Growth plans. Upgrade to build formula-driven quiz funnels."
-        requiredPlan="Pro"
+        featureName={upgradeFeature.name}
+        description={upgradeFeature.desc}
+        requiredPlan={upgradeFeature.plan}
       />
     </div>
   );

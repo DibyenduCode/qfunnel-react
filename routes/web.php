@@ -88,6 +88,8 @@ $router->group([AuthMiddleware::class], function (Router $router) {
         $router->post('/api/funnels/{id}/form-fields', [ApiSpaController::class, 'saveFunnelFormFields']);
 
         // Submissions & Leads CRM
+        $router->get('/api/submissions/export', [ApiSpaController::class, 'exportSubmissions']);
+        $router->get('/admin/submissions/export', [ApiSpaController::class, 'exportSubmissions']);
         $router->get('/api/submissions', [ApiSpaController::class, 'submissions']);
         $router->get('/api/submissions/{id}', [ApiSpaController::class, 'submissionDetail']);
         $router->post('/api/submissions/{id}/status', [ApiSpaController::class, 'updateSubmissionStatus']);

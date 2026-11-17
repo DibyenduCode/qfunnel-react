@@ -8,17 +8,27 @@ export const VideoGateNode = memo(({ data, selected }: NodeProps) => {
   const title = (data.title as string) || vg.video_headline || vg.gate_headline || (isStandard ? 'Video Presentation' : 'Interactive Video Gate');
   const videoUrl = vg.video_url || '';
   const gateSeconds = Number(vg.gate_timestamp_seconds ?? 45);
-  const gateMin = Math.floor(gateSeconds / 60);
+  const gateHours = Math.floor(gateSeconds / 3600);
+  const gateMin = Math.floor((gateSeconds % 3600) / 60);
   const gateSec = Math.floor(gateSeconds % 60);
-  const formattedTime = gateMin > 0 ? `${gateMin}m ${gateSec}s` : `${gateSec}s`;
+  const formattedTime = gateHours > 0
+    ? `${gateHours}h ${gateMin}m ${gateSec}s`
+    : gateMin > 0
+    ? `${gateMin}m ${gateSec}s`
+    : `${gateSec}s`;
   const allowSkip = Boolean(vg.allow_skip_gate);
   const fields = vg.form_fields || data.fields || [];
   const fieldsCount = Array.isArray(fields) && fields.length > 0 ? fields.length : 2;
   const ctaReveal = vg.cta_reveal || 'always';
   const ctaDelay = Number(vg.cta_delay_seconds ?? 15);
-  const ctaMin = Math.floor(ctaDelay / 60);
+  const ctaHours = Math.floor(ctaDelay / 3600);
+  const ctaMin = Math.floor((ctaDelay % 3600) / 60);
   const ctaSec = Math.floor(ctaDelay % 60);
-  const formattedCtaDelay = ctaMin > 0 ? `${ctaMin}m ${ctaSec}s` : `${ctaSec}s`;
+  const formattedCtaDelay = ctaHours > 0
+    ? `${ctaHours}h ${ctaMin}m ${ctaSec}s`
+    : ctaMin > 0
+    ? `${ctaMin}m ${ctaSec}s`
+    : `${ctaSec}s`;
   const ctaButtonText = vg.cta_button_text || 'Continue to Next Step';
 
   return (

@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
-import { UserPlus, Trash2, Loader2 } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import { UserPlus, Trash2, Loader2, Lock, AlertTriangle } from 'lucide-react';
 
 export const TeamPage: React.FC = () => {
+  const { limits, isPlatformAdmin, refreshLimits } = useAuthStore();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -11,6 +14,13 @@ export const TeamPage: React.FC = () => {
   const [inviteRole, setInviteRole] = useState('editor');
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const isAtSeatLimit = Boolean(
+    !isPlatformAdmin &&
+    limits &&
+    limits.max_team_members > 0 &&
+    (limits.current_team_members ?? members.length) >= limits.max_team_members
+  );
 
   useEffect(() => {
     loadTeam();
@@ -42,6 +52,7 @@ export const TeamPage: React.FC = () => {
       setShowInviteModal(false);
       setInviteEmail('');
       setInviteName('');
+      await refreshLimits();
       loadTeam();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to add member.');
@@ -63,6 +74,7 @@ export const TeamPage: React.FC = () => {
     if (!confirm('Remove this member from workspace?')) return;
     try {
       await api.post(`/api/team/${membershipId}/remove`);
+      await refreshLimits();
       loadTeam();
     } catch (err: any) {
       alert(err.message || 'Failed to remove member');

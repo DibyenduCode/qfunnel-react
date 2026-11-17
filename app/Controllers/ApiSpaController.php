@@ -348,6 +348,11 @@ class ApiSpaController
             $requestedWhiteLabel = !empty($input['white_label']);
             $whiteLabel = $requestedWhiteLabel && $canWhiteLabel;
 
+            $canTrackingPixels = UsageLimitService::hasFeature($tenantId, 'custom_tracking_pixels') || AuthorizationService::isPlatformAdmin();
+            $fbPixel = $canTrackingPixels ? trim((string)($input['fb_pixel_id'] ?? ($currentSettings['fb_pixel_id'] ?? ''))) : ($currentSettings['fb_pixel_id'] ?? '');
+            $googleTag = $canTrackingPixels ? trim((string)($input['google_tag_id'] ?? ($currentSettings['google_tag_id'] ?? ''))) : ($currentSettings['google_tag_id'] ?? '');
+            $tiktokPixel = $canTrackingPixels ? trim((string)($input['tiktok_pixel_id'] ?? ($currentSettings['tiktok_pixel_id'] ?? ''))) : ($currentSettings['tiktok_pixel_id'] ?? '');
+
             $newSettings = array_merge($currentSettings, [
                 'theme' => in_array($input['theme'] ?? '', ['light', 'dark'], true) ? $input['theme'] : ($currentSettings['theme'] ?? 'light'),
                 'accent_color' => $input['accent_color'] ?? ($currentSettings['accent_color'] ?? '#5B5BD6'),
@@ -370,9 +375,9 @@ class ApiSpaController
                 'background_style' => in_array($input['background_style'] ?? '', ['default', 'dots', 'warm', 'dark'], true) ? $input['background_style'] : ($currentSettings['background_style'] ?? 'default'),
                 'card_elevation' => in_array($input['card_elevation'] ?? '', ['flat', 'soft', 'floating'], true) ? $input['card_elevation'] : ($currentSettings['card_elevation'] ?? 'soft'),
                 'social_proof_badge' => trim((string)($input['social_proof_badge'] ?? ($currentSettings['social_proof_badge'] ?? ''))),
-                'fb_pixel_id' => trim((string)($input['fb_pixel_id'] ?? ($currentSettings['fb_pixel_id'] ?? ''))),
-                'google_tag_id' => trim((string)($input['google_tag_id'] ?? ($currentSettings['google_tag_id'] ?? ''))),
-                'tiktok_pixel_id' => trim((string)($input['tiktok_pixel_id'] ?? ($currentSettings['tiktok_pixel_id'] ?? ''))),
+                'fb_pixel_id' => $fbPixel,
+                'google_tag_id' => $googleTag,
+                'tiktok_pixel_id' => $tiktokPixel,
                 'meta_title' => trim((string)($input['meta_title'] ?? ($currentSettings['meta_title'] ?? ''))),
                 'meta_description' => trim((string)($input['meta_description'] ?? ($currentSettings['meta_description'] ?? ''))),
             ]);
@@ -818,6 +823,38 @@ class ApiSpaController
         return Response::error("Unknown bulk action.", "INVALID_ACTION", null, 400);
     }
 
+    public function exportSubmissions(Request $request): void
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+
+        if (!AuthorizationService::isPlatformAdmin() && !UsageLimitService::hasFeature($tenantId, 'csv_export')) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'CSV lead export is only available on Pro or Enterprise plans.',
+                'error_code' => 'FEATURE_LOCKED'
+            ]);
+            exit;
+        }
+
+        $funnelId = $request->query('funnel_id') ? (int)$request->query('funnel_id') : null;
+        $tab = $request->query('tab');
+        $filters = [
+            'date_range' => $request->query('date_range'),
+        ];
+
+        $csv = SubmissionService::exportCsv($tenantId, $funnelId, $tab, $filters);
+        $filename = 'leads_export_' . date('Y-m-d_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        echo $csv;
+        exit;
+    }
+
     public function listLeadStages(Request $request): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
@@ -875,6 +912,14 @@ class ApiSpaController
     public function inviteTeamMember(Request $request): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
+
+        if (!AuthorizationService::isPlatformAdmin()) {
+            $seatCheck = UsageLimitService::checkCanAddTeamMember($tenantId);
+            if (!$seatCheck['allowed']) {
+                return Response::error($seatCheck['message'], "LIMIT_REACHED", $seatCheck, 403);
+            }
+        }
+
         $email = trim(strtolower((string)$request->input('email')));
         $name = trim((string)$request->input('name', ''));
         $role = (string)$request->input('role', 'editor');
@@ -964,6 +1009,11 @@ class ApiSpaController
     public function createWebhook(Request $request): Response
     {
         $tenantId = TenantContextService::getActiveTenantId();
+
+        if (!AuthorizationService::isPlatformAdmin() && !UsageLimitService::hasFeature($tenantId, 'webhooks')) {
+            return Response::error("Outbound webhooks are only available on Pro or Enterprise plans.", "FEATURE_LOCKED", null, 403);
+        }
+
         $targetUrl = trim((string)$request->input('target_url'));
         $eventType = (string)$request->input('event_type', 'all');
         $funnelId = $request->input('funnel_id') ? (int)$request->input('funnel_id') : null;

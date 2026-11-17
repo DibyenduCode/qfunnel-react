@@ -2181,7 +2181,7 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                       <input
                         type="range"
                         min={1}
-                        max={Math.max(600, vgCtaDelay > 600 ? vgCtaDelay + 300 : 600)}
+                        max={Math.max(3600, vgCtaDelay > 3600 ? Math.ceil((vgCtaDelay * 1.25) / 60) * 60 : 3600)}
                         step={1}
                         value={vgCtaDelay}
                         onChange={(e) => {
@@ -2196,57 +2196,31 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
                     {/* Quick Presets */}
                     <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                       <span className="text-[10px] text-[#5d5f60]">Presets:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVgCtaDelay(30);
-                          commit({ vgCtaDelay: 30 });
-                        }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-mono"
-                      >
-                        00:30
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVgCtaDelay(60);
-                          commit({ vgCtaDelay: 60 });
-                        }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-mono"
-                      >
-                        01:00
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVgCtaDelay(120);
-                          commit({ vgCtaDelay: 120 });
-                        }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-mono"
-                      >
-                        02:00
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVgCtaDelay(285);
-                          commit({ vgCtaDelay: 285 });
-                        }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-mono font-bold"
-                        title="4 minutes 45 seconds"
-                      >
-                        04:45 (4m 45s)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVgCtaDelay(300);
-                          commit({ vgCtaDelay: 300 });
-                        }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-mono"
-                      >
-                        05:00
-                      </button>
+                      {[
+                        { label: '30s', secs: 30 },
+                        { label: '1m', secs: 60 },
+                        { label: '2m', secs: 120 },
+                        { label: '5m', secs: 300 },
+                        { label: '10m', secs: 600 },
+                        { label: '15m', secs: 900 },
+                        { label: '30m', secs: 1800 },
+                      ].map((p) => (
+                        <button
+                          key={p.secs}
+                          type="button"
+                          onClick={() => {
+                            setVgCtaDelay(p.secs);
+                            commit({ vgCtaDelay: p.secs });
+                          }}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition cursor-pointer ${
+                            vgCtaDelay === p.secs
+                              ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                              : 'bg-white hover:bg-slate-100 border border-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
                     </div>
 
                     <p className="text-[11px] text-[#5d5f60] leading-tight">
@@ -2280,43 +2254,163 @@ export const NodeInspector: React.FC<NodeInspectorProps> = ({
             {/* Gated Mode Controls */}
             {vgPlaybackMode === 'gated' && (
               <>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-medium text-[#131416]">
-                      Gate Pause Time
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-mono font-medium text-[#131416] bg-[#f4f6f8] px-1.5 py-0.5 rounded border border-[#e8eaec]">
-                        {String(Math.floor(gateTimestamp / 60)).padStart(2, '0')}:{String(Math.floor(gateTimestamp % 60)).padStart(2, '0')}
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={3600}
-                        value={gateTimestamp}
-                        onChange={(e) => {
-                          const val = Math.max(1, Number(e.target.value) || 0);
-                          setGateTimestamp(val);
-                          commit({ gateTimestamp: val });
-                        }}
-                        className="w-16 px-2 py-0.5 rounded border border-[#e8eaec] text-xs font-mono text-right text-[#131416]"
-                      />
-                      <span className="text-xs text-[#5d5f60]">sec</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#131416]">
+                        Gate Pause Time (Lock Moment)
+                      </label>
+                      <p className="text-[11px] text-[#5d5f60]">
+                        Moment video pauses to require lead details
+                      </p>
+                    </div>
+                    {/* Digital Badge */}
+                    <span className="text-xs font-mono font-bold text-[#1d5fd6] bg-[#dcf1ff] px-2 py-0.5 rounded-md border border-[#b9e6fe]">
+                      {Math.floor(gateTimestamp / 3600) > 0
+                        ? `${String(Math.floor(gateTimestamp / 3600)).padStart(2, '0')}:${String(
+                            Math.floor((gateTimestamp % 3600) / 60)
+                          ).padStart(2, '0')}:${String(Math.floor(gateTimestamp % 60)).padStart(2, '0')}`
+                        : `${String(Math.floor(gateTimestamp / 60)).padStart(2, '0')}:${String(
+                            Math.floor(gateTimestamp % 60)
+                          ).padStart(2, '0')}`}
+                    </span>
+                  </div>
+
+                  {/* Dual Minutes & Seconds Inputs + Total Seconds */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#5d5f60] mb-0.5">Minutes</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={300}
+                          value={Math.floor(gateTimestamp / 60)}
+                          onChange={(e) => {
+                            const m = Math.max(0, parseInt(e.target.value) || 0);
+                            const s = Math.floor(gateTimestamp % 60);
+                            const total = Math.max(1, (m * 60) + s);
+                            setGateTimestamp(total);
+                            commit({ gateTimestamp: total });
+                          }}
+                          className="w-full px-2.5 py-1.5 pr-8 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono font-medium text-[#131416] focus:border-[#1d5fd6] focus:outline-none"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#5d5f60]">
+                          min
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#5d5f60] mb-0.5">Seconds</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          value={Math.floor(gateTimestamp % 60)}
+                          onChange={(e) => {
+                            const s = Math.min(59, Math.max(0, parseInt(e.target.value) || 0));
+                            const m = Math.floor(gateTimestamp / 60);
+                            const total = Math.max(1, (m * 60) + s);
+                            setGateTimestamp(total);
+                            commit({ gateTimestamp: total });
+                          }}
+                          className="w-full px-2.5 py-1.5 pr-8 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono font-medium text-[#131416] focus:border-[#1d5fd6] focus:outline-none"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#5d5f60]">
+                          sec
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#5d5f60] mb-0.5">Total Sec</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={1}
+                          max={18000}
+                          value={gateTimestamp}
+                          onChange={(e) => {
+                            const total = Math.max(1, Number(e.target.value) || 1);
+                            setGateTimestamp(total);
+                            commit({ gateTimestamp: total });
+                          }}
+                          className="w-full px-2.5 py-1.5 pr-8 rounded-[6px] border border-[#e8eaec] bg-white text-xs font-mono font-medium text-[#131416] focus:border-[#1d5fd6] focus:outline-none"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#5d5f60]">
+                          sec
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={300}
-                    step={1}
-                    value={gateTimestamp}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      setGateTimestamp(val);
-                      commit({ gateTimestamp: val });
-                    }}
-                    className="w-full accent-[#004cfd]"
-                  />
+
+                  {/* Adaptive Interactive Slider (Up to 1 hr minimum, dynamically expanding) */}
+                  <div className="space-y-1">
+                    <input
+                      type="range"
+                      min={1}
+                      max={Math.max(3600, gateTimestamp > 3600 ? Math.ceil((gateTimestamp * 1.25) / 60) * 60 : 3600)}
+                      step={1}
+                      value={gateTimestamp}
+                      onChange={(e) => {
+                        const val = Math.max(1, Number(e.target.value));
+                        setGateTimestamp(val);
+                        commit({ gateTimestamp: val });
+                      }}
+                      className="w-full accent-[#1d5fd6] cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                    />
+                    <div className="flex justify-between text-[10px] font-mono text-[#5d5f60]">
+                      <span>00:01</span>
+                      <span>30:00</span>
+                      <span>
+                        {Math.floor(Math.max(3600, gateTimestamp > 3600 ? Math.ceil((gateTimestamp * 1.25) / 60) * 60 : 3600) / 60)}m
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Quick Presets */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] text-[#5d5f60]">Presets:</span>
+                    {[
+                      { label: '30s', secs: 30 },
+                      { label: '1m', secs: 60 },
+                      { label: '2m', secs: 120 },
+                      { label: '5m', secs: 300 },
+                      { label: '10m', secs: 600 },
+                      { label: '15m', secs: 900 },
+                      { label: '30m', secs: 1800 },
+                      { label: '45m', secs: 2700 },
+                      { label: '1h', secs: 3600 },
+                    ].map((p) => (
+                      <button
+                        key={p.secs}
+                        type="button"
+                        onClick={() => {
+                          setGateTimestamp(p.secs);
+                          commit({ gateTimestamp: p.secs });
+                        }}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition cursor-pointer ${
+                          gateTimestamp === p.secs
+                            ? 'bg-[#1d5fd6] text-white font-bold shadow-xs'
+                            : 'bg-white hover:bg-slate-100 border border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-[#5d5f60] leading-tight">
+                    Video automatically pauses at exactly{' '}
+                    <span className="font-semibold text-slate-800">
+                      {Math.floor(gateTimestamp / 3600) > 0
+                        ? `${Math.floor(gateTimestamp / 3600)}h ${Math.floor((gateTimestamp % 3600) / 60)}m ${Math.floor(gateTimestamp % 60)}s`
+                        : `${Math.floor(gateTimestamp / 60)}m ${Math.floor(gateTimestamp % 60)}s`}
+                    </span>{' '}
+                    ({gateTimestamp} sec) and prompts turnstile lead form.
+                  </p>
                 </div>
 
                 <div>

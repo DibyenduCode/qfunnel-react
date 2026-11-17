@@ -395,6 +395,10 @@ class FunnelService
             throw new RuntimeException($limitCheck['message']);
         }
 
+        if (!UsageLimitService::hasFeature($tenantId, 'funnel_cloning') && !AuthorizationService::isPlatformAdmin()) {
+            throw new RuntimeException("Funnel cloning is only available on Pro or Enterprise plans. Please upgrade to duplicate funnels.");
+        }
+
         $original = self::getFunnel($tenantId, $funnelId);
         if (!$original) {
             throw new RuntimeException("Funnel not found.");

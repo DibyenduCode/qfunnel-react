@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
-  const { user, activeTenant, userTenants, switchWorkspace, logout, isPlatformAdmin, limits } = useAuthStore();
+  const { user, activeTenant, userTenants, switchWorkspace, logout, isPlatformAdmin, limits, refreshLimits } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -34,6 +34,11 @@ export const AdminLayout: React.FC = () => {
   useEffect(() => {
     setAvatarError(false);
   }, [user?.avatar_url]);
+
+  // Synchronize plan limits and live usage counters on every navigation change
+  useEffect(() => {
+    refreshLimits();
+  }, [location.pathname, refreshLimits]);
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, chip: 'bg-[#dcf1ff] text-[#1d5fd6]' },

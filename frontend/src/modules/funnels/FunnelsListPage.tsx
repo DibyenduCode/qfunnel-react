@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const FunnelsListPage: React.FC = () => {
-  const { activeTenant, features, isPlatformAdmin } = useAuthStore();
+  const { activeTenant, features, isPlatformAdmin, limits, refreshLimits } = useAuthStore();
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [usage, setUsage] = useState<any>(null);
   const [search, setSearch] = useState('');
@@ -36,6 +36,13 @@ export const FunnelsListPage: React.FC = () => {
   const [upgradeFeature, setUpgradeFeature] = useState({ name: '', desc: '' });
 
   const navigate = useNavigate();
+
+  const isAtLimit = Boolean(
+    !isPlatformAdmin &&
+    limits &&
+    limits.max_funnels > 0 &&
+    (limits.current_funnels ?? 0) >= limits.max_funnels
+  );
 
   useEffect(() => {
     loadFunnels();
@@ -73,9 +80,19 @@ export const FunnelsListPage: React.FC = () => {
       return;
     }
 
+    if (isAtLimit) {
+      setUpgradeFeature({
+        name: `Funnel Limit Reached (${limits?.current_funnels}/${limits?.max_funnels})`,
+        desc: `You have reached your limit of ${limits?.max_funnels} funnels on the ${limits?.plan_name || 'Starter'} plan. Upgrade to unlock more active funnels.`,
+      });
+      setUpgradeModalOpen(true);
+      return;
+    }
+
     try {
       setActionLoadingId(id);
-      const clone = await api.post(`/api/funnels/${id}/duplicate`);
+      await api.post(`/api/funnels/${id}/duplicate`);
+      await refreshLimits();
       loadFunnels();
     } catch (err: any) {
       alert(err.message || 'Duplicate failed');
@@ -92,6 +109,7 @@ export const FunnelsListPage: React.FC = () => {
       } else {
         await api.post(`/api/funnels/${funnel.id}/publish`);
       }
+      await refreshLimits();
       loadFunnels();
     } catch (err: any) {
       alert(err.message || 'Publish toggle failed');
@@ -105,6 +123,7 @@ export const FunnelsListPage: React.FC = () => {
     try {
       setActionLoadingId(id);
       await api.post(`/api/funnels/${id}/delete`);
+      await refreshLimits();
       loadFunnels();
     } catch (err: any) {
       alert(err.message || 'Delete failed');
@@ -123,13 +142,29 @@ export const FunnelsListPage: React.FC = () => {
           <p className="text-xs text-[#5d5f60] mt-0.5">Manage, design, and publish your branching logic funnels</p>
         </div>
 
-        <Link
-          to="/admin/funnels/create"
-          className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Create Funnel</span>
-        </Link>
+        {isAtLimit ? (
+          <button
+            onClick={() => {
+              setUpgradeFeature({
+                name: `Funnel Limit Reached (${limits?.current_funnels}/${limits?.max_funnels})`,
+                desc: `You have reached your limit of ${limits?.max_funnels} funnels on the ${limits?.plan_name || 'Starter'} plan. Upgrade to create more funnels.`,
+              });
+              setUpgradeModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#d97706] text-white text-xs font-medium hover:bg-[#b45309] transition self-start sm:self-auto shadow-xs"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Create Funnel (Limit Reached)</span>
+          </button>
+        ) : (
+          <Link
+            to="/admin/funnels/create"
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create Funnel</span>
+          </Link>
+        )}
       </div>
 
       {/* Workspace Suspended Alert */}

@@ -21,6 +21,7 @@ interface AuthState {
   switchWorkspace: (tenantId: number) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  refreshLimits: () => Promise<PlanLimits | null>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -35,6 +36,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  refreshLimits: async () => {
+    try {
+      const data = await api.get('/api/auth/me');
+      if (data.csrf_token) {
+        setCsrfToken(data.csrf_token);
+      }
+      set({
+        limits: data.limits,
+        features: data.features,
+        activeTenant: data.active_tenant || get().activeTenant,
+        userTenants: data.user_tenants || get().userTenants,
+      });
+      return data.limits || null;
+    } catch {
+      return null;
+    }
+  },
 
   checkAuth: async () => {
     try {

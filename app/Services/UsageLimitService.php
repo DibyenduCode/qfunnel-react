@@ -112,7 +112,10 @@ class UsageLimitService
             $planFeatures = json_decode($sub['features_json'], true) ?: [];
         }
 
-        $isAllInclusive = in_array($planSlug, ['pro', 'enterprise'], true);
+        $isAllInclusive = in_array($planSlug, ['pro', 'enterprise', 'lifetime', 'lifetime-pro-deal'], true) 
+            || str_contains($planSlug, 'lifetime') 
+            || str_contains($planSlug, 'pro') 
+            || str_contains($planSlug, 'enterprise');
 
         foreach ($catalog as $key => $meta) {
             if (isset($planFeatures[$key])) {
