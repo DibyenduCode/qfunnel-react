@@ -923,22 +923,67 @@ class ApiSpaController
         $email = trim(strtolower((string)$request->input('email')));
         $name = trim((string)$request->input('name', ''));
         $role = (string)$request->input('role', 'editor');
+        $rawPassword = trim((string)$request->input('password', ''));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return Response::error("Invalid email address.", "VALIDATION_FAILED", null, 400);
         }
 
+        if (empty($rawPassword)) {
+            $rawPassword = 'FF-' . bin2hex(random_bytes(3)) . '@' . rand(10, 99);
+        }
+
+        if (strlen($rawPassword) < 8) {
+            return Response::error("Password must be at least 8 characters long.", "VALIDATION_FAILED", null, 400);
+        }
+
+        $activeTenant = TenantContextService::getActiveTenant();
+        $currentUser = current_user();
+        $workspaceName = $activeTenant['name'] ?? 'Workspace';
+        $invitedByName = $currentUser['name'] ?? 'Workspace Administrator';
+        $appUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
+        $loginUrl = "{$appUrl}/login";
+
+        $isNewUser = false;
         // Check if user exists
         $user = Database::fetchOne("SELECT * FROM users WHERE email = ?", [$email]);
         if (!$user) {
-            $defaultPassword = password_hash('Welcome123!', PASSWORD_DEFAULT);
+            $isNewUser = true;
+            $passwordHash = password_hash($rawPassword, PASSWORD_DEFAULT);
+            $displayName = $name ?: explode('@', $email)[0];
             Database::execute(
-                "INSERT INTO users (name, email, password_hash, status) VALUES (?, ?, ?, 'active')",
-                [$name ?: explode('@', $email)[0], $email, $defaultPassword]
+                "INSERT INTO users (name, email, password_hash, status, email_verified_at) VALUES (?, ?, ?, 'active', NOW())",
+                [$displayName, $email, $passwordHash]
             );
             $userId = (int)Database::lastInsertId();
+
+            // Send invitation email with credentials
+            try {
+                MailService::sendTemplate('team_invitation', $email, $displayName, [
+                    'workspace_name' => $workspaceName,
+                    'role' => ucfirst($role),
+                    'invited_by_name' => $invitedByName,
+                    'password' => $rawPassword,
+                    'login_url' => $loginUrl,
+                ]);
+            } catch (\Throwable $e) {
+                Logger::error("Failed to send team invitation email to {$email}: " . $e->getMessage());
+            }
         } else {
             $userId = (int)$user['id'];
+            $displayName = $user['name'] ?: ($name ?: explode('@', $email)[0]);
+
+            // Send existing user notification email
+            try {
+                MailService::sendTemplate('team_member_added', $email, $displayName, [
+                    'workspace_name' => $workspaceName,
+                    'role' => ucfirst($role),
+                    'invited_by_name' => $invitedByName,
+                    'login_url' => $loginUrl,
+                ]);
+            } catch (\Throwable $e) {
+                Logger::error("Failed to send team access email to {$email}: " . $e->getMessage());
+            }
         }
 
         // Check existing membership
@@ -952,7 +997,15 @@ class ApiSpaController
             [$tenantId, $userId, $role]
         );
 
-        return Response::success(null, "Team member added successfully.", 201);
+        return Response::success([
+            'is_new_user' => $isNewUser,
+            'name' => $displayName,
+            'email' => $email,
+            'role' => $role,
+            'password' => $isNewUser ? $rawPassword : null,
+            'workspace_name' => $workspaceName,
+            'login_url' => $loginUrl,
+        ], $isNewUser ? "Team member added and credentials sent to {$email}." : "Existing user added to workspace successfully.", 201);
     }
 
     public function updateTeamMember(Request $request, string $id): Response

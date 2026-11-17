@@ -778,7 +778,81 @@ class MailService
                     <p style="font-size: 12px; color: #64748b;">If you need assistance or believe this is an error, contact our support team at {{support_email}}.</p>
                 ',
                 'body_text' => "Workspace Suspended: {{tenant_name}}\nReason: {{suspension_reason}}\n\nPlease visit your dashboard to reactivate: {{dashboard_url}}\n\n{{app_name}} Support",
-            ]
+            ],
+
+            'team_invitation' => [
+                'name' => 'Team Member Invitation & Credentials',
+                'description' => 'Sent when a new user is invited to a workspace, containing login URL, email, and temporary password.',
+                'subject' => 'You\'ve been invited to join {{workspace_name}} on {{app_name}} 🎉',
+                'preheader' => '{{invited_by_name}} invited you to collaborate as {{role}}. Log in with your temporary credentials.',
+                'available_tags' => [
+                    'app_name',
+                    'user_name',
+                    'user_email',
+                    'password',
+                    'workspace_name',
+                    'role',
+                    'invited_by_name',
+                    'login_url',
+                    'support_email',
+                ],
+                'body_html' => '
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Workspace Team Invitation</h2>
+                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569;"><strong>{{invited_by_name}}</strong> has invited you to join and collaborate on the workspace <strong>{{workspace_name}}</strong> with the role of <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
+
+                    <div style="margin: 24px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Your Direct Login Credentials:</h4>
+                        
+                        <div style="font-size: 13px; line-height: 2; color: #334155;">
+                            <div>🌐 <strong>Portal URL:</strong> <a href="{{login_url}}" style="color: #1d5fd6; text-decoration: none;">{{login_url}}</a></div>
+                            <div>✉️ <strong>Login Email:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace;">{{user_email}}</code></div>
+                            <div>🔑 <strong>Password:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #0f172a;">{{password}}</code></div>
+                            <div>🏷️ <strong>Assigned Role:</strong> <span style="text-transform: capitalize; font-weight: 600;">{{role}}</span></div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin: 28px 0;">
+                        <a href="{{login_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Log In to Your Workspace →</a>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 12.5px; color: #92400e; margin-bottom: 20px; line-height: 1.5;">
+                        📬 <strong>Can\'t find this in your Primary Inbox?</strong> Please check your <strong>Spam</strong> or <strong>Junk</strong> folder. Mark it as <em>\"Not Spam\"</em> so you always receive workspace updates directly.
+                    </div>
+
+                    <p style="font-size: 12.5px; color: #64748b;">🔒 For security, we recommend updating your password after logging in from your Profile Settings.</p>
+                ',
+                'body_text' => "Hello {{user_name}},\n\n{{invited_by_name}} invited you to join {{workspace_name}} as {{role}}.\n\nLogin URL: {{login_url}}\nEmail: {{user_email}}\nPassword: {{password}}\n\nLog in here: {{login_url}}\n\nBest regards,\n{{app_name}} Team",
+            ],
+
+            'team_member_added' => [
+                'name' => 'Team Workspace Access Granted (Existing User)',
+                'description' => 'Sent when an existing platform user is granted access to a new workspace.',
+                'subject' => 'You\'ve been added to {{workspace_name}} on {{app_name}}',
+                'preheader' => 'Access granted by {{invited_by_name}} as {{role}}. Switch workspaces in your dashboard.',
+                'available_tags' => [
+                    'app_name',
+                    'user_name',
+                    'user_email',
+                    'workspace_name',
+                    'role',
+                    'invited_by_name',
+                    'login_url',
+                    'dashboard_url',
+                    'support_email',
+                ],
+                'body_html' => '
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Workspace Access Granted</h2>
+                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569;"><strong>{{invited_by_name}}</strong> has granted you access to the workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
+                    <p style="color: #475569;">Since you already have a registered account on {{app_name}}, you can log in with your existing password and seamlessly switch to <strong>{{workspace_name}}</strong> from the workspace switcher menu.</p>
+
+                    <div style="text-align: center; margin: 28px 0;">
+                        <a href="{{login_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Open Workspace →</a>
+                    </div>
+                ',
+                'body_text' => "Hello {{user_name}},\n\n{{invited_by_name}} has granted you access to {{workspace_name}} as {{role}}.\n\nLog in with your existing credentials here: {{login_url}}",
+            ],
         ];
     }
 
