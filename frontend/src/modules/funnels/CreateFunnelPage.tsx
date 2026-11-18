@@ -232,6 +232,7 @@ export const CreateFunnelPage: React.FC = () => {
             <input
               type="text"
               required
+              data-tour="funnel-name-input"
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="e.g. Health Risk Assessment"

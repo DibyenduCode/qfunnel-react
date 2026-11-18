@@ -30,6 +30,7 @@ import { NodeInspector } from './inspector/NodeInspector';
 import { BuilderToolbar } from './toolbar/BuilderToolbar';
 import { SeoHelmet } from '../../components/SeoHelmet';
 import { NodePalette, AVAILABLE_NODES } from './palette/NodePalette';
+import { OnboardingTourModal } from '../../components/OnboardingTourModal';
 import {
   X,
   ArrowRight,
@@ -1481,6 +1482,8 @@ const BuilderInner: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Interactive Onboarding Tour Modal */}
+      <OnboardingTourModal />
     </div>
   );
 };

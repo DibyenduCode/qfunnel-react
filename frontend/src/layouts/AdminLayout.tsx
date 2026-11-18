@@ -20,17 +20,26 @@ import {
   Menu,
   X,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  HelpCircle
 } from 'lucide-react';
+import { OnboardingTourModal } from '../components/OnboardingTourModal';
+import { useTourStore } from '../store/tourStore';
 
 export const AdminLayout: React.FC = () => {
   const { user, activeTenant, userTenants, switchWorkspace, logout, isPlatformAdmin, limits, refreshLimits } = useAuthStore();
+  const { checkAutoStart, startTour } = useTourStore();
   const location = useLocation();
   const navigate = useNavigate();
 
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+
+  // Automatically initiate guided onboarding tour for new first-time users
+  useEffect(() => {
+    checkAutoStart();
+  }, [checkAutoStart]);
 
   useEffect(() => {
     setAvatarError(false);
@@ -370,8 +379,18 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => startTour(0)}
+              className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 hover:text-slate-900 transition border border-slate-200/80"
+              title="Start Interactive Hands-On Tour"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#1d5fd6]" />
+              <span className="hidden sm:inline">Interactive Tour</span>
+            </button>
+
             <Link
               to="/admin/funnels/create"
+              data-tour="create-funnel-btn"
               className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#1853bf] transition shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -403,6 +422,9 @@ export const AdminLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Global Interactive Onboarding Tour Modal */}
+      <OnboardingTourModal />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProFeatureTooltip } from '../../../components/ProFeatureTooltip';
+import { useTourStore } from '../../../store/tourStore';
 import {
   ArrowLeft,
   Save,
@@ -202,6 +203,16 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
           </button>
         )}
 
+        <button
+          type="button"
+          onClick={() => useTourStore.getState().startTour()}
+          className="px-2 h-7 rounded-md border border-[#e8eaec] text-xs font-normal text-[#5d5f60] hover:bg-[#f4f6f8] hover:text-[#1d5fd6] transition flex items-center gap-1.5 shrink-0"
+          title="Interactive Workflow Tour"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#1d5fd6]" />
+          <span className="hidden xl:inline text-[#131416]">Tour</span>
+        </button>
+
         {onOpenShortcuts && (
           <button
             type="button"
@@ -299,6 +310,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
         </button>
 
         <button
+          data-tour="publish-btn"
           onClick={onPublish}
           disabled={isPublishing}
           className="px-3 h-7 rounded-md bg-[#1d5fd6] hover:bg-[#1853bf] text-white text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap shrink-0 disabled:opacity-50 shadow-xs"

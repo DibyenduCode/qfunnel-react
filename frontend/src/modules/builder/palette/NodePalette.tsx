@@ -175,6 +175,7 @@ export const NodePalette: React.FC<NodePaletteProps> = ({
 
   return (
     <aside
+      data-tour="node-library-panel"
       className={`relative z-20 flex bg-white border border-[#e8eaec] rounded-[16px] overflow-hidden shrink-0 transition-[width] duration-150 ${
         isOpen ? 'w-[232px]' : 'w-12'
       }`}

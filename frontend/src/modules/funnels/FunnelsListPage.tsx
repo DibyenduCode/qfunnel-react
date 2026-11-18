@@ -160,6 +160,7 @@ export const FunnelsListPage: React.FC = () => {
         ) : (
           <Link
             to="/admin/funnels/create"
+            data-tour="create-funnel-btn"
             className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -274,6 +275,7 @@ export const FunnelsListPage: React.FC = () => {
           <p className="text-xs text-[#5d5f60] mt-1">Get started by building your first interactive branching funnel.</p>
           <Link
             to="/admin/funnels/create"
+            data-tour="create-funnel-btn"
             className="mt-4 inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
