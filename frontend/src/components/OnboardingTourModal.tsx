@@ -27,24 +27,20 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 1,
     totalSteps: 6,
     badge: 'Step 1 of 6 • Getting Started',
-    title: 'Create Your First Funnel',
-    bengaliTitle: '১. প্রথম ফানেল তৈরি করুন',
-    description: 'Funnels are the high-converting engines that turn visitors into qualified leads. Click the primary "Create Funnel" button to get started.',
-    bengaliDescription: 'নতুন কাস্টমার জার্নি শুরু করতে প্রথমে ওপরের বা ড্যাশবোর্ডের "+ Create Funnel" বাটনে ক্লিক করুন।',
+    title: '1. Create Your First Funnel',
+    description: 'Funnels are the high-converting engines that turn visitors into qualified leads. Click the primary "+ Create Funnel" button to get started.',
     targetSelector: '[data-tour="create-funnel-btn"]',
     position: 'bottom',
     diagramType: 'create',
-    actionPrompt: 'Click "Next Step" to see how to name and configure your funnel.',
+    actionPrompt: 'Click "Next Step" to learn how to name and configure your funnel.',
   },
   {
     id: 'step-2-details',
     stepNumber: 2,
     totalSteps: 6,
-    badge: 'Step 2 of 6 • Funnel Setup',
-    title: 'Name Your Funnel & Choose Mode',
-    bengaliTitle: '২. ফানেলের নাম ও মোড নির্বাচন',
-    description: 'Give your funnel a memorable title, custom URL slug, and select between Standard Quiz or Dynamic Calculator & Instant Quote mode.',
-    bengaliDescription: 'ফানেলের একটি সুন্দর নাম ও URL স্লাগ দিন, এবং আপনার প্রয়োজনমতো কুইজ বা ক্যালকুলেটর মোড বেছে নিন।',
+    badge: 'Step 2 of 6 • Funnel Configuration',
+    title: '2. Name Your Funnel & Select Mode',
+    description: 'Give your funnel a memorable title, custom URL slug, and choose between Quiz Funnel (branching questions) or Calculator Funnel (instant quotes).',
     targetSelector: '[data-tour="funnel-name-input"]',
     position: 'center',
     diagramType: 'details',
@@ -55,10 +51,8 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 3,
     totalSteps: 6,
     badge: 'Step 3 of 6 • Node Library Overview',
-    title: 'Visual Canvas & Node Library',
-    bengaliTitle: '৩. ভিজ্যুয়াল ক্যানভাস ও নোড লাইব্রেরি পরিচিতি',
-    description: 'Inside the builder, the left sidebar holds your Node Library with 4 building blocks: Inputs, Media, Logic Routers, and Outcomes.',
-    bengaliDescription: 'ক্যানভাসের বাম পাশে রয়েছে নোড লাইব্রেরি—ইনপুট ফর্ম, মিডিয়া, লজিক ডিসিশন এবং আউটকাম পেজ।',
+    title: '3. Explore the Node Library',
+    description: 'Inside the builder, the left sidebar provides 4 essential building block types: Inputs (Forms & Sliders), Media, Logic Routers, and Outcomes.',
     targetSelector: '[data-tour="node-library-panel"]',
     position: 'right',
     diagramType: 'nodes_overview',
@@ -69,10 +63,8 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 4,
     totalSteps: 6,
     badge: 'Step 4 of 6 • Hands-on Workflow',
-    title: 'Start Step ➔ 2-Field Lead Capture Form',
-    bengaliTitle: '৪. এন্ট্রি পয়েন্ট থেকে ২-ফিল্ড লিড ক্যাপচার ফর্ম',
-    description: 'Every funnel begins at the Start Step. Connect a wire to a Lead Capture Form node with 2 essential fields: Full Name & Work Email.',
-    bengaliDescription: 'প্রতিটি ফানেল শুরু হয় Start Step দিয়ে। তার সাথে যুক্ত করুন একটি লিড ফর্ম যার মধ্যে ২টি ফিল্ড থাকবে: নাম ও ইমেইল।',
+    title: '4. Connect Start Step to Lead Capture Form',
+    description: 'Every funnel begins at the Start Step. Connect a wire directly to a Lead Capture Form configured with 2 essential fields: Full Name & Work Email.',
     position: 'center',
     diagramType: 'start_to_form',
     actionPrompt: 'Now let us add intelligent branching logic with a Decision Node.',
@@ -82,10 +74,8 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 5,
     totalSteps: 6,
     badge: 'Step 5 of 6 • Smart Branching',
-    title: 'Form ➔ Decision Node ➔ Quiz Branch',
-    bengaliTitle: '৫. ফর্ম থেকে ডিসিশন নোড এবং কুইজ ব্রাঞ্চিং',
-    description: 'Connect the form into a Decision Node (Conditional Router). Route qualified prospects to an Interactive Quiz Node to qualify their budget.',
-    bengaliDescription: 'ফর্ম থেকে একটি Decision Node-এ কানেক্ট করুন। যোগ্য ভিজিটরদের একটি কুইজ নোডে নিয়ে গিয়ে তাদের বাজেট ও চাহিদা যাচাই করুন।',
+    title: '5. Route from Form to Decision Node & Quiz',
+    description: 'Connect the form into a Decision Node (Conditional Router) to qualify visitors, then branch them into an interactive Multiple Choice Quiz question.',
     position: 'center',
     diagramType: 'form_to_decision_quiz',
     actionPrompt: 'Finally, let us set the outcome and publish the funnel live!',
@@ -95,10 +85,8 @@ const TOUR_STEPS: TourStep[] = [
     stepNumber: 6,
     totalSteps: 6,
     badge: 'Step 6 of 6 • Final Destination & Launch',
-    title: 'Outcome Node & 1-Click Publishing',
-    bengaliTitle: '৬. আউটকাম পেজ ও ফানেল পাবলিশ',
-    description: 'Route quiz answers to a Thank You or Instant Quote Node. When your flowchart is ready, click Publish to get your live embed link!',
-    bengaliDescription: 'কুইজ শেষে ফলাফল পেজ যুক্ত করুন এবং ওপরের Publish বাটনে ক্লিক করে আপনার ফানেলটি লাইভ করে শেয়ার করুন!',
+    title: '6. Outcome Destination & 1-Click Publishing',
+    description: 'Route quiz answers to a Thank You or Instant Quote Node. When your flowchart is ready, click "Publish" in the toolbar to get your live embed link!',
     targetSelector: '[data-tour="publish-btn"]',
     position: 'bottom',
     diagramType: 'publish_launch',
@@ -210,8 +198,8 @@ export const OnboardingTourModal: React.FC = () => {
             <h3 className="text-base font-bold text-slate-900 leading-tight">
               {step.title}
             </h3>
-            <p className="text-xs font-semibold text-[#1d5fd6]">
-              {step.bengaliTitle}
+            <p className="text-xs text-slate-500">
+              Interactive Workflow Guide
             </p>
           </div>
 
@@ -229,10 +217,12 @@ export const OnboardingTourModal: React.FC = () => {
           <p className="text-xs text-slate-600 leading-relaxed">
             {step.description}
           </p>
-          <div className="p-2.5 rounded-lg bg-blue-50/60 border border-blue-100 text-[11px] text-[#1e40af] flex items-center gap-2">
-            <span className="font-bold text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-200/70 text-[#1e3a8a]">বাংলা গাইড</span>
-            <span>{step.bengaliDescription}</span>
-          </div>
+          {step.actionPrompt && (
+            <div className="p-2.5 rounded-lg bg-[#dcf1ff]/60 border border-[#b9e6fe]/70 text-[11px] text-[#1d5fd6] flex items-center gap-2">
+              <span className="font-bold text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1d5fd6] text-white">Next Step</span>
+              <span className="font-medium text-slate-700">{step.actionPrompt}</span>
+            </div>
+          )}
 
           {/* Interactive Visualizer Canvas / Animated Diagram */}
           <div className="w-full h-[180px] bg-slate-950 rounded-xl border border-slate-800 p-3.5 flex flex-col justify-center relative overflow-hidden shadow-inner">

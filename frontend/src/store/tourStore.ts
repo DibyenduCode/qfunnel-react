@@ -6,9 +6,7 @@ export interface TourStep {
   totalSteps: number;
   badge: string;
   title: string;
-  bengaliTitle: string;
   description: string;
-  bengaliDescription: string;
   targetSelector?: string;
   position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   diagramType: 'create' | 'details' | 'nodes_overview' | 'start_to_form' | 'form_to_decision_quiz' | 'publish_launch';
