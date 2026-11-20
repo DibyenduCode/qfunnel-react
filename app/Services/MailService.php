@@ -428,32 +428,39 @@ class MailService
         $supportEmail = htmlspecialchars($tags['support_email'] ?? 'support@filterfunnel.in');
         $year = date('Y');
 
+        $preheaderDiv = !empty($preheader)
+            ? "<div style=\"display:none; font-size:1px; color:#ffffff; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;\">" . htmlspecialchars($preheader) . "</div>"
+            : "";
+
         return "
 <!DOCTYPE html>
 <html lang=\"en\">
 <head>
     <meta charset=\"utf-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
     <title>{$subject}</title>
 </head>
-<body style=\"margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;\">
-    " . (!empty($preheader) ? "<div style=\"display:none; font-size:1px; color:#ffffff; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;\">" . htmlspecialchars($preheader) . "</div>" : "") . "
-    <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: #f8fafc; padding: 32px 16px;\">
+<body style=\"margin: 0; padding: 0; background-color: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;\">
+    {$preheaderDiv}
+    <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: #f8f9fa; padding: 36px 16px;\">
         <tr>
             <td align=\"center\">
-                <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width: 580px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);\">
-                    <!-- Brand Header -->
+                <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width: 600px; background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden;\">
+                    <!-- Brand Top Bar -->
                     <tr>
-                        <td style=\"padding: 28px 32px 20px 32px; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;\">
+                        <td style=\"padding: 22px 32px; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;\">
                             <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">
                                 <tr>
                                     <td>
-                                        <div style=\"display: inline-block; background-color: #1d5fd6; color: #ffffff; font-weight: bold; font-size: 16px; padding: 6px 12px; border-radius: 8px; letter-spacing: -0.5px;\">
+                                        <span style=\"font-size: 17px; font-weight: 800; letter-spacing: -0.4px; color: #0f172a; text-decoration: none;\">
                                             {$appName}
-                                        </div>
+                                        </span>
                                     </td>
-                                    <td align=\"right\" style=\"font-size: 12px; color: #64748b; font-weight: 500;\">
-                                        Platform Notification
+                                    <td align=\"right\">
+                                        <span style=\"font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 9999px;\">
+                                            Platform Notification
+                                        </span>
                                     </td>
                                 </tr>
                             </table>
@@ -467,28 +474,13 @@ class MailService
                         </td>
                     </tr>
 
-                    <!-- Deliverability / Spam Notice -->
+                    <!-- Clean Brand Footer -->
                     <tr>
-                        <td style=\"padding: 0 32px 24px 32px;\">
-                            <table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;\">
-                                <tr>
-                                    <td width=\"26\" valign=\"top\" style=\"padding-right: 12px; font-size: 16px; line-height: 1;\">
-                                        📬
-                                    </td>
-                                    <td style=\"font-size: 12px; color: #64748b; line-height: 1.55;\">
-                                        <strong style=\"color: #334155;\">Important Deliverability Notice:</strong> If this email or any verification code lands in your <strong>Spam</strong> or <strong>Junk</strong> folder, please mark it as <em>\"Not Spam\"</em> or move it to your <strong>Primary Inbox</strong> to ensure you receive future critical security codes and notifications without delay.
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Brand Footer -->
-                    <tr>
-                        <td style=\"padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; text-align: center; font-size: 12px; color: #64748b;\">
-                            <p style=\"margin: 0 0 8px 0;\">Sent securely by <strong>{$appName}</strong> • Quiz Funnels & Interactive Automation</p>
-                            <p style=\"margin: 0; color: #94a3b8;\">Need assistance? Contact our team at <a href=\"mailto:{$supportEmail}\" style=\"color: #1d5fd6; text-decoration: none;\">{$supportEmail}</a></p>
-                            <p style=\"margin: 12px 0 0 0; font-size: 11px; color: #cbd5e1;\">© {$year} {$appName}. All rights reserved.</p>
+                        <td style=\"padding: 24px 32px; background-color: #fafbfc; border-top: 1px solid #f1f5f9; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6;\">
+                            <p style=\"margin: 0 0 6px 0; color: #475569;\">Sent securely by <strong>{$appName}</strong> • Interactive Funnels & Automation</p>
+                            <p style=\"margin: 0; color: #94a3b8;\">Questions? Contact our team at <a href=\"mailto:{$supportEmail}\" style=\"color: #1d5fd6; text-decoration: none; font-weight: 500;\">{$supportEmail}</a></p>
+                            <p style=\"margin: 10px 0 0 0; font-size: 11px; color: #94a3b8;\">If this email arrived in your Spam folder, please mark it as <em>\"Not Spam\"</em> to ensure you receive future platform alerts.</p>
+                            <p style=\"margin: 8px 0 0 0; font-size: 11px; color: #cbd5e1;\">© {$year} {$appName}. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>
@@ -622,25 +614,22 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Verify Your Email Address</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;">Thank you for registering on <strong>{{app_name}}</strong>. Please use the 6-digit One-Time Password (OTP) below to verify your email address and activate your workspace dashboard:</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Verify Your Email Address</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;">Thank you for registering on <strong>{{app_name}}</strong>. Please enter the 6-digit verification code below to verify your email and activate your workspace:</p>
                     
                     <div style="margin: 28px 0; text-align: center;">
-                        <div style="display: inline-block; font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #1d5fd6; background: #eff6ff; border: 2px dashed #bfdbfe; border-radius: 12px; padding: 14px 28px; font-family: monospace;">
-                            {{otp_code}}
+                        <div style="display: inline-block; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px 40px;">
+                            <span style="font-size: 38px; font-weight: 800; letter-spacing: 12px; color: #0f172a; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-left: 12px;">
+                                {{otp_code}}
+                            </span>
                         </div>
+                        <p style="margin: 12px 0 0 0; font-size: 12px; color: #64748b; font-weight: 500;">
+                            ⏱️ Valid for {{otp_expiry_minutes}} minutes
+                        </p>
                     </div>
 
-                    <div style="background: #f8fafc; border-left: 4px solid #1d5fd6; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin-bottom: 16px;">
-                        ⏱️ This verification code is valid for <strong>{{otp_expiry_minutes}} minutes</strong>. For security, never share this code with anyone.
-                    </div>
-
-                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 12.5px; color: #92400e; margin-bottom: 24px; line-height: 1.5;">
-                        📬 <strong>Can\'t find this in your Primary Inbox?</strong> Please check your <strong>Spam</strong> or <strong>Junk</strong> folder. If you find it there, please mark it as <em>\"Not Spam\"</em> so you receive all important platform notifications directly.
-                    </div>
-
-                    <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">If you did not create an account on {{app_name}}, please disregard this message or notify our support team.</p>
+                    <p style="font-size: 12.5px; color: #64748b; line-height: 1.5; margin-bottom: 0;">If you did not request this verification code, please disregard this message. No changes will be made to your account.</p>
                 ',
                 'body_text' => "Hello {{user_name}},\n\nYour 6-digit verification code is: {{otp_code}}\n\nThis code expires in {{otp_expiry_minutes}} minutes.\n\nThank you,\n{{app_name}} Team",
             ],
@@ -660,22 +649,33 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Welcome to {{app_name}}! 🚀</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;">Your email is verified and your customer workspace <strong>{{tenant_name}}</strong> is live and ready for high-converting interactive funnels.</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Welcome to {{app_name}}! 🚀</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your email is verified and your customer workspace <strong>{{tenant_name}}</strong> is live and ready to build high-converting interactive funnels.</p>
 
-                    <div style="margin: 24px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
-                        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #0f172a;">Quick Start Checklist:</h4>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.8;">
-                            <li>Create your first visual quiz with our drag-and-drop React Flow canvas</li>
-                            <li>Configure branching paths, lead forms, and instant calculator quotes</li>
-                            <li>Embed the quiz on your website via iframe or popup widget</li>
-                            <li>Track incoming leads in real-time with automatic WhatsApp routing</li>
-                        </ul>
-                    </div>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; width: 44px; vertical-align: top;">01</td>
+                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong>Build Your Flow:</strong> Drag and drop branching question nodes and 2-field lead capture forms in the visual canvas.
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; vertical-align: top;">02</td>
+                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong>Smart Branching:</strong> Add decision nodes to route qualified high-budget prospects to custom instant quotes.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; vertical-align: top;">03</td>
+                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong>Publish & Launch:</strong> Click Publish to get your live embed link and start capturing leads immediately.
+                            </td>
+                        </tr>
+                    </table>
 
                     <div style="text-align: center; margin: 28px 0;">
-                        <a href="{{dashboard_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: 8px; display: inline-block;">Go to Workspace Dashboard →</a>
+                        <a href="{{dashboard_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block;">Go to Workspace Dashboard →</a>
                     </div>
 
                     <p style="font-size: 13px; color: #64748b;">Have any questions? Simply reply to this email or reach us at {{support_email}}.</p>
@@ -703,38 +703,41 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Payment Receipt & Invoice</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;">We have received your payment for workspace <strong>{{tenant_name}}</strong>. Your transaction has been processed successfully.</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Payment Receipt & Invoice</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;">We have received your payment for workspace <strong>{{tenant_name}}</strong>. Your transaction has been processed successfully.</p>
 
-                    <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px;">
-                        <tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
-                            <td style="padding: 10px 14px; font-weight: 600; color: #475569;">Invoice Number</td>
-                            <td style="padding: 10px 14px; text-align: right; font-weight: 700; color: #0f172a; font-family: monospace;">#{{invoice_number}}</td>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse; overflow: hidden;">
+                        <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Invoice Reference</td>
+                            <td style="padding: 10px 16px; text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; font-weight: 700; color: #0f172a;">
+                                #{{invoice_number}}
+                                <span style="margin-left: 6px; background-color: #ecfdf5; color: #047857; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 9999px; border: 1px solid #a7f3d0;">PAID</span>
+                            </td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 14px; color: #64748b;">Subscription Plan</td>
-                            <td style="padding: 10px 14px; text-align: right; font-weight: 600; color: #0f172a;">{{plan_name}} ({{billing_interval}})</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Subscription Plan</td>
+                            <td style="padding: 10px 16px; text-align: right; font-size: 13px; font-weight: 600; color: #0f172a;">{{plan_name}} ({{billing_interval}})</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 14px; color: #64748b;">Payment Method</td>
-                            <td style="padding: 10px 14px; text-align: right; color: #0f172a; text-transform: capitalize;">{{payment_method}}</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Payment Method</td>
+                            <td style="padding: 10px 16px; text-align: right; font-size: 13px; color: #0f172a; text-transform: capitalize;">{{payment_method}}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 14px; color: #64748b;">Date Paid</td>
-                            <td style="padding: 10px 14px; text-align: right; color: #0f172a;">{{paid_at}}</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Date Paid</td>
+                            <td style="padding: 10px 16px; text-align: right; font-size: 13px; color: #0f172a;">{{paid_at}}</td>
                         </tr>
-                        <tr style="background: #eff6ff; font-size: 14px;">
-                            <td style="padding: 12px 14px; font-weight: 700; color: #1d5fd6;">Total Paid</td>
-                            <td style="padding: 12px 14px; text-align: right; font-weight: 800; color: #1d5fd6;">{{currency_symbol}}{{amount}}</td>
+                        <tr style="background-color: #fafbfc;">
+                            <td style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a;">Total Paid</td>
+                            <td style="padding: 12px 16px; text-align: right; font-size: 16px; font-weight: 800; color: #1d5fd6;">{{currency_symbol}}{{amount}}</td>
                         </tr>
                     </table>
 
-                    <div style="text-align: center; margin: 24px 0;">
-                        <a href="{{dashboard_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px; display: inline-block;">View Billing in Dashboard →</a>
+                    <div style="text-align: center; margin: 26px 0;">
+                        <a href="{{dashboard_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">View Billing in Dashboard →</a>
                     </div>
 
-                    <p style="font-size: 12px; color: #64748b;">This receipt serves as your official proof of payment. For tax invoices or corporate GST details, please reach out to {{support_email}}.</p>
+                    <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 0;">This receipt serves as your official digital invoice. For tax receipts or GST invoice details, please contact {{support_email}}.</p>
                 ',
                 'body_text' => "Payment Receipt: Invoice #{{invoice_number}}\n\nPlan: {{plan_name}}\nAmount: {{currency_symbol}}{{amount}}\nDate: {{paid_at}}\n\nThank you for choosing {{app_name}}!",
             ],
@@ -757,20 +760,29 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Upcoming Subscription Renewal</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;">This is a friendly reminder that your subscription for workspace <strong>{{tenant_name}}</strong> is scheduled for renewal on <strong>{{due_date}}</strong>.</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Upcoming Subscription Renewal</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;">This is a friendly reminder that your subscription for workspace <strong>{{tenant_name}}</strong> is scheduled for renewal on <strong>{{due_date}}</strong>.</p>
 
-                    <div style="margin: 20px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
-                        <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b;">Current Plan:</p>
-                        <p style="margin: 0 0 12px 0; font-size: 16px; font-weight: 700; color: #0f172a;">{{plan_name}} • {{currency_symbol}}{{amount}} / {{billing_interval}}</p>
-                        <p style="margin: 0; font-size: 12px; color: #64748b;">Renewal / Due Date: <strong>{{due_date}}</strong></p>
-                    </div>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 22px 0; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Current Plan</td>
+                            <td style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{plan_name}}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Scheduled Amount</td>
+                            <td style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #1d5fd6;">{{currency_symbol}}{{amount}} / {{billing_interval}}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Due Date</td>
+                            <td style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #0f172a;">{{due_date}}</td>
+                        </tr>
+                    </table>
 
-                    <p style="font-size: 13px; color: #475569;">To ensure uninterrupted access to your live quizzes, automated lead routing, and analytics, please ensure your payment method is up to date.</p>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6;">To ensure uninterrupted access to your live quizzes and leads routing, please verify your billing information.</p>
 
-                    <div style="text-align: center; margin: 24px 0;">
-                        <a href="{{dashboard_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px; display: inline-block;">Manage Billing & Invoices →</a>
+                    <div style="text-align: center; margin: 26px 0;">
+                        <a href="{{dashboard_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Manage Billing & Invoices →</a>
                     </div>
                 ',
                 'body_text' => "Subscription Renewal Reminder\n\nWorkspace: {{tenant_name}}\nPlan: {{plan_name}}\nAmount: {{currency_symbol}}{{amount}}\nDue: {{due_date}}\n\nManage your billing here: {{dashboard_url}}",
@@ -790,18 +802,18 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 0; margin-bottom: 8px;">Workspace Suspended</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;">Your customer workspace <strong>{{tenant_name}}</strong> has been suspended due to:</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Suspended</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your customer workspace <strong>{{tenant_name}}</strong> has been suspended due to:</p>
 
-                    <div style="margin: 18px 0; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px 18px; color: #991b1b; font-size: 13px; font-weight: 600;">
+                    <div style="margin: 20px 0; background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 6px; padding: 14px 18px; color: #991b1b; font-size: 13px; font-weight: 600;">
                         ⚠️ {{suspension_reason}}
                     </div>
 
-                    <p style="font-size: 13px; color: #475569;">While suspended, visitor quiz submissions are paused and editing features are locked. Your data remains fully safe.</p>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6;">While suspended, visitor quiz submissions are paused and editing features are locked. Your data remains fully safe.</p>
 
-                    <div style="text-align: center; margin: 24px 0;">
-                        <a href="{{dashboard_url}}" style="background: #dc2626; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px; display: inline-block;">Reactivate Workspace →</a>
+                    <div style="text-align: center; margin: 26px 0;">
+                        <a href="{{dashboard_url}}" style="background-color: #dc2626; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Reactivate Workspace →</a>
                     </div>
 
                     <p style="font-size: 12px; color: #64748b;">If you need assistance or believe this is an error, contact our support team at {{support_email}}.</p>
@@ -826,30 +838,40 @@ class MailService
                     'support_email',
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Workspace Team Invitation</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;"><strong>{{invited_by_name}}</strong> has invited you to join and collaborate on the workspace <strong>{{workspace_name}}</strong> with the role of <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Team Invitation</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;"><strong>{{invited_by_name}}</strong> has invited you to collaborate on the customer workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
 
-                    <div style="margin: 24px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Your Direct Login Credentials:</h4>
-                        
-                        <div style="font-size: 13px; line-height: 2; color: #334155;">
-                            <div>🌐 <strong>Portal URL:</strong> <a href="{{login_url}}" style="color: #1d5fd6; text-decoration: none;">{{login_url}}</a></div>
-                            <div>✉️ <strong>Login Email:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace;">{{user_email}}</code></div>
-                            <div>🔑 <strong>Password:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 700; color: #0f172a;">{{password}}</code></div>
-                            <div>🏷️ <strong>Assigned Role:</strong> <span style="text-transform: capitalize; font-weight: 600;">{{role}}</span></div>
-                        </div>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Workspace</td>
+                            <td style="padding: 11px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{workspace_name}}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Assigned Role</td>
+                            <td style="padding: 11px 16px;">
+                                <span style="background-color: #eff6ff; color: #1d5fd6; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe; text-transform: uppercase; letter-spacing: 0.5px;">{{role}}</span>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Login Email</td>
+                            <td style="padding: 11px 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12.5px; color: #0f172a; font-weight: 600;">{{user_email}}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Direct Password</td>
+                            <td style="padding: 11px 16px;">
+                                <code style="background-color: #ffffff; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; font-weight: 700; color: #1d5fd6;">{{password}}</code>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{{login_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block; letter-spacing: -0.2px;">Log In to Your Workspace →</a>
                     </div>
 
-                    <div style="text-align: center; margin: 28px 0;">
-                        <a href="{{login_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Log In to Your Workspace →</a>
+                    <div style="background-color: #f8fafc; border-left: 3px solid #94a3b8; padding: 10px 14px; border-radius: 4px; font-size: 12px; color: #64748b; line-height: 1.5;">
+                        🔒 <strong>Security Note:</strong> This is a temporary access credential generated by your workspace administrator. You can update your password at any time from your Profile Settings.
                     </div>
-
-                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 12.5px; color: #92400e; margin-bottom: 20px; line-height: 1.5;">
-                        📬 <strong>Can\'t find this in your Primary Inbox?</strong> Please check your <strong>Spam</strong> or <strong>Junk</strong> folder. Mark it as <em>\"Not Spam\"</em> so you always receive workspace updates directly.
-                    </div>
-
-                    <p style="font-size: 12.5px; color: #64748b;">🔒 For security, we recommend updating your password after logging in from your Profile Settings.</p>
                 ',
                 'body_text' => "Hello {{user_name}},\n\n{{invited_by_name}} invited you to join {{workspace_name}} as {{role}}.\n\nLogin URL: {{login_url}}\nEmail: {{user_email}}\nPassword: {{password}}\n\nLog in here: {{login_url}}\n\nBest regards,\n{{app_name}} Team",
             ],
@@ -871,13 +893,27 @@ class MailService
                     'support_email',
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Workspace Access Granted</h2>
-                    <p style="margin-top: 0; color: #475569;">Hello <strong>{{user_name}}</strong>,</p>
-                    <p style="color: #475569;"><strong>{{invited_by_name}}</strong> has granted you access to the workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
-                    <p style="color: #475569;">Since you already have a registered account on {{app_name}}, you can log in with your existing password and seamlessly switch to <strong>{{workspace_name}}</strong> from the workspace switcher menu.</p>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Access Granted</h2>
+                    <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.6;"><strong>{{invited_by_name}}</strong> has granted you collaboration access to the workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
+
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Workspace</td>
+                            <td style="padding: 11px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{workspace_name}}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Assigned Role</td>
+                            <td style="padding: 11px 16px;">
+                                <span style="background-color: #eff6ff; color: #1d5fd6; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe; text-transform: uppercase; letter-spacing: 0.5px;">{{role}}</span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6;">Since you already have a registered account on {{app_name}}, simply log in with your existing password and select <strong>{{workspace_name}}</strong> from the workspace dropdown switcher.</p>
 
                     <div style="text-align: center; margin: 28px 0;">
-                        <a href="{{login_url}}" style="background: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Open Workspace →</a>
+                        <a href="{{login_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block;">Open Workspace →</a>
                     </div>
                 ',
                 'body_text' => "Hello {{user_name}},\n\n{{invited_by_name}} has granted you access to {{workspace_name}} as {{role}}.\n\nLog in with your existing credentials here: {{login_url}}",
