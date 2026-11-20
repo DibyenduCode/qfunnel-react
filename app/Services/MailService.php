@@ -624,12 +624,16 @@ class MailService
                                 {{otp_code}}
                             </span>
                         </div>
-                        <p style="margin: 12px 0 0 0; font-size: 12px; color: #64748b; font-weight: 500;">
-                            ⏱️ Valid for {{otp_expiry_minutes}} minutes
-                        </p>
+                        <div style="margin-top: 14px;">
+                            <span style="display: inline-block; background-color: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; padding: 5px 14px; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                <span style="vertical-align: middle; margin-right: 4px;">⏳</span> Valid for {{otp_expiry_minutes}} minutes
+                            </span>
+                        </div>
                     </div>
 
-                    <p style="font-size: 12.5px; color: #64748b; line-height: 1.5; margin-bottom: 0;">If you did not request this verification code, please disregard this message. No changes will be made to your account.</p>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-top: 24px; font-size: 12px; color: #64748b; line-height: 1.5;">
+                        <span style="font-size: 14px; vertical-align: middle; margin-right: 4px;">🛡️</span> <strong>Security Note:</strong> FilterFunnel team members will never ask you for your verification code. If you did not create an account, you can safely ignore this email.
+                    </div>
                 ',
                 'body_text' => "Hello {{user_name}},\n\nYour 6-digit verification code is: {{otp_code}}\n\nThis code expires in {{otp_expiry_minutes}} minutes.\n\nThank you,\n{{app_name}} Team",
             ],
@@ -637,7 +641,7 @@ class MailService
             'welcome_email' => [
                 'name' => 'Welcome to Platform',
                 'description' => 'Sent after email verification to welcome new workspace owners.',
-                'subject' => 'Welcome to {{app_name}}, {{user_name}}! 🚀',
+                'subject' => 'Welcome to {{app_name}}, {{user_name}} 👋',
                 'preheader' => 'Your workspace {{tenant_name}} is ready. Build your first quiz funnel.',
                 'available_tags' => [
                     'app_name',
@@ -649,36 +653,36 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Welcome to {{app_name}}! 🚀</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Welcome to {{app_name}} 👋</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your email is verified and your customer workspace <strong>{{tenant_name}}</strong> is live and ready to build high-converting interactive funnels.</p>
 
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; width: 44px; vertical-align: top;">01</td>
-                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
-                                <strong>Build Your Flow:</strong> Drag and drop branching question nodes and 2-field lead capture forms in the visual canvas.
+                            <td style="padding: 14px 16px; font-size: 18px; width: 44px; vertical-align: middle; text-align: center;">🧩</td>
+                            <td style="padding: 14px 16px 14px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong style="color: #0f172a;">Visual Flow Builder:</strong> Drag and drop branching question nodes and 2-field lead capture forms in the visual canvas.
                             </td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; vertical-align: top;">02</td>
-                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
-                                <strong>Smart Branching:</strong> Add decision nodes to route qualified high-budget prospects to custom instant quotes.
+                            <td style="padding: 14px 16px; font-size: 18px; vertical-align: middle; text-align: center;">🔀</td>
+                            <td style="padding: 14px 16px 14px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong style="color: #0f172a;">Smart Decision Logic:</strong> Add decision nodes to route qualified high-budget prospects to custom instant quotes.
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding: 12px 16px; font-weight: 800; color: #1d5fd6; font-size: 13px; vertical-align: top;">03</td>
-                            <td style="padding: 12px 16px 12px 0; font-size: 13px; color: #334155; line-height: 1.5;">
-                                <strong>Publish & Launch:</strong> Click Publish to get your live embed link and start capturing leads immediately.
+                            <td style="padding: 14px 16px; font-size: 18px; vertical-align: middle; text-align: center;">🌐</td>
+                            <td style="padding: 14px 16px 14px 0; font-size: 13px; color: #334155; line-height: 1.5;">
+                                <strong style="color: #0f172a;">Publish & Embed:</strong> Connect custom domains or embed directly on your website to start capturing leads immediately.
                             </td>
                         </tr>
                     </table>
 
                     <div style="text-align: center; margin: 28px 0;">
-                        <a href="{{dashboard_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block;">Go to Workspace Dashboard →</a>
+                        <a href="{{dashboard_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block;">Open Workspace Dashboard →</a>
                     </div>
 
-                    <p style="font-size: 13px; color: #64748b;">Have any questions? Simply reply to this email or reach us at {{support_email}}.</p>
+                    <p style="font-size: 13px; color: #64748b;">Have any questions or need setup help? Reply directly to this email or reach our support team at {{support_email}}.</p>
                 ',
                 'body_text' => "Hello {{user_name}},\n\nWelcome to {{app_name}}! Your workspace {{tenant_name}} is ready.\n\nOpen your dashboard here: {{dashboard_url}}\n\nBest regards,\n{{app_name}} Team",
             ],
@@ -703,32 +707,42 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Payment Receipt & Invoice</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Payment Receipt & Invoice 🧾</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">We have received your payment for workspace <strong>{{tenant_name}}</strong>. Your transaction has been processed successfully.</p>
 
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse; overflow: hidden;">
                         <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Invoice Reference</td>
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 4px;">📄</span> Invoice Reference
+                            </td>
                             <td style="padding: 10px 16px; text-align: right; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; font-weight: 700; color: #0f172a;">
                                 #{{invoice_number}}
                                 <span style="margin-left: 6px; background-color: #ecfdf5; color: #047857; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 9999px; border: 1px solid #a7f3d0;">PAID</span>
                             </td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Subscription Plan</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">
+                                <span style="margin-right: 4px;">💳</span> Subscription Plan
+                            </td>
                             <td style="padding: 10px 16px; text-align: right; font-size: 13px; font-weight: 600; color: #0f172a;">{{plan_name}} ({{billing_interval}})</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Payment Method</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">
+                                <span style="margin-right: 4px;">🏦</span> Payment Method
+                            </td>
                             <td style="padding: 10px 16px; text-align: right; font-size: 13px; color: #0f172a; text-transform: capitalize;">{{payment_method}}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">Date Paid</td>
+                            <td style="padding: 10px 16px; font-size: 13px; color: #64748b;">
+                                <span style="margin-right: 4px;">📅</span> Date Paid
+                            </td>
                             <td style="padding: 10px 16px; text-align: right; font-size: 13px; color: #0f172a;">{{paid_at}}</td>
                         </tr>
                         <tr style="background-color: #fafbfc;">
-                            <td style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a;">Total Paid</td>
+                            <td style="padding: 12px 16px; font-size: 14px; font-weight: 700; color: #0f172a;">
+                                <span style="margin-right: 4px;">💰</span> Total Paid
+                            </td>
                             <td style="padding: 12px 16px; text-align: right; font-size: 16px; font-weight: 800; color: #1d5fd6;">{{currency_symbol}}{{amount}}</td>
                         </tr>
                     </table>
@@ -760,21 +774,27 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Upcoming Subscription Renewal</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Upcoming Subscription Renewal 🗓️</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">This is a friendly reminder that your subscription for workspace <strong>{{tenant_name}}</strong> is scheduled for renewal on <strong>{{due_date}}</strong>.</p>
 
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 22px 0; border-collapse: collapse;">
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Current Plan</td>
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">
+                                <span style="margin-right: 4px;">📦</span> Current Plan
+                            </td>
                             <td style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{plan_name}}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Scheduled Amount</td>
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 4px;">💳</span> Scheduled Amount
+                            </td>
                             <td style="padding: 10px 16px; font-size: 13px; font-weight: 700; color: #1d5fd6;">{{currency_symbol}}{{amount}} / {{billing_interval}}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Due Date</td>
+                            <td style="padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 4px;">📅</span> Renewal Date
+                            </td>
                             <td style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #0f172a;">{{due_date}}</td>
                         </tr>
                     </table>
@@ -802,15 +822,15 @@ class MailService
                     'support_email'
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Suspended</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Suspended ⚠️</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;">Your customer workspace <strong>{{tenant_name}}</strong> has been suspended due to:</p>
 
                     <div style="margin: 20px 0; background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 6px; padding: 14px 18px; color: #991b1b; font-size: 13px; font-weight: 600;">
-                        ⚠️ {{suspension_reason}}
+                        <span style="font-size: 15px; vertical-align: middle; margin-right: 6px;">🛑</span> {{suspension_reason}}
                     </div>
 
-                    <p style="font-size: 13px; color: #475569; line-height: 1.6;">While suspended, visitor quiz submissions are paused and editing features are locked. Your data remains fully safe.</p>
+                    <p style="font-size: 13px; color: #475569; line-height: 1.6;">While suspended, visitor quiz submissions are paused and editing features are locked. Your quiz funnels and customer lead data remain fully safe.</p>
 
                     <div style="text-align: center; margin: 26px 0;">
                         <a href="{{dashboard_url}}" style="background-color: #dc2626; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 8px; display: inline-block;">Reactivate Workspace →</a>
@@ -824,7 +844,7 @@ class MailService
             'team_invitation' => [
                 'name' => 'Team Member Invitation & Credentials',
                 'description' => 'Sent when a new user is invited to a workspace, containing login URL, email, and temporary password.',
-                'subject' => 'You\'ve been invited to join {{workspace_name}} on {{app_name}} 🎉',
+                'subject' => '{{invited_by_name}} invited you to {{workspace_name}} on {{app_name}}',
                 'preheader' => '{{invited_by_name}} invited you to collaborate as {{role}}. Log in with your temporary credentials.',
                 'available_tags' => [
                     'app_name',
@@ -838,27 +858,35 @@ class MailService
                     'support_email',
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Team Invitation</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Team Invitation 🤝</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;"><strong>{{invited_by_name}}</strong> has invited you to collaborate on the customer workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
 
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Workspace</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">
+                                <span style="margin-right: 6px; font-size: 14px;">🏢</span> Workspace
+                            </td>
                             <td style="padding: 11px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{workspace_name}}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Assigned Role</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 6px; font-size: 14px;">🏷️</span> Assigned Role
+                            </td>
                             <td style="padding: 11px 16px;">
                                 <span style="background-color: #eff6ff; color: #1d5fd6; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe; text-transform: uppercase; letter-spacing: 0.5px;">{{role}}</span>
                             </td>
                         </tr>
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Login Email</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 6px; font-size: 14px;">✉️</span> Login Email
+                            </td>
                             <td style="padding: 11px 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12.5px; color: #0f172a; font-weight: 600;">{{user_email}}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Direct Password</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 6px; font-size: 14px;">🔑</span> Direct Password
+                            </td>
                             <td style="padding: 11px 16px;">
                                 <code style="background-color: #ffffff; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; font-weight: 700; color: #1d5fd6;">{{password}}</code>
                             </td>
@@ -869,8 +897,8 @@ class MailService
                         <a href="{{login_url}}" style="background-color: #1d5fd6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; padding: 13px 32px; border-radius: 8px; display: inline-block; letter-spacing: -0.2px;">Log In to Your Workspace →</a>
                     </div>
 
-                    <div style="background-color: #f8fafc; border-left: 3px solid #94a3b8; padding: 10px 14px; border-radius: 4px; font-size: 12px; color: #64748b; line-height: 1.5;">
-                        🔒 <strong>Security Note:</strong> This is a temporary access credential generated by your workspace administrator. You can update your password at any time from your Profile Settings.
+                    <div style="background-color: #f8fafc; border-left: 3px solid #64748b; padding: 10px 14px; border-radius: 4px; font-size: 12px; color: #64748b; line-height: 1.5;">
+                        <span style="font-size: 13px; vertical-align: middle; margin-right: 4px;">🛡️</span> <strong>Security Note:</strong> This is a temporary access credential generated by your workspace administrator. You can update your password at any time from your Profile Settings.
                     </div>
                 ',
                 'body_text' => "Hello {{user_name}},\n\n{{invited_by_name}} invited you to join {{workspace_name}} as {{role}}.\n\nLogin URL: {{login_url}}\nEmail: {{user_email}}\nPassword: {{password}}\n\nLog in here: {{login_url}}\n\nBest regards,\n{{app_name}} Team",
@@ -893,17 +921,21 @@ class MailService
                     'support_email',
                 ],
                 'body_html' => '
-                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Access Granted</h2>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 8px; letter-spacing: -0.3px;">Workspace Access Granted 🤝</h2>
                     <p style="margin-top: 0; color: #475569; font-size: 14px; line-height: 1.6;">Hello <strong>{{user_name}}</strong>,</p>
                     <p style="color: #475569; font-size: 14px; line-height: 1.6;"><strong>{{invited_by_name}}</strong> has granted you collaboration access to the workspace <strong>{{workspace_name}}</strong> as <strong style="text-transform: capitalize;">{{role}}</strong>.</p>
 
                     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin: 24px 0; border-collapse: collapse;">
                         <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">Workspace</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; width: 34%;">
+                                <span style="margin-right: 6px; font-size: 14px;">🏢</span> Workspace
+                            </td>
                             <td style="padding: 11px 16px; font-size: 13px; font-weight: 700; color: #0f172a;">{{workspace_name}}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Assigned Role</td>
+                            <td style="padding: 11px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">
+                                <span style="margin-right: 6px; font-size: 14px;">🏷️</span> Assigned Role
+                            </td>
                             <td style="padding: 11px 16px;">
                                 <span style="background-color: #eff6ff; color: #1d5fd6; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid #bfdbfe; text-transform: uppercase; letter-spacing: 0.5px;">{{role}}</span>
                             </td>
