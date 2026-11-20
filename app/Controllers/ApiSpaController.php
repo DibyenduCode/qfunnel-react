@@ -2417,17 +2417,19 @@ class ApiSpaController
             if (empty($providedKey) || !hash_equals($configuredKey, $providedKey)) {
                 return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
             }
-        } elseif (!empty($providedKey)) {
+        } else {
             $validDefaults = ['filterfunnel_cron_secret', 'leadcollector_cron_secret'];
             $matched = false;
-            foreach ($validDefaults as $def) {
-                if (hash_equals($def, $providedKey)) {
-                    $matched = true;
-                    break;
+            if (!empty($providedKey)) {
+                foreach ($validDefaults as $def) {
+                    if (hash_equals($def, $providedKey)) {
+                        $matched = true;
+                        break;
+                    }
                 }
             }
             if (!$matched) {
-                return Response::error("Invalid cron security key.", "UNAUTHORIZED", null, 403);
+                return Response::error("Invalid or missing cron security key.", "UNAUTHORIZED", null, 403);
             }
         }
 

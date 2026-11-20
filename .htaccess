@@ -4,8 +4,12 @@
     # Prevent directory listing
     Options -Indexes
 
-    # Block sensitive internal directories and files
-    RewriteRule ^(\.env|app|config|database|storage|docs-internal|tests) - [F,L,NC]
+    # Block dotfiles (.env, .git, etc.) and sensitive archives/dumps
+    RewriteRule ^\. - [F,L]
+    RewriteRule (?i)\.(env|sql|zip|gz|tar|log|bak|swp|sh)$ - [F,L]
+
+    # Block sensitive internal directories and source folders
+    RewriteRule ^(app|config|database|storage|docs-internal|tests|e2e|\.agents|\.system_generated) - [F,L,NC]
 
     # Map legacy /qfunnel2/uploads to public/uploads
     RewriteRule ^qfunnel2/uploads/(.*)$ public/uploads/$1 [L,NC]

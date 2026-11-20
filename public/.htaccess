@@ -4,6 +4,10 @@
     # Prevent directory browsing
     Options -Indexes
 
+    # Block dotfiles (.env, .git, etc.) and sensitive configuration dumps
+    RewriteRule ^\. - [F,L]
+    RewriteRule (?i)\.(env|sql|zip|gz|tar|log|bak|swp|sh)$ - [F,L]
+
     # Route /assets/ requests to dist/assets/ directly if not in public/assets/
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
