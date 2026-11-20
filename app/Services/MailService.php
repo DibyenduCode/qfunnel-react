@@ -15,16 +15,26 @@ class MailService
      */
     public static function getSmtpSettings(): array
     {
+        $envHost = Env::get('MAIL_HOST', '');
+        $envPort = (int)Env::get('MAIL_PORT', 587);
+        $envUser = Env::get('MAIL_USERNAME', '');
+        $envPass = Env::get('MAIL_PASSWORD', '');
+        $envFrom = Env::get('MAIL_FROM_ADDRESS', 'no-reply@filterfunnel.in');
+        $envFromName = Env::get('MAIL_FROM_NAME', 'FilterFunnel Platform');
+        $envReplyTo = Env::get('MAIL_REPLY_TO', 'support@filterfunnel.in');
+        $envEnc = Env::get('MAIL_ENCRYPTION', 'tls');
+        $envEnabled = !empty($envHost) && $envHost !== 'smtp.gmail.com';
+
         $defaults = [
-            'enabled' => false,
-            'host' => 'smtp.gmail.com',
-            'port' => 587,
-            'encryption' => 'tls', // 'tls', 'ssl', 'none'
-            'username' => '',
-            'password' => '',
-            'from_email' => 'no-reply@filterfunnel.in',
-            'from_name' => 'FilterFunnel Platform',
-            'reply_to' => 'support@filterfunnel.in',
+            'enabled' => $envEnabled,
+            'host' => !empty($envHost) ? $envHost : 'smtp.gmail.com',
+            'port' => $envPort > 0 ? $envPort : 587,
+            'encryption' => in_array($envEnc, ['tls', 'ssl', 'none'], true) ? $envEnc : 'tls',
+            'username' => $envUser,
+            'password' => $envPass,
+            'from_email' => $envFrom,
+            'from_name' => $envFromName,
+            'reply_to' => $envReplyTo,
         ];
 
         $saved = PlatformSettingService::get('smtp_settings', []);
@@ -144,7 +154,15 @@ class MailService
         $errno = 0;
         $errstr = '';
 
-        $socket = @stream_socket_client($targetHost . ":{$port}", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT);
+        $socketContext = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ]);
+
+        $socket = @stream_socket_client($targetHost . ":{$port}", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $socketContext);
         if (!$socket) {
             $errorMsg = "Socket connect failed to {$targetHost}:{$port} - {$errstr} ({$errno})";
             $nativeRes = self::sendNativeMail($toEmail, $toName, $subject, $htmlBody, $settings);
@@ -349,15 +367,26 @@ class MailService
             ];
         }
 
-        // Standard default tags
-        $appName = Env::get('APP_NAME', 'FilterFunnel');
+        // Standard default tags populated from Super Admin SMTP & platform settings
+        $settings = self::getSmtpSettings();
+        $appName = !empty($settings['from_name']) ? $settings['from_name'] : Env::get('APP_NAME', 'FilterFunnel');
+        $supportEmail = !empty($settings['reply_to']) ? $settings['reply_to'] : (!empty($settings['from_email']) ? $settings['from_email'] : 'support@filterfunnel.in');
         $appUrl = rtrim(Env::get('APP_URL', 'https://filterfunnel.in'), '/');
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $basePath = (isset($_SERVER['SCRIPT_NAME']) && str_contains($_SERVER['SCRIPT_NAME'], '/qfunnel2')) ? '/qfunnel2' : '';
+            $detectedUrl = "{$scheme}://{$_SERVER['HTTP_HOST']}{$basePath}";
+            if (empty($appUrl) || (str_contains($appUrl, 'localhost') && !str_contains($_SERVER['HTTP_HOST'], 'localhost')) || ($appUrl === 'https://filterfunnel.in' && !str_contains($_SERVER['HTTP_HOST'], 'filterfunnel.in'))) {
+                $appUrl = $detectedUrl;
+            }
+        }
+
         $mergedTags = array_merge([
             'app_name' => $appName,
             'app_url' => $appUrl,
             'login_url' => "{$appUrl}/login",
             'dashboard_url' => "{$appUrl}/dashboard",
-            'support_email' => 'support@filterfunnel.in',
+            'support_email' => $supportEmail,
             'current_year' => date('Y'),
             'user_name' => $toName,
             'user_email' => $toEmail,

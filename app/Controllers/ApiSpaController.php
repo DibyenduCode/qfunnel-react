@@ -1086,15 +1086,20 @@ class ApiSpaController
             );
             $userId = (int)Database::lastInsertId();
 
-            // Send invitation email with credentials
+            // Send invitation email with credentials via configured Super Admin SMTP
             try {
-                MailService::sendTemplate('team_invitation', $email, $displayName, [
+                $mailRes = MailService::sendTemplate('team_invitation', $email, $displayName, [
                     'workspace_name' => $workspaceName,
                     'role' => ucfirst($role),
                     'invited_by_name' => $invitedByName,
                     'password' => $rawPassword,
                     'login_url' => $loginUrl,
                 ]);
+                if (!empty($mailRes['success'])) {
+                    Logger::info("Team invitation email successfully dispatched to {$email} via configured SMTP.");
+                } else {
+                    Logger::warning("Team invitation email to {$email} returned: " . ($mailRes['message'] ?? ''));
+                }
             } catch (\Throwable $e) {
                 Logger::error("Failed to send team invitation email to {$email}: " . $e->getMessage());
             }
@@ -1102,14 +1107,19 @@ class ApiSpaController
             $userId = (int)$user['id'];
             $displayName = $user['name'] ?: ($name ?: explode('@', $email)[0]);
 
-            // Send existing user notification email
+            // Send existing user notification email via configured Super Admin SMTP
             try {
-                MailService::sendTemplate('team_member_added', $email, $displayName, [
+                $mailRes = MailService::sendTemplate('team_member_added', $email, $displayName, [
                     'workspace_name' => $workspaceName,
                     'role' => ucfirst($role),
                     'invited_by_name' => $invitedByName,
                     'login_url' => $loginUrl,
                 ]);
+                if (!empty($mailRes['success'])) {
+                    Logger::info("Team access email successfully dispatched to {$email} via configured SMTP.");
+                } else {
+                    Logger::warning("Team access email to {$email} returned: " . ($mailRes['message'] ?? ''));
+                }
             } catch (\Throwable $e) {
                 Logger::error("Failed to send team access email to {$email}: " . $e->getMessage());
             }
