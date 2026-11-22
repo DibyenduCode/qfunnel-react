@@ -88,6 +88,11 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function (Router 
         $router->post('/api/funnels/{id}/mode', [ApiSpaController::class, 'updateFunnelMode']);
         $router->post('/api/funnels/{id}/form-fields', [ApiSpaController::class, 'saveFunnelFormFields']);
 
+        // Workflow Templates Library (Tenant Workspace)
+        $router->get('/api/templates', [ApiSpaController::class, 'templates']);
+        $router->get('/api/templates/{id}', [ApiSpaController::class, 'templateDetail']);
+        $router->post('/api/templates/{id}/use', [ApiSpaController::class, 'useTemplate']);
+
         // Submissions & Leads CRM
         $router->get('/api/submissions/export', [ApiSpaController::class, 'exportSubmissions']);
         $router->get('/admin/submissions/export', [ApiSpaController::class, 'exportSubmissions']);
@@ -182,6 +187,14 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function (Router 
         $router->post('/api/platform/email-settings/templates/{key}/reset', [ApiSpaController::class, 'superadminResetTemplate']);
         $router->post('/api/platform/email-settings/templates/{key}/preview-test', [ApiSpaController::class, 'superadminPreviewTestEmail']);
         $router->get('/api/platform/email-settings/logs', [ApiSpaController::class, 'superadminEmailLogs']);
+
+        // Global Workflow Templates Manager (Super Admin)
+        $router->get('/api/platform/templates', [ApiSpaController::class, 'superadminTemplates']);
+        $router->post('/api/platform/templates', [ApiSpaController::class, 'superadminCreateTemplate']);
+        $router->post('/api/platform/templates/from-funnel', [ApiSpaController::class, 'superadminCreateTemplateFromFunnel']);
+        $router->post('/api/platform/templates/{id}/update', [ApiSpaController::class, 'superadminUpdateTemplate']);
+        $router->post('/api/platform/templates/{id}/delete', [ApiSpaController::class, 'superadminDeleteTemplate']);
+        $router->get('/api/platform/templates/{id}/export', [ApiSpaController::class, 'superadminExportTemplate']);
 
         // System Audit Logs
         $router->get('/api/platform/logs', [ApiSpaController::class, 'superadminLogs']);

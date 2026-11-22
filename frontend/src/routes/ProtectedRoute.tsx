@@ -27,11 +27,6 @@ export const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ chi
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Platform super admins operate exclusively in the Super Admin Console
-  if (isPlatformAdmin) {
-    return <Navigate to="/admin/platform" replace />;
-  }
-
   // Gated: Users MUST verify their email with OTP before accessing the dashboard
   if (!user.email_verified_at) {
     return <Navigate to="/verify-email" replace />;

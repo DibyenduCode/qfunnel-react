@@ -22,6 +22,7 @@ import { EmailVerificationPage } from '../modules/auth/EmailVerificationPage';
 import { DashboardPage } from '../modules/dashboard/DashboardPage';
 import { FunnelsListPage } from '../modules/funnels/FunnelsListPage';
 import { CreateFunnelPage } from '../modules/funnels/CreateFunnelPage';
+import { TemplateLibraryPage } from '../modules/templates/TemplateLibraryPage';
 import { FunnelSettingsPage } from '../modules/funnels/FunnelSettingsPage';
 import { BuilderPage } from '../modules/builder/BuilderPage';
 
@@ -34,6 +35,7 @@ import { BillingPage } from '../modules/billing/BillingPage';
 import { SettingsPage } from '../modules/settings/SettingsPage';
 
 import { SuperadminDashboard } from '../modules/platform/SuperadminDashboard';
+import { SuperadminTemplatesPage } from '../modules/platform/SuperadminTemplatesPage';
 import { SuperadminCustomers } from '../modules/platform/SuperadminCustomers';
 import { SuperadminPlans } from '../modules/platform/SuperadminPlans';
 import { SuperadminGateways } from '../modules/platform/SuperadminGateways';
@@ -104,6 +106,7 @@ export const AppRoutes: React.FC = () => {
         }
       >
         <Route path="/admin/dashboard" element={<DashboardPage />} />
+        <Route path="/admin/templates" element={<TemplateLibraryPage />} />
         <Route path="/admin/funnels" element={<FunnelsListPage />} />
         <Route path="/admin/funnels/create" element={<CreateFunnelPage />} />
         <Route path="/admin/funnels/:id/settings" element={<FunnelSettingsPage />} />
@@ -125,6 +128,7 @@ export const AppRoutes: React.FC = () => {
         }
       >
         <Route path="/admin/platform" element={<SuperadminDashboard />} />
+        <Route path="/admin/platform/templates" element={<SuperadminTemplatesPage />} />
         <Route path="/admin/platform/customers" element={<SuperadminCustomers />} />
         <Route path="/admin/platform/plans" element={<SuperadminPlans />} />
         <Route path="/admin/platform/payment-gateways" element={<SuperadminGateways />} />

@@ -31,6 +31,7 @@ use App\Services\CashfreeService;
 use App\Services\RateLimiterService;
 use App\Services\FunnelGraphService;
 use App\Services\QuizEngineService;
+use App\Services\TemplateService;
 
 class ApiSpaController
 {
@@ -3424,6 +3425,210 @@ class ApiSpaController
         $limit = min(200, max(10, (int)$request->input('limit', 100)));
         $logs = MailService::getRecentLogs($limit);
         return Response::success($logs);
+    }
+
+    // ==========================================
+    // WORKFLOW TEMPLATE LIBRARY (TENANT WORKSPACE)
+    // ==========================================
+
+    public function templates(Request $request): Response
+    {
+        $category = $request->query('category');
+        $mode = $request->query('mode');
+        $search = $request->query('search');
+
+        $templates = TemplateService::listPublicTemplates($category, $mode, $search);
+        return Response::success([
+            'templates' => $templates,
+            'categories' => TemplateService::getCategories(),
+        ]);
+    }
+
+    public function templateDetail(Request $request, string $id): Response
+    {
+        $template = TemplateService::getTemplate($id, true);
+        if (!$template) {
+            return Response::error("Template not found or inactive.", "NOT_FOUND", null, 404);
+        }
+
+        return Response::success($template);
+    }
+
+    public function useTemplate(Request $request, string $id): Response
+    {
+        $tenantId = TenantContextService::getActiveTenantId();
+        if (!$tenantId) {
+            return Response::error("Active workspace required.", "NO_WORKSPACE", null, 400);
+        }
+
+        $user = current_user();
+        $customName = $request->input('name');
+
+        try {
+            $createdFunnel = TemplateService::instantiateTemplate($tenantId, (int)$id, $customName, (int)$user['id']);
+            return Response::success($createdFunnel, "Funnel created from template successfully.", 201);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "TEMPLATE_INSTANTIATION_FAILED", null, 400);
+        }
+    }
+
+    // ==========================================
+    // WORKFLOW TEMPLATES (SUPER ADMIN PLATFORM)
+    // ==========================================
+
+    public function superadminTemplates(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $search = $request->query('search');
+        $templates = TemplateService::listAllForAdmin($search);
+
+        // Fetch user funnels that could be converted to templates
+        $sourceFunnels = Database::query(
+            "SELECT f.id, f.name, f.slug, f.funnel_mode, t.name as tenant_name,
+                    (SELECT COUNT(*) FROM funnel_nodes fn WHERE fn.funnel_id = f.id) as node_count
+             FROM funnels f
+             JOIN tenants t ON f.tenant_id = t.id
+             ORDER BY f.id DESC LIMIT 50"
+        );
+
+        return Response::success([
+            'templates' => $templates,
+            'source_funnels' => $sourceFunnels,
+            'categories' => TemplateService::getCategories(),
+            'stats' => [
+                'total' => count($templates),
+                'active' => count(array_filter($templates, fn($t) => !empty($t['is_active']))),
+                'featured' => count(array_filter($templates, fn($t) => !empty($t['is_featured']))),
+                'calculator' => count(array_filter($templates, fn($t) => ($t['funnel_mode'] ?? '') === 'calculator')),
+            ]
+        ]);
+    }
+
+    public function superadminCreateTemplate(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $admin = current_user();
+        $payload = $request->all();
+
+        // Handle uploaded JSON file if provided
+        $file = $request->file('template_file') ?? $request->file('file');
+        if ($file && $file['error'] === UPLOAD_ERR_OK) {
+            $fileContent = @file_get_contents($file['tmp_name']);
+            if ($fileContent) {
+                $decoded = json_decode($fileContent, true);
+                if (is_array($decoded)) {
+                    $payload = array_merge($decoded, $payload);
+                    if (isset($decoded['graph'])) {
+                        $payload['graph'] = $decoded['graph'];
+                    }
+                }
+            }
+        }
+
+        try {
+            $created = TemplateService::createTemplate($payload, (int)$admin['id']);
+            return Response::success($created, "Template created successfully.", 201);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "CREATE_TEMPLATE_FAILED", null, 400);
+        }
+    }
+
+    public function superadminCreateTemplateFromFunnel(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $admin = current_user();
+        $funnelId = (int)$request->input('funnel_id');
+        if (!$funnelId) {
+            return Response::error("Source funnel ID is required.", "VALIDATION_FAILED", null, 422);
+        }
+
+        try {
+            $created = TemplateService::createFromExistingFunnel($funnelId, $request->all(), (int)$admin['id']);
+            return Response::success($created, "Funnel converted into global template successfully.", 201);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "CONVERT_FUNNEL_FAILED", null, 400);
+        }
+    }
+
+    public function superadminUpdateTemplate(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $admin = current_user();
+        try {
+            $updated = TemplateService::updateTemplate((int)$id, $request->all(), (int)$admin['id']);
+            return Response::success(['updated' => $updated], "Template updated successfully.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "UPDATE_TEMPLATE_FAILED", null, 400);
+        }
+    }
+
+    public function superadminDeleteTemplate(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $admin = current_user();
+        $deleted = TemplateService::deleteTemplate((int)$id, (int)$admin['id']);
+        if (!$deleted) {
+            return Response::error("Template not found or already deleted.", "NOT_FOUND", null, 404);
+        }
+
+        return Response::success(null, "Template deleted successfully.");
+    }
+
+    public function superadminExportTemplate(Request $request, string $id): void
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Super admin privilege required.']);
+            exit;
+        }
+
+        $template = TemplateService::getTemplate((int)$id, false);
+        if (!$template) {
+            http_response_code(404);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Template not found.']);
+            exit;
+        }
+
+        $exportData = [
+            'name' => $template['name'],
+            'slug' => $template['slug'],
+            'description' => $template['description'],
+            'category' => $template['category'],
+            'funnel_mode' => $template['funnel_mode'],
+            'badge' => $template['badge'],
+            'graph' => $template['graph'],
+            'settings' => $template['settings'],
+            'form_schema' => $template['form_schema'],
+            'exported_at' => date('Y-m-d H:i:s'),
+            'generator' => 'FilterFunnel Platform Template Engine',
+        ];
+
+        $jsonStr = json_encode($exportData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $filename = 'template_' . $template['slug'] . '.json';
+
+        header('Content-Type: application/json; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        echo $jsonStr;
+        exit;
     }
 }
 

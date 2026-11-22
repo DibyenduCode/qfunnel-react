@@ -21,7 +21,8 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
-  HelpCircle
+  HelpCircle,
+  LayoutTemplate
 } from 'lucide-react';
 import { OnboardingTourModal } from '../components/OnboardingTourModal';
 import { useTourStore } from '../store/tourStore';
@@ -53,6 +54,7 @@ export const AdminLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard, chip: 'bg-[#dcf1ff] text-[#1d5fd6]' },
     { name: 'Funnels', href: '/admin/funnels', icon: GitFork, chip: 'bg-[#e0e7ff] text-[#3730a3]' },
+    { name: 'Template Library', href: '/admin/templates', icon: LayoutTemplate, chip: 'bg-[#fdf2f8] text-[#be185d]' },
     { name: 'Leads & Submissions', href: '/admin/submissions', icon: Users, chip: 'bg-[#dcfae5] text-[#2f7a45]' },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, chip: 'bg-[#fef3c7] text-[#b45309]' },
     { name: 'Team', href: '/admin/team', icon: Users2, chip: 'bg-[#ccfbf1] text-[#0f766e]' },
@@ -69,6 +71,7 @@ export const AdminLayout: React.FC = () => {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes('/dashboard')) return 'Dashboard';
+    if (path.includes('/templates')) return 'Template Library';
     if (path.includes('/funnels')) return 'Funnels';
     if (path.includes('/submissions')) return 'Leads & Submissions';
     if (path.includes('/analytics')) return 'Analytics';

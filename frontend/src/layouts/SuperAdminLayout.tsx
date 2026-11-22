@@ -19,7 +19,10 @@ import {
   Scale,
   Code2,
   UserCheck,
-  LifeBuoy
+  LifeBuoy,
+  LayoutTemplate,
+  GitFork,
+  ArrowRight
 } from 'lucide-react';
 
 export const SuperAdminLayout: React.FC = () => {
@@ -36,6 +39,7 @@ export const SuperAdminLayout: React.FC = () => {
   const navigation = [
     { name: 'Platform Overview', href: '/admin/platform', icon: LayoutDashboard, chip: 'bg-[#dcf1ff] text-[#1d5fd6]' },
     { name: 'Customers & Workspaces', href: '/admin/platform/customers', icon: Users, chip: 'bg-[#dcfae5] text-[#2f7a45]' },
+    { name: 'Workflow Templates', href: '/admin/platform/templates', icon: LayoutTemplate, chip: 'bg-[#fdf2f8] text-[#be185d]' },
     { name: 'Plans & Feature Quotas', href: '/admin/platform/plans', icon: Layers, chip: 'bg-[#fef3c7] text-[#b45309]' },
     { name: 'Payment Gateways', href: '/admin/platform/payment-gateways', icon: CreditCard, chip: 'bg-[#e0e7ff] text-[#3730a3]' },
     { name: 'Email & Global SMTP', href: '/admin/platform/email-settings', icon: Mail, chip: 'bg-[#ffedd5] text-[#c2410c]' },
@@ -170,6 +174,15 @@ export const SuperAdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              to="/admin/funnels"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#1d5fd6] bg-[#eff6ff] hover:bg-[#dbeafe] border border-[#bfdbfe] transition"
+              title="Open Visual Funnel Studio to build and test funnels"
+            >
+              <GitFork className="w-3.5 h-3.5" />
+              <span>Funnel Studio / Canvas</span>
+            </Link>
+
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#dcfae5] text-[#2f7a45] border border-[#bbf7d0]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2f7a45]" />
               <span>Multi-Tenant Cluster Operational</span>

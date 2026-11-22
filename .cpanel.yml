@@ -21,6 +21,7 @@ deployment:
     - /bin/cp -R public $DEPLOYPATH
     - /bin/cp -R vendor $DEPLOYPATH
     - /bin/cp index.php $DEPLOYPATH
+    - /bin/cp cron.php $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH
     - /bin/chmod -R 775 $DEPLOYPATH/storage
     - /bin/chmod -R 775 $DEPLOYPATH/public/uploads

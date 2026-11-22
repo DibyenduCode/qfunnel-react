@@ -19,7 +19,8 @@ import {
   Keyboard,
   Undo2,
   Redo2,
-  Settings
+  Settings,
+  LayoutTemplate
 } from 'lucide-react';
 
 interface BuilderToolbarProps {
@@ -36,6 +37,7 @@ interface BuilderToolbarProps {
   onAutoArrange?: () => void;
   isPaletteOpen?: boolean;
   onTogglePalette?: () => void;
+  onOpenTemplates?: () => void;
   onOpenShortcuts?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
@@ -56,6 +58,7 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
   onAutoArrange,
   isPaletteOpen = true,
   onTogglePalette,
+  onOpenTemplates,
   onOpenShortcuts,
   canUndo = false,
   canRedo = false,
@@ -162,6 +165,18 @@ export const BuilderToolbar: React.FC<BuilderToolbarProps> = ({
             <span className="hidden sm:inline">Node library</span>
             <span className="sm:hidden">Nodes</span>
           </button>
+
+          {onOpenTemplates && (
+            <button
+              type="button"
+              onClick={onOpenTemplates}
+              className="px-2.5 h-7 rounded-md border border-[#e8eaec] bg-white text-[#5d5f60] hover:text-[#1d5fd6] hover:bg-[#f4f6f8] text-xs font-normal transition flex items-center gap-1.5"
+              title="Insert Pre-built Workflow Template"
+            >
+              <LayoutTemplate className="w-3.5 h-3.5 text-[#1d5fd6]" />
+              <span className="hidden sm:inline">Templates</span>
+            </button>
+          )}
         </div>
       )}
 

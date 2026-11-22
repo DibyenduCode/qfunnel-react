@@ -82,6 +82,22 @@ export const CreateFunnelPage: React.FC = () => {
         <h1 className="text-lg font-bold text-[#131416]">Create a New Funnel</h1>
         <p className="text-xs text-[#5c6066] mt-1">Configure your funnel type and metadata</p>
 
+        {/* Template Library Shortcut Banner */}
+        <div className="mt-4 p-3.5 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-[#1d5fd6] shrink-0" />
+            <span className="text-xs text-[#1e40af]">
+              Want a pre-built industry workflow? Browse our <strong>Template Library</strong> to clone full quizzes & calculators with 1 click.
+            </span>
+          </div>
+          <Link
+            to="/admin/templates"
+            className="px-3 py-1 rounded-lg bg-[#1d5fd6] hover:bg-[#154cb3] text-white text-[11px] font-bold shrink-0 transition"
+          >
+            Browse Library ➔
+          </Link>
+        </div>
+
         {isAtLimit && (
           <div className="mt-4 p-4 rounded-xl bg-[#fffbeb] border border-[#fde68a] text-[#92400e] text-xs flex items-start justify-between gap-3 shadow-xs">
             <div className="flex items-start gap-2.5">

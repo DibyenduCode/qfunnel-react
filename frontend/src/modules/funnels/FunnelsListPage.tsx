@@ -20,7 +20,8 @@ import {
   Upload,
   Loader2,
   AlertTriangle,
-  Lock
+  Lock,
+  Sparkles
 } from 'lucide-react';
 
 export const FunnelsListPage: React.FC = () => {
@@ -143,30 +144,40 @@ export const FunnelsListPage: React.FC = () => {
           <p className="text-xs text-[#5d5f60] mt-0.5">Manage, design, and publish your branching logic funnels</p>
         </div>
 
-        {isAtLimit ? (
-          <button
-            onClick={() => {
-              setUpgradeFeature({
-                name: `Funnel Limit Reached (${limits?.current_funnels}/${limits?.max_funnels})`,
-                desc: `You have reached your limit of ${limits?.max_funnels} funnels on the ${limits?.plan_name || 'Starter'} plan. Upgrade to create more funnels.`,
-              });
-              setUpgradeModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#d97706] text-white text-xs font-medium hover:bg-[#b45309] transition self-start sm:self-auto shadow-xs"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Create Funnel (Limit Reached)</span>
-          </button>
-        ) : (
+        <div className="flex items-center gap-2">
           <Link
-            to="/admin/funnels/create"
-            data-tour="create-funnel-btn"
-            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
+            to="/admin/templates"
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#eff6ff] text-[#1d5fd6] border border-[#bfdbfe] text-xs font-semibold hover:bg-[#dbeafe] transition shadow-xs"
           >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create Funnel</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Template Library</span>
           </Link>
-        )}
+
+          {isAtLimit ? (
+            <button
+              onClick={() => {
+                setUpgradeFeature({
+                  name: `Funnel Limit Reached (${limits?.current_funnels}/${limits?.max_funnels})`,
+                  desc: `You have reached your limit of ${limits?.max_funnels} funnels on the ${limits?.plan_name || 'Starter'} plan. Upgrade to create more funnels.`,
+                });
+                setUpgradeModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#d97706] text-white text-xs font-medium hover:bg-[#b45309] transition self-start sm:self-auto shadow-xs"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Create Funnel (Limit Reached)</span>
+            </button>
+          ) : (
+            <Link
+              to="/admin/funnels/create"
+              data-tour="create-funnel-btn"
+              className="inline-flex items-center gap-1.5 px-3 h-8 rounded-md bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition self-start sm:self-auto shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Funnel</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Workspace Suspended Alert */}

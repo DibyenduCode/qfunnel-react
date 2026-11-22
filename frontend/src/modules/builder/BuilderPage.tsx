@@ -37,7 +37,10 @@ import {
   Plus,
   Play,
   Keyboard,
-  Command
+  Command,
+  LayoutTemplate,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 interface QuickAddState {
@@ -59,6 +62,10 @@ const BuilderInner: React.FC = () => {
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [templateList, setTemplateList] = useState<any[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [insertingTemplateId, setInsertingTemplateId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
@@ -657,6 +664,67 @@ const BuilderInner: React.FC = () => {
     setTimeout(() => setBannerMsg(null), 2500);
   };
 
+  const handleOpenTemplateModal = async () => {
+    setTemplateModalOpen(true);
+    try {
+      setLoadingTemplates(true);
+      const res = await api.get('/api/templates');
+      setTemplateList(Array.isArray(res) ? res : (res.templates || []));
+    } catch {
+      // ignore
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const handleApplyTemplateToCanvas = async (templateId: number) => {
+    try {
+      setInsertingTemplateId(templateId);
+      const tpl = await api.get(`/api/templates/${templateId}`);
+      if (!tpl || !tpl.graph || !tpl.graph.nodes) {
+        setBannerMsg({ type: 'error', text: 'Selected template has no valid graph nodes.' });
+        return;
+      }
+      pushHistory();
+
+      const newNodes: Node[] = (tpl.graph.nodes || []).map((n: any, idx: number) => ({
+        id: n.node_key || `node_${idx + 1}`,
+        type: n.node_type || 'question',
+        position: {
+          x: Number(n.position_x) || (100 + idx * 260),
+          y: Number(n.position_y) || 220,
+        },
+        data: {
+          ...n,
+          title: n.title || n.node_type,
+          node_type: n.node_type,
+          is_start: Boolean(n.is_start),
+        },
+      }));
+
+      const newEdges: Edge[] = (tpl.graph.edges || []).map((e: any, idx: number) => ({
+        id: e.edge_key || `edge_${idx + 1}`,
+        source: e.source_node_key || e.source,
+        target: e.target_node_key || e.target,
+        sourceHandle: e.source_handle || 'out',
+        targetHandle: e.target_handle || 'in',
+        type: 'smoothstep',
+        data: { ...e },
+      }));
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+      setIsDirty(true);
+      setTemplateModalOpen(false);
+      setBannerMsg({ type: 'success', text: `Loaded template "${tpl.name}" into canvas!` });
+      setTimeout(() => fitView({ padding: 0.2, duration: 400 }), 150);
+    } catch (err: any) {
+      setBannerMsg({ type: 'error', text: err.message || 'Failed to load template into canvas' });
+    } finally {
+      setInsertingTemplateId(null);
+    }
+  };
+
   const handleSaveGraph = async () => {
     try {
       setIsSaving(true);
@@ -1121,6 +1189,7 @@ const BuilderInner: React.FC = () => {
         onAutoArrange={handleAutoArrange}
         isPaletteOpen={isPaletteOpen}
         onTogglePalette={() => setIsPaletteOpen((prev) => !prev)}
+        onOpenTemplates={handleOpenTemplateModal}
         onOpenShortcuts={() => setShowShortcutsModal(true)}
       />
 
@@ -1477,6 +1546,101 @@ const BuilderInner: React.FC = () => {
                 className="px-3.5 py-1.5 rounded-lg bg-[#1d5fd6] text-white text-xs font-medium hover:bg-[#1853bf] transition shadow-xs"
               >
                 Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Template Picker Modal in Builder */}
+      {templateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white border border-[#e2e5e9] rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-xl animate-in fade-in duration-150 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0f3] shrink-0">
+              <div className="flex items-center gap-2">
+                <LayoutTemplate className="w-4 h-4 text-[#1d5fd6]" />
+                <h3 className="text-sm font-bold text-[#131416]">
+                  Insert Workflow Template into Canvas
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTemplateModalOpen(false)}
+                className="p-1 text-[#5d5f60] hover:text-[#131416] rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#5d5f60] shrink-0">
+              Select a pre-built workflow from the library to populate your canvas. You can undo this action at any time with <kbd className="px-1.5 py-0.5 rounded bg-[#f1f5f9] border border-[#e2e5e9] font-mono text-[10px]">Ctrl+Z</kbd>.
+            </p>
+
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+              {loadingTemplates ? (
+                <div className="py-12 text-center text-xs text-[#5d5f60] flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#1d5fd6]" />
+                  <span>Loading templates...</span>
+                </div>
+              ) : templateList.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#5d5f60]">
+                  No templates found in library.
+                </div>
+              ) : (
+                templateList.map((tpl) => (
+                  <div
+                    key={tpl.id}
+                    className="p-4 rounded-xl border border-[#e2e5e9] bg-[#f8fafc]/50 hover:bg-white hover:border-[#cbd5e1] hover:shadow-xs transition flex items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-xs text-[#131416] truncate">
+                          {tpl.name}
+                        </span>
+                        {tpl.badge && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+                            {tpl.badge}
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eff6ff] text-[#1d5fd6]">
+                          {tpl.node_count} nodes
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#5d5f60] line-clamp-1">
+                        {tpl.description}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={insertingTemplateId === tpl.id}
+                      onClick={() => handleApplyTemplateToCanvas(tpl.id)}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#1d5fd6] hover:bg-[#154cb3] text-white text-xs font-semibold shrink-0 transition shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {insertingTemplateId === tpl.id ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Inserting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Apply</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-[#edf0f3] shrink-0">
+              <button
+                type="button"
+                onClick={() => setTemplateModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-xl border border-[#e2e5e9] text-xs font-semibold text-[#5d5f60] hover:bg-[#f8fafc]"
+              >
+                Close
               </button>
             </div>
           </div>

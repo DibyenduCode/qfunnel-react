@@ -80,6 +80,41 @@ if ($action === 'check_email_log') {
     exit(0);
 }
 
+if ($action === 'ensure_test_tenant') {
+    $email = 'template_user@filterfunnel.test';
+    $password = 'Password123!';
+    $user = \App\Core\Database::fetchOne("SELECT * FROM users WHERE email = ?", [$email]);
+    if (!$user) {
+        \App\Core\Database::query(
+            "INSERT INTO users (name, email, password_hash, email_verified_at, is_platform_admin, status) VALUES (?, ?, ?, NOW(), 0, 'active')",
+            ['Template Tester', $email, password_hash($password, PASSWORD_BCRYPT)]
+        );
+        $userId = \App\Core\Database::getConnection()->lastInsertId();
+    } else {
+        $userId = $user['id'];
+        \App\Core\Database::query(
+            "UPDATE users SET password_hash = ?, email_verified_at = NOW(), is_platform_admin = 0, status = 'active' WHERE id = ?",
+            [password_hash($password, PASSWORD_BCRYPT), $userId]
+        );
+    }
+
+    $membership = \App\Core\Database::fetchOne("SELECT * FROM tenant_memberships WHERE user_id = ?", [$userId]);
+    if (!$membership) {
+        $slug = 'template-ws-' . time();
+        \App\Core\Database::query(
+            "INSERT INTO tenants (name, slug, status) VALUES (?, ?, 'active')",
+            ['Template Test Workspace', $slug]
+        );
+        $tenantId = \App\Core\Database::getConnection()->lastInsertId();
+        \App\Core\Database::query(
+            "INSERT INTO tenant_memberships (tenant_id, user_id, role) VALUES (?, ?, 'owner')",
+            [$tenantId, $userId]
+        );
+    }
+    echo json_encode(['status' => 'ready', 'email' => $email, 'password' => $password]);
+    exit(0);
+}
+
 if ($action === 'integrity_check') {
     $orphanedNodes = \App\Core\Database::fetchOne("SELECT COUNT(*) as cnt FROM funnel_nodes fn LEFT JOIN funnels f ON fn.funnel_id = f.id WHERE f.id IS NULL")['cnt'];
     $orphanedEdges = \App\Core\Database::fetchOne("SELECT COUNT(*) as cnt FROM funnel_edges fe LEFT JOIN funnels f ON fe.funnel_id = f.id WHERE f.id IS NULL")['cnt'];
