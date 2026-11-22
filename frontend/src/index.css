@@ -176,4 +176,19 @@ td.num, th.num {
   animation: loader-spin-smooth 0.75s linear infinite;
 }
 
+/* SweetAlert2 top-level layering & anti-slop SaaS aesthetic */
+.swal2-container {
+  z-index: 999999 !important;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert, showToast } from '../../utils/swal';
 import {
   LayoutTemplate,
   Plus,
@@ -23,9 +24,13 @@ import {
   RefreshCw,
   FolderPlus,
   ChevronRight,
+  ChevronDown,
   Hash,
   Sliders,
-  Tag
+  Tag,
+  SearchX,
+  RotateCcw,
+  Filter
 } from 'lucide-react';
 
 interface TemplateItem {
@@ -87,6 +92,9 @@ export const SuperadminTemplatesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [modeFilter, setModeFilter] = useState<'all' | 'quiz' | 'calculator'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [moreCategoriesOpen, setMoreCategoriesOpen] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modals
@@ -180,10 +188,21 @@ export const SuperadminTemplatesPage: React.FC = () => {
 
   const handleDeleteCategory = async (cat: CategoryItem) => {
     if (cat.count > 0) {
-      alert(`Cannot delete category "${cat.label}" because it has ${cat.count} template(s) assigned to it.`);
+      await showAlert(
+        'Cannot Delete Category',
+        `Category "${cat.label}" is currently assigned to ${cat.count} template(s). Reassign or delete those templates first.`,
+        'warning'
+      );
       return;
     }
-    if (!window.confirm(`Are you sure you want to delete category "${cat.label}"?`)) {
+
+    const confirmed = await showConfirm(
+      'Delete Category',
+      `Are you sure you want to delete category "${cat.label}"?`,
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -229,7 +248,13 @@ export const SuperadminTemplatesPage: React.FC = () => {
   };
 
   const handleDelete = async (template: TemplateItem) => {
-    if (!window.confirm(`Are you sure you want to permanently delete template "${template.name}"?`)) {
+    const confirmed = await showConfirm(
+      'Delete Template',
+      `Are you sure you want to permanently delete template "${template.name}"? This action cannot be undone.`,
+      'Yes, Delete Template',
+      true
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -392,6 +417,16 @@ export const SuperadminTemplatesPage: React.FC = () => {
 
   const filteredTemplates = templates.filter((t) => {
     if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+    if (modeFilter !== 'all' && t.funnel_mode !== modeFilter) return false;
+    if (statusFilter === 'active' && !t.is_active) return false;
+    if (statusFilter === 'inactive' && t.is_active) return false;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const matchName = t.name.toLowerCase().includes(q);
+      const matchSlug = t.slug.toLowerCase().includes(q);
+      const matchDesc = Boolean(t.description && t.description.toLowerCase().includes(q));
+      if (!matchName && !matchSlug && !matchDesc) return false;
+    }
     return true;
   });
 
@@ -523,65 +558,237 @@ export const SuperadminTemplatesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#e2e5e9] shadow-xs">
-        {/* Dynamic Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+      {/* Redesigned Clean Filter & Search Controls */}
+      <div className="bg-white border border-[#e2e5e9] rounded-2xl p-4 shadow-xs space-y-3">
+        {/* Top Controls: Search Bar + Mode Filter + Status Filter + Quick Reset */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Search Box with Clear Button */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-[#5d5f60] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search templates by title, slug, or keywords..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-9 py-2 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] text-[#131416] outline-hidden transition shadow-2xs placeholder:text-[#94a3b8]"
+            />
+            {search.trim() && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#131416] p-0.5 rounded transition cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filters & Actions */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {/* Mode Filter */}
+            <div className="relative">
+              <select
+                value={modeFilter}
+                onChange={(e) => setModeFilter(e.target.value as any)}
+                aria-label="Filter templates by workflow mode"
+                className="px-3 py-2 text-xs font-semibold bg-[#f8fafc] hover:bg-[#edf0f3] border border-[#e2e5e9] rounded-xl text-[#131416] focus:bg-white focus:border-[#1d5fd6] outline-hidden transition cursor-pointer"
+              >
+                <option value="all">All Modes ({templates.length})</option>
+                <option value="quiz">Quiz / Funnel ({templates.filter(t => t.funnel_mode !== 'calculator').length})</option>
+                <option value="calculator">Interactive Calculator ({templates.filter(t => t.funnel_mode === 'calculator').length})</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                aria-label="Filter templates by publication status"
+                className="px-3 py-2 text-xs font-semibold bg-[#f8fafc] hover:bg-[#edf0f3] border border-[#e2e5e9] rounded-xl text-[#131416] focus:bg-white focus:border-[#1d5fd6] outline-hidden transition cursor-pointer"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive / Draft</option>
+              </select>
+            </div>
+
+            {/* Reset Filters button if any active */}
+            {(search.trim() || categoryFilter !== 'all' || modeFilter !== 'all' || statusFilter !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setCategoryFilter('all');
+                  setModeFilter('all');
+                  setStatusFilter('all');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#ef4444] bg-[#fee2e2]/60 hover:bg-[#fee2e2] border border-[#fecaca] transition cursor-pointer"
+                title="Reset all filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Category Pills Navigation Strip */}
+        <div className="pt-2.5 border-t border-[#edf0f3] flex items-center gap-1.5 flex-wrap">
+          {/* All Categories */}
           <button
             onClick={() => setCategoryFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
               categoryFilter === 'all'
                 ? 'bg-[#1d5fd6] text-white shadow-xs'
-                : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3]'
+                : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3] border border-transparent'
             }`}
           >
             All Categories ({templates.length})
           </button>
 
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setCategoryFilter(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                categoryFilter === cat.id
-                  ? 'bg-[#1d5fd6] text-white shadow-xs'
-                  : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3]'
+          {/* Active Categories (with templates) */}
+          {categories
+            .filter((c) => c.count > 0)
+            .map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setCategoryFilter(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+                  categoryFilter === cat.id
+                    ? 'bg-[#1d5fd6] text-white shadow-xs'
+                    : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3] border border-transparent'
+                }`}
+              >
+                <span>{cat.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    categoryFilter === cat.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-[#e2e5e9] text-[#5d5f60]'
+                  }`}
+                >
+                  {cat.count}
+                </span>
+              </button>
+            ))}
+
+          {/* Selected Empty Category Pill if active */}
+          {categories.filter(c => c.count === 0).some(c => c.id === categoryFilter) && (
+            <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#eff6ff] text-[#1d5fd6] border border-[#bfdbfe] flex items-center gap-1.5">
+              <span>{categories.find(c => c.id === categoryFilter)?.label}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#bfdbfe]/50 text-[#1d5fd6]">0</span>
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('all')}
+                className="hover:text-[#ef4444] ml-0.5 cursor-pointer"
+                title="Clear category filter"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {/* Other Categories Dropdown inline */}
+          {categories.some((c) => c.count === 0) && (
+            <select
+              value={categories.filter(c => c.count === 0).some(c => c.id === categoryFilter) ? categoryFilter : ''}
+              onChange={(e) => {
+                if (e.target.value) setCategoryFilter(e.target.value);
+              }}
+              aria-label="Select an empty or inactive category"
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer outline-hidden border ${
+                categories.filter(c => c.count === 0).some(c => c.id === categoryFilter)
+                  ? 'bg-[#eff6ff] text-[#1d5fd6] border-[#bfdbfe]'
+                  : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3] border-[#e2e5e9]'
               }`}
             >
-              {cat.label} {cat.count > 0 ? `(${cat.count})` : ''}
-            </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="relative min-w-[220px]">
-          <Search className="w-3.5 h-3.5 text-[#5d5f60] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] outline-hidden transition"
-          />
+              <option value="" disabled>
+                {categories.filter(c => c.count === 0).some(c => c.id === categoryFilter)
+                  ? `Category: ${categories.find(c => c.id === categoryFilter)?.label}`
+                  : `Other Categories (${categories.filter(c => c.count === 0).length}) ▾`}
+              </option>
+              {categories.filter(c => c.count === 0).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label} (0)
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
       {/* Templates Table / List */}
       <div className="bg-white border border-[#e2e5e9] rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-xs text-[#5d5f60] flex items-center justify-center gap-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-[#1d5fd6]" />
-            <span>Loading workflow templates...</span>
+          <div className="p-16 text-center text-xs text-[#5d5f60] flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#1d5fd6]" />
+            <span className="font-medium">Loading workflow templates catalog...</span>
           </div>
         ) : filteredTemplates.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] border border-[#e2e5e9] text-[#5d5f60] mx-auto flex items-center justify-center">
-              <LayoutTemplate className="w-6 h-6 text-[#5d5f60]" />
+          <div className="p-14 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#f8fafc] border border-[#e2e5e9] text-[#5d5f60] mx-auto flex items-center justify-center shadow-2xs">
+              {search.trim() || categoryFilter !== 'all' || modeFilter !== 'all' || statusFilter !== 'all' ? (
+                <SearchX className="w-7 h-7 text-[#5d5f60]" />
+              ) : (
+                <LayoutTemplate className="w-7 h-7 text-[#1d5fd6]" />
+              )}
             </div>
-            <p className="text-sm font-bold text-[#131416]">No workflow templates found</p>
-            <p className="text-xs text-[#5d5f60] max-w-sm mx-auto">
-              Select a funnel created in your workspace and convert it to populate the global template library.
-            </p>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-[#131416]">
+                {search.trim()
+                  ? `No templates matching "${search}"`
+                  : categoryFilter !== 'all'
+                  ? `No templates in "${categories.find(c => c.id === categoryFilter)?.label || categoryFilter}"`
+                  : modeFilter !== 'all' || statusFilter !== 'all'
+                  ? 'No templates match the selected filters'
+                  : 'Workflow Template Library is Empty'}
+              </h3>
+              <p className="text-xs text-[#5d5f60] max-w-md mx-auto leading-relaxed">
+                {search.trim() || categoryFilter !== 'all' || modeFilter !== 'all' || statusFilter !== 'all'
+                  ? 'Try searching with different terms, selecting another category, or resetting your filters.'
+                  : 'Get started by converting an existing funnel from any workspace into a reusable global template, or upload a JSON template.'}
+              </p>
+            </div>
+
+            {search.trim() || categoryFilter !== 'all' || modeFilter !== 'all' || statusFilter !== 'all' ? (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setCategoryFilter('all');
+                    setModeFilter('all');
+                    setStatusFilter('all');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#1d5fd6] bg-[#eff6ff] hover:bg-[#dbeafe] border border-[#bfdbfe] transition cursor-pointer shadow-2xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset All Filters</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setConvertModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#1d5fd6] hover:bg-[#154cb3] shadow-xs transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Convert Funnel to Template</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#5d5f60] bg-[#f8fafc] hover:bg-[#edf0f3] border border-[#e2e5e9] shadow-xs transition cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload JSON</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

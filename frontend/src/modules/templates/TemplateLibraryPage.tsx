@@ -212,12 +212,12 @@ export const TemplateLibraryPage: React.FC = () => {
       {/* Filter and Search Controls */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#e2e5e9] shadow-xs">
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                 selectedCategory === cat.id
                   ? 'bg-[#1d5fd6] text-white shadow-xs'
                   : 'bg-[#f8fafc] text-[#5d5f60] hover:text-[#131416] hover:bg-[#edf0f3]'
@@ -233,7 +233,7 @@ export const TemplateLibraryPage: React.FC = () => {
           <select
             value={selectedMode}
             onChange={(e) => setSelectedMode(e.target.value as any)}
-            className="px-3 py-1.5 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] outline-hidden font-medium text-[#131416]"
+            className="px-3 py-1.5 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] outline-hidden font-medium text-[#131416] cursor-pointer"
           >
             <option value="all">All Modes</option>
             <option value="quiz">Quiz / Surveys</option>
@@ -247,8 +247,18 @@ export const TemplateLibraryPage: React.FC = () => {
               placeholder="Search templates..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] outline-hidden transition"
+              className="w-full pl-8 pr-8 py-1.5 text-xs bg-[#f8fafc] border border-[#e2e5e9] rounded-xl focus:bg-white focus:border-[#1d5fd6] outline-hidden transition placeholder:text-[#94a3b8]"
             />
+            {search.trim() && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#131416] p-0.5 rounded transition cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>

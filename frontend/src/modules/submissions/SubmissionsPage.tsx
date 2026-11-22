@@ -5,6 +5,7 @@ import { Submission, LeadStage } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
 import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   Users,
   Search,
@@ -161,7 +162,7 @@ export const SubmissionsPage: React.FC = () => {
         prev.map((sub) => (sub.id === submissionId ? { ...sub, lead_status: newStage } : sub))
       );
     } catch (err: any) {
-      alert(err.message || 'Failed to update lead stage');
+      await showAlert('Update Failed', err.message || 'Failed to update lead stage', 'error');
     }
   };
 
@@ -184,15 +185,21 @@ export const SubmissionsPage: React.FC = () => {
   const handleExecuteBulkAction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bulkAction) {
-      alert('Please select a bulk action.');
+      await showAlert('Action Required', 'Please select a bulk action.', 'warning');
       return;
     }
     if (selectedIds.length === 0) {
-      alert('Please select at least one lead.');
+      await showAlert('Selection Required', 'Please select at least one lead.', 'warning');
       return;
     }
-    if (bulkAction === 'delete' && !window.confirm(`Are you sure you want to delete ${selectedIds.length} lead(s)?`)) {
-      return;
+    if (bulkAction === 'delete') {
+      const confirmed = await showConfirm(
+        'Delete Leads',
+        `Are you sure you want to permanently delete ${selectedIds.length} lead(s)?`,
+        'Yes, Delete',
+        true
+      );
+      if (!confirmed) return;
     }
 
     try {
@@ -205,7 +212,7 @@ export const SubmissionsPage: React.FC = () => {
       setBulkAction('');
       await loadSubmissions();
     } catch (err: any) {
-      alert(err.message || 'Bulk action failed');
+      await showAlert('Bulk Action Failed', err.message || 'Bulk action failed', 'error');
     } finally {
       setBulkProcessing(false);
     }
@@ -238,7 +245,7 @@ export const SubmissionsPage: React.FC = () => {
       setNewStageName('');
       setIsStagesModalOpen(false);
     } catch (err: any) {
-      alert(err.message || 'Failed to create lead stage');
+      await showAlert('Create Failed', err.message || 'Failed to create lead stage', 'error');
     } finally {
       setCreatingStage(false);
     }
@@ -246,12 +253,18 @@ export const SubmissionsPage: React.FC = () => {
 
   // Delete Custom Stage
   const handleDeleteStage = async (stageId: number) => {
-    if (!window.confirm('Delete this custom stage? Leads currently in this stage will not be deleted.')) return;
+    const confirmed = await showConfirm(
+      'Delete Lead Stage',
+      'Delete this custom stage? Leads currently in this stage will not be deleted.',
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) return;
     try {
       await api.post(`/api/submissions-stages/${stageId}/delete`, {});
       setLeadStages((prev) => prev.filter((s) => s.id !== stageId));
     } catch (err: any) {
-      alert(err.message || 'Failed to delete stage');
+      await showAlert('Delete Failed', err.message || 'Failed to delete stage', 'error');
     }
   };
 

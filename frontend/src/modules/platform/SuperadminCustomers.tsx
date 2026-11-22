@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert } from '../../utils/swal';
 import { TablePagination } from '../../components/TablePagination';
 import {
   Users,
@@ -185,7 +186,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Plan assigned successfully');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to assign plan');
+      await showAlert('Assign Plan Failed', err.message || 'Failed to assign plan', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -210,7 +211,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Billing cycle updated');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to update billing cycle');
+      await showAlert('Update Failed', err.message || 'Failed to update billing cycle', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -234,7 +235,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Offline payment recorded and invoice generated');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to record payment');
+      await showAlert('Record Failed', err.message || 'Failed to record payment', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -253,7 +254,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Workspace suspended');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to suspend workspace');
+      await showAlert('Suspend Failed', err.message || 'Failed to suspend workspace', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -271,7 +272,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Workspace reactivated');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to unsuspend workspace');
+      await showAlert('Reactivation Failed', err.message || 'Failed to unsuspend workspace', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -286,7 +287,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Workspace marked for termination review');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to mark termination due');
+      await showAlert('Action Failed', err.message || 'Failed to mark termination due', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -299,7 +300,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Workspace dismissed from termination review');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to dismiss');
+      await showAlert('Dismiss Failed', err.message || 'Failed to dismiss', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -309,7 +310,7 @@ export const SuperadminCustomers: React.FC = () => {
     e.preventDefault();
     if (!terminateModal.tenant) return;
     if (confirmSlugInput.toLowerCase() !== terminateModal.tenant.slug.toLowerCase()) {
-      alert(`Confirmation failed: You must type '${terminateModal.tenant.slug}' exactly.`);
+      await showAlert('Confirmation Mismatch', `You must type '${terminateModal.tenant.slug}' exactly.`, 'warning');
       return;
     }
     try {
@@ -323,7 +324,7 @@ export const SuperadminCustomers: React.FC = () => {
       setMsg(res.message || 'Workspace terminated');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to terminate workspace');
+      await showAlert('Termination Failed', err.message || 'Failed to terminate workspace', 'error');
     } finally {
       setActionLoading(false);
     }

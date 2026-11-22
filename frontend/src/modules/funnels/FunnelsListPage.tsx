@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
 import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
 import { SeoHelmet } from '../../components/SeoHelmet';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   GitFork,
   Plus,
@@ -97,7 +98,7 @@ export const FunnelsListPage: React.FC = () => {
       await refreshLimits();
       loadFunnels();
     } catch (err: any) {
-      alert(err.message || 'Duplicate failed');
+      await showAlert('Duplicate Failed', err.message || 'Duplicate failed', 'error');
     } finally {
       setActionLoadingId(null);
     }
@@ -114,21 +115,27 @@ export const FunnelsListPage: React.FC = () => {
       await refreshLimits();
       loadFunnels();
     } catch (err: any) {
-      alert(err.message || 'Publish toggle failed');
+      await showAlert('Publish Failed', err.message || 'Publish toggle failed', 'error');
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this funnel?')) return;
+    const confirmed = await showConfirm(
+      'Delete Funnel',
+      'Are you sure you want to permanently delete this funnel? This action cannot be undone.',
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) return;
     try {
       setActionLoadingId(id);
       await api.post(`/api/funnels/${id}/delete`);
       await refreshLimits();
       loadFunnels();
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      await showAlert('Delete Failed', err.message || 'Delete failed', 'error');
     } finally {
       setActionLoadingId(null);
     }

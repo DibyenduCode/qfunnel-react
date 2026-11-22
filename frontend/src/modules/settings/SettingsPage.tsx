@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { api, resolveMediaUrl } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   Building2,
   User,
@@ -82,7 +83,13 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRemoveLogo = async () => {
-    if (!window.confirm('Are you sure you want to remove the workspace logo?')) return;
+    const confirmed = await showConfirm(
+      'Remove Logo',
+      'Are you sure you want to remove the workspace logo?',
+      'Yes, Remove',
+      true
+    );
+    if (!confirmed) return;
     setWsUploading(true);
     setWsMsg('');
     setWsErr('');
@@ -153,7 +160,13 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!window.confirm('Are you sure you want to remove your profile picture?')) return;
+    const confirmed = await showConfirm(
+      'Remove Profile Picture',
+      'Are you sure you want to remove your profile picture?',
+      'Yes, Remove',
+      true
+    );
+    if (!confirmed) return;
     setAvatarUploading(true);
     setUserMsg('');
     setUserErr('');

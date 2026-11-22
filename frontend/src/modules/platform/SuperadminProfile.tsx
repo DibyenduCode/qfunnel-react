@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api, resolveMediaUrl } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { showConfirm, showAlert } from '../../utils/swal';
 import { ShieldCheck, User, KeyRound, CheckCircle, AlertTriangle, Save, Lock, Upload, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export const SuperadminProfile: React.FC = () => {
@@ -87,7 +88,13 @@ export const SuperadminProfile: React.FC = () => {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!window.confirm('Are you sure you want to remove your admin avatar?')) return;
+    const confirmed = await showConfirm(
+      'Remove Avatar',
+      'Are you sure you want to remove your admin avatar?',
+      'Yes, Remove',
+      true
+    );
+    if (!confirmed) return;
     setAvatarUploading(true);
     setProfileMsg('');
     setProfileErr('');

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   UserPlus,
   Trash2,
@@ -97,18 +98,24 @@ export const TeamPage: React.FC = () => {
       await api.post(`/api/team/${membershipId}/update`, { role: newRole });
       loadTeam();
     } catch (err: any) {
-      alert(err.message || 'Failed to update role');
+      await showAlert('Update Failed', err.message || 'Failed to update role', 'error');
     }
   };
 
   const handleRemove = async (membershipId: number) => {
-    if (!confirm('Remove this member from workspace?')) return;
+    const confirmed = await showConfirm(
+      'Remove Member',
+      'Are you sure you want to remove this member from the workspace?',
+      'Yes, Remove',
+      true
+    );
+    if (!confirmed) return;
     try {
       await api.post(`/api/team/${membershipId}/remove`);
       await refreshLimits();
       loadTeam();
     } catch (err: any) {
-      alert(err.message || 'Failed to remove member');
+      await showAlert('Removal Failed', err.message || 'Failed to remove member', 'error');
     }
   };
 

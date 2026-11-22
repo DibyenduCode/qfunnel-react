@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   LifeBuoy,
   Mail,
@@ -131,14 +132,20 @@ export const SuperadminSupportTickets: React.FC = () => {
       const res = await api.get('/api/platform/support-tickets');
       if (res?.stats) setStats(res.stats);
     } catch (err: any) {
-      alert(err.message || 'Failed to update ticket status');
+      await showAlert('Update Failed', err.message || 'Failed to update ticket status', 'error');
     } finally {
       setUpdatingTicket(false);
     }
   };
 
   const handleDeleteTicket = async (ticket: SupportTicket) => {
-    if (!window.confirm(`Delete ticket #${ticket.ticket_num} from ${ticket.name}?`)) return;
+    const confirmed = await showConfirm(
+      'Delete Support Ticket',
+      `Permanently delete ticket #${ticket.ticket_num} from ${ticket.name}?`,
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) return;
 
     try {
       await api.post(`/api/platform/support-tickets/${ticket.id}/delete`, {});
@@ -149,7 +156,7 @@ export const SuperadminSupportTickets: React.FC = () => {
       const res = await api.get('/api/platform/support-tickets');
       if (res?.stats) setStats(res.stats);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete ticket');
+      await showAlert('Delete Failed', err.message || 'Failed to delete ticket', 'error');
     }
   };
 

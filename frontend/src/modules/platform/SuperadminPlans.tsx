@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert } from '../../utils/swal';
 import {
   Layers,
   Plus,
@@ -172,7 +173,7 @@ export const SuperadminPlans: React.FC = () => {
       setPlanModalOpen(false);
       await loadPlans();
     } catch (err: any) {
-      alert(err.message || 'Failed to save plan');
+      await showAlert('Save Plan Failed', err.message || 'Failed to save plan', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -185,14 +186,20 @@ export const SuperadminPlans: React.FC = () => {
       setMsg(res.message || 'Visibility updated');
       await loadPlans();
     } catch (err: any) {
-      alert(err.message || 'Failed to toggle visibility');
+      await showAlert('Update Failed', err.message || 'Failed to toggle visibility', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeletePlan = async (p: any) => {
-    if (!window.confirm(`Are you sure you want to delete or deactivate plan '${p.name}'?`)) {
+    const confirmed = await showConfirm(
+      'Deactivate Plan',
+      `Are you sure you want to delete or deactivate plan '${p.name}'?`,
+      'Yes, Proceed',
+      true
+    );
+    if (!confirmed) {
       return;
     }
     try {
@@ -201,7 +208,7 @@ export const SuperadminPlans: React.FC = () => {
       setMsg(res.message || `Plan '${p.name}' processed`);
       await loadPlans();
     } catch (err: any) {
-      alert(err.message || 'Failed to remove plan');
+      await showAlert('Action Failed', err.message || 'Failed to remove plan', 'error');
     } finally {
       setActionLoading(false);
     }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert } from '../../utils/swal';
 import { Scale, Plus, CheckCircle, AlertTriangle, ExternalLink, Trash2, Save, FileText, ArrowLeft, X } from 'lucide-react';
 
 interface LegalPageItem {
@@ -120,7 +121,7 @@ export const SuperadminLegalPages: React.FC = () => {
       setNewPublished(true);
       await loadPages(res.id);
     } catch (err: any) {
-      alert(err.message || 'Failed to create legal page');
+      await showAlert('Create Failed', err.message || 'Failed to create legal page', 'error');
     } finally {
       setCreating(false);
     }
@@ -128,17 +129,23 @@ export const SuperadminLegalPages: React.FC = () => {
 
   const handleDelete = async (page: LegalPageItem) => {
     if (CORE_SLUGS.includes(page.slug)) {
-      alert(`Cannot delete core system policy '${page.title}'. You may edit or unpublish it instead.`);
+      await showAlert('Protected Policy', `Cannot delete core system policy '${page.title}'. You may edit or unpublish it instead.`, 'warning');
       return;
     }
-    if (!window.confirm(`Permanently delete legal page '${page.title}'? This cannot be undone.`)) {
+    const confirmed = await showConfirm(
+      'Delete Legal Page',
+      `Permanently delete legal page '${page.title}'? This action cannot be undone.`,
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) {
       return;
     }
     try {
       await api.post(`/api/platform/legal-pages/${page.id}/delete`, {});
       await loadPages();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete legal page');
+      await showAlert('Delete Failed', err.message || 'Failed to delete legal page', 'error');
     }
   };
 

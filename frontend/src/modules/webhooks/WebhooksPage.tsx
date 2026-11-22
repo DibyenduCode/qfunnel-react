@@ -3,6 +3,7 @@ import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { UpgradeModal } from '../../components/UpgradeModal';
 import { ProFeatureTooltip } from '../../components/ProFeatureTooltip';
+import { showConfirm, showAlert } from '../../utils/swal';
 import { Webhook, Plus, Trash2, Loader2, Sparkles } from 'lucide-react';
 
 export const WebhooksPage: React.FC = () => {
@@ -50,19 +51,25 @@ export const WebhooksPage: React.FC = () => {
       setSecret('');
       loadWebhooks();
     } catch (err: any) {
-      alert(err.message || 'Failed to create webhook');
+      await showAlert('Create Failed', err.message || 'Failed to create webhook', 'error');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this webhook endpoint?')) return;
+    const confirmed = await showConfirm(
+      'Delete Webhook',
+      'Are you sure you want to delete this webhook endpoint?',
+      'Yes, Delete',
+      true
+    );
+    if (!confirmed) return;
     try {
       await api.post(`/api/webhooks/${id}/delete`);
       loadWebhooks();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete');
+      await showAlert('Delete Failed', err.message || 'Failed to delete webhook', 'error');
     }
   };
 

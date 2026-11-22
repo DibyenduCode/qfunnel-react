@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { showConfirm, showAlert } from '../../utils/swal';
 import { SmtpSettings, EmailTemplate, EmailLog } from '../../types';
 import { TablePagination } from '../../components/TablePagination';
 import {
@@ -133,7 +134,7 @@ export const SuperadminEmailSettings: React.FC = () => {
 
   const handleTestSmtp = async () => {
     if (!testRecipient) {
-      alert('Please enter a recipient email address to send the test message.');
+      await showAlert('Recipient Required', 'Please enter a recipient email address to send the test message.', 'warning');
       return;
     }
     setTestingSmtp(true);
@@ -169,7 +170,13 @@ export const SuperadminEmailSettings: React.FC = () => {
 
   const handleResetTemplate = async () => {
     if (!currentTemplate) return;
-    if (!confirm(`Are you sure you want to reset '${currentTemplate.name}' to its default subject and HTML content?`)) {
+    const confirmed = await showConfirm(
+      'Reset Template',
+      `Are you sure you want to reset '${currentTemplate.name}' to its default subject and HTML content?`,
+      'Yes, Reset',
+      true
+    );
+    if (!confirmed) {
       return;
     }
     try {
@@ -187,7 +194,7 @@ export const SuperadminEmailSettings: React.FC = () => {
   const handleSendPreviewEmail = async () => {
     if (!currentTemplate) return;
     if (!previewRecipient) {
-      alert('Please enter an email address to receive the preview.');
+      await showAlert('Recipient Required', 'Please enter an email address to receive the preview.', 'warning');
       return;
     }
     setSendingPreview(true);
@@ -195,10 +202,10 @@ export const SuperadminEmailSettings: React.FC = () => {
       const res = await api.post(`/api/platform/email-settings/templates/${currentTemplate.template_key}/preview-test`, {
         email: previewRecipient,
       });
-      alert(res.message || 'Preview email sent!');
+      await showAlert('Preview Sent', res.message || 'Preview email sent!', 'success');
       loadEmailData();
     } catch (err: any) {
-      alert(err.message || 'Failed to dispatch preview email');
+      await showAlert('Send Failed', err.message || 'Failed to dispatch preview email', 'error');
     } finally {
       setSendingPreview(false);
     }
