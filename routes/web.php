@@ -196,6 +196,11 @@ $router->group([AuthMiddleware::class, CsrfMiddleware::class], function (Router 
         $router->post('/api/platform/templates/{id}/delete', [ApiSpaController::class, 'superadminDeleteTemplate']);
         $router->get('/api/platform/templates/{id}/export', [ApiSpaController::class, 'superadminExportTemplate']);
 
+        // Template Categories Manager (Super Admin)
+        $router->get('/api/platform/template-categories', [ApiSpaController::class, 'superadminCategories']);
+        $router->post('/api/platform/template-categories', [ApiSpaController::class, 'superadminCreateCategory']);
+        $router->post('/api/platform/template-categories/{id}/delete', [ApiSpaController::class, 'superadminDeleteCategory']);
+
         // System Audit Logs
         $router->get('/api/platform/logs', [ApiSpaController::class, 'superadminLogs']);
     });

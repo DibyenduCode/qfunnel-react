@@ -57,6 +57,16 @@ async function runTemplateTests() {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '25_superadmin_templates.png') });
     console.log('📸 Screenshot saved: 25_superadmin_templates.png');
 
+    // Test 1.1b: Test Dedicated Category Manager Modal
+    await page.click('button:has-text("Manage Categories")');
+    await page.waitForSelector('text=Workflow Template Categories');
+    console.log('✅ Dedicated "Manage Categories" modal mounted.');
+    await page.fill('input[placeholder*="Dental"]', 'Dentistry & Oral Care');
+    await page.click('form button:has-text("Add")');
+    await page.waitForTimeout(600);
+    console.log('✅ New category created and added to database table.');
+    await page.click('button:has-text("Done")');
+
     // Test 1.2: Open "+ Convert Funnel to Template" Modal and test custom category
     await page.click('button:has-text("+ Convert Funnel to Template")');
     await page.waitForSelector('text=Convert Funnel to Global Template');

@@ -174,15 +174,6 @@ export const SuperAdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/admin/funnels"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#1d5fd6] bg-[#eff6ff] hover:bg-[#dbeafe] border border-[#bfdbfe] transition"
-              title="Open Visual Funnel Studio to build and test funnels"
-            >
-              <GitFork className="w-3.5 h-3.5" />
-              <span>Funnel Studio / Canvas</span>
-            </Link>
-
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#dcfae5] text-[#2f7a45] border border-[#bbf7d0]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2f7a45]" />
               <span>Multi-Tenant Cluster Operational</span>

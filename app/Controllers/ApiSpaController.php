@@ -3630,5 +3630,47 @@ class ApiSpaController
         echo $jsonStr;
         exit;
     }
+
+    public function superadminCategories(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+        return Response::success(TemplateService::getCategories());
+    }
+
+    public function superadminCreateCategory(Request $request): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        $label = $request->input('label');
+        $keyName = $request->input('key_name');
+
+        try {
+            $cat = TemplateService::createCategory($label, $keyName);
+            return Response::success($cat, "Category created successfully.", 201);
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "CREATE_CATEGORY_FAILED", null, 400);
+        }
+    }
+
+    public function superadminDeleteCategory(Request $request, string $id): Response
+    {
+        if (!AuthorizationService::isPlatformAdmin()) {
+            return Response::error("Super admin privilege required.", "FORBIDDEN", null, 403);
+        }
+
+        try {
+            $deleted = TemplateService::deleteCategory($id);
+            if (!$deleted) {
+                return Response::error("Category not found.", "NOT_FOUND", null, 404);
+            }
+            return Response::success(null, "Category deleted successfully.");
+        } catch (\Throwable $e) {
+            return Response::error($e->getMessage(), "DELETE_CATEGORY_FAILED", null, 400);
+        }
+    }
 }
 

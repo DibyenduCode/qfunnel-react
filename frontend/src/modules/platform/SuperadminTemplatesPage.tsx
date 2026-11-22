@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import {
   LayoutTemplate,
@@ -23,7 +22,6 @@ import {
   Check,
   RefreshCw,
   FolderPlus,
-  ExternalLink,
   ChevronRight,
   Hash,
   Sliders,
@@ -96,7 +94,12 @@ export const SuperadminTemplatesPage: React.FC = () => {
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<TemplateItem | null>(null);
+
+  // Category Manager State
+  const [newCategoryLabel, setNewCategoryLabel] = useState('');
+  const [categorySubmitting, setCategorySubmitting] = useState(false);
 
   // Upload JSON Modal State
   const [jsonText, setJsonText] = useState('');
@@ -153,6 +156,43 @@ export const SuperadminTemplatesPage: React.FC = () => {
       setFeedbackMsg({ type: 'error', text: err.message || 'Failed to load templates' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryLabel.trim()) return;
+
+    setCategorySubmitting(true);
+    try {
+      const res = await api.post('/api/platform/template-categories', {
+        label: newCategoryLabel.trim(),
+      });
+      setFeedbackMsg({ type: 'success', text: `Category "${res.label}" created successfully!` });
+      setNewCategoryLabel('');
+      await loadTemplates();
+    } catch (err: any) {
+      setFeedbackMsg({ type: 'error', text: err.message || 'Failed to create category' });
+    } finally {
+      setCategorySubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat: CategoryItem) => {
+    if (cat.count > 0) {
+      alert(`Cannot delete category "${cat.label}" because it has ${cat.count} template(s) assigned to it.`);
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete category "${cat.label}"?`)) {
+      return;
+    }
+
+    try {
+      await api.post(`/api/platform/template-categories/${cat.id}/delete`);
+      setFeedbackMsg({ type: 'success', text: `Category "${cat.label}" deleted.` });
+      await loadTemplates();
+    } catch (err: any) {
+      setFeedbackMsg({ type: 'error', text: err.message || 'Could not delete category' });
     }
   };
 
@@ -369,7 +409,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
                 Global Workflow Templates
               </h1>
               <p className="text-xs text-[#5d5f60]">
-                Curate, publish, and manage pre-built visual workflows. Convert any funnel into a template in 1 click, or add custom categories.
+                Super Admin control panel to convert platform funnels into global templates, organize categories, and manage workflows.
               </p>
             </div>
           </div>
@@ -377,15 +417,15 @@ export const SuperadminTemplatesPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Quick link to Visual Builder */}
-          <Link
-            to="/admin/funnels"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#5d5f60] bg-white border border-[#e2e5e9] hover:bg-[#f8fafc] hover:text-[#131416] transition shadow-xs"
-            title="Open Funnel Studio to build or customize a funnel in the visual canvas"
+          {/* Dedicated Category Manager Button */}
+          <button
+            type="button"
+            onClick={() => setCategoryModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#5d5f60] bg-white border border-[#e2e5e9] hover:bg-[#f8fafc] hover:text-[#131416] transition shadow-xs"
           >
-            <GitFork className="w-3.5 h-3.5 text-[#1d5fd6]" />
-            <span>Open Funnel Studio</span>
-          </Link>
+            <FolderPlus className="w-3.5 h-3.5 text-[#1d5fd6]" />
+            <span>Manage Categories ({categories.length})</span>
+          </button>
 
           {/* Upload JSON Button */}
           <button
@@ -473,13 +513,13 @@ export const SuperadminTemplatesPage: React.FC = () => {
 
         <div className="bg-white border border-[#e2e5e9] rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#5d5f60]">Calculators & Quotes</span>
+            <span className="text-xs font-semibold text-[#5d5f60]">Total Categories</span>
             <div className="w-7 h-7 rounded-lg bg-[#eff6ff] text-[#1d5fd6] flex items-center justify-center">
-              <Calculator className="w-3.5 h-3.5" />
+              <FolderPlus className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-[#131416] mt-2">{stats.calculator}</p>
-          <p className="text-[11px] text-[#5d5f60] mt-0.5">Formula estimation funnels</p>
+          <p className="text-2xl font-bold text-[#131416] mt-2">{categories.length}</p>
+          <p className="text-[11px] text-[#5d5f60] mt-0.5">Organized categories</p>
         </div>
       </div>
 
@@ -540,7 +580,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
             </div>
             <p className="text-sm font-bold text-[#131416]">No workflow templates found</p>
             <p className="text-xs text-[#5d5f60] max-w-sm mx-auto">
-              Click "+ Convert Funnel to Template" or "Upload JSON" to add templates to the library.
+              Select a funnel created in your workspace and convert it to populate the global template library.
             </p>
           </div>
         ) : (
@@ -808,7 +848,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
                       className="w-full px-3 py-2 text-xs bg-[#eff6ff] border border-[#1d5fd6] rounded-xl focus:bg-white outline-hidden transition"
                     />
                     <p className="text-[10px] text-[#5d5f60]">
-                      This will automatically create a new category in the template library.
+                      This will automatically register a new category in the template library.
                     </p>
                   </div>
                 ) : (
@@ -833,7 +873,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Badge & Description */}
+              {/* Badge & Mode */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-[#131416] mb-1">
@@ -875,7 +915,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
               </div>
 
               <div className="p-3 bg-[#f8fafc] rounded-xl border border-[#e2e5e9] text-[11px] text-[#5d5f60] leading-relaxed">
-                💡 <strong>What happens when you click Convert?</strong> The system automatically extracts all nodes, questions, choices, formulas, branching rules, and settings from the source funnel, removes all tenant IDs, and publishes it into the global library for all users to clone in 1 click!
+                💡 <strong>1-Click Conversion:</strong> The system automatically extracts all nodes, questions, choices, formulas, branching rules, and settings from the source funnel, removes all tenant IDs, and publishes it into the global library for all users to clone in 1 click!
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-[#edf0f3]">
@@ -1276,7 +1316,7 @@ export const SuperadminTemplatesPage: React.FC = () => {
                   ))}
                 </select>
                 <p className="text-[10.5px] text-[#5d5f60]">
-                  💡 If you made modifications to a funnel in the visual canvas, select it here to update this template's workflow graph.
+                  💡 If you made modifications to a funnel in your test account, select it here to update this template's workflow graph.
                 </p>
               </div>
 
@@ -1368,6 +1408,103 @@ export const SuperadminTemplatesPage: React.FC = () => {
                 className="px-4 py-1.5 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#154cb3]"
               >
                 Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: Dedicated Category Manager Modal */}
+      {/* ========================================================================= */}
+      {categoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white border border-[#e2e5e9] rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-xl animate-in fade-in duration-150 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-[#edf0f3] shrink-0">
+              <div className="flex items-center gap-2">
+                <FolderPlus className="w-4 h-4 text-[#1d5fd6]" />
+                <h3 className="text-sm font-bold text-[#131416]">
+                  Workflow Template Categories
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCategoryModalOpen(false)}
+                className="p-1 text-[#5d5f60] hover:text-[#131416] rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Add Category Form */}
+            <form onSubmit={handleCreateCategory} className="bg-[#f8fafc] p-3.5 rounded-xl border border-[#e2e5e9] space-y-2.5 shrink-0">
+              <label className="block text-xs font-bold text-[#131416]">
+                + Add New Category
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dental & Healthcare, Financial Services, Gym"
+                  value={newCategoryLabel}
+                  onChange={(e) => setNewCategoryLabel(e.target.value)}
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-[#e2e5e9] rounded-xl focus:border-[#1d5fd6] outline-hidden transition"
+                />
+                <button
+                  type="submit"
+                  disabled={categorySubmitting || !newCategoryLabel.trim()}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#154cb3] disabled:opacity-50 transition shadow-xs shrink-0"
+                >
+                  {categorySubmitting ? 'Adding...' : 'Add'}
+                </button>
+              </div>
+              <p className="text-[10.5px] text-[#5d5f60]">
+                Added categories will immediately appear in the filter tabs and be available in both Super Admin and the User Template Library.
+              </p>
+            </form>
+
+            {/* Existing Categories List */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              <span className="text-xs font-bold text-[#5d5f60] uppercase tracking-wider block mb-1">
+                Active Categories ({categories.length})
+              </span>
+              <div className="divide-y divide-[#edf0f3] border border-[#e2e5e9] rounded-xl overflow-hidden bg-white">
+                {categories.map((c) => (
+                  <div key={c.id} className="p-3 flex items-center justify-between hover:bg-[#f8fafc] transition">
+                    <div>
+                      <div className="text-xs font-bold text-[#131416] flex items-center gap-2">
+                        <span>{c.label}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eff6ff] text-[#1d5fd6] border border-[#dbeafe]">
+                          {c.count} {c.count === 1 ? 'template' : 'templates'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#94a3b8] font-mono">key: {c.id}</span>
+                    </div>
+
+                    <div>
+                      {c.count === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategory(c)}
+                          className="p-1.5 text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#fee2e2]/60 rounded-lg transition"
+                          title="Delete empty category"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-[#edf0f3] shrink-0">
+              <button
+                type="button"
+                onClick={() => setCategoryModalOpen(false)}
+                className="px-4 py-1.5 rounded-xl bg-[#1d5fd6] text-white text-xs font-semibold hover:bg-[#154cb3]"
+              >
+                Done
               </button>
             </div>
           </div>

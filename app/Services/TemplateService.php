@@ -13,49 +13,106 @@ class TemplateService
      */
     public static function getCategories(): array
     {
-        $rows = Database::query("SELECT DISTINCT category FROM workflow_templates WHERE category IS NOT NULL AND category != ''");
-        $preset = [
-            'lead_generation' => 'Lead Generation',
-            'calculator' => 'Calculators & Quotes',
-            'real_estate' => 'Real Estate',
-            'b2b_saas' => 'B2B & SaaS',
-            'health_wellness' => 'Health & Wellness',
-            'marketing' => 'Marketing & VSL',
-            'ecommerce' => 'E-Commerce & Retail',
-            'education' => 'Education & Coaching',
-            'agency' => 'Agencies & Consulting',
-            'finance' => 'Finance & Insurance',
-            'healthcare' => 'Dental & Healthcare',
-            'home_services' => 'Home & Contractor Services',
-        ];
+        // Auto-seed any category existing in workflow_templates into template_categories
+        $orphanCats = Database::query(
+            "SELECT DISTINCT wt.category 
+             FROM workflow_templates wt 
+             LEFT JOIN template_categories tc ON wt.category = tc.key_name 
+             WHERE tc.id IS NULL AND wt.category IS NOT NULL AND wt.category != ''"
+        );
+        foreach ($orphanCats as $oc) {
+            $k = trim($oc['category']);
+            $lbl = ucwords(str_replace(['_', '-'], ' ', $k));
+            try {
+                Database::execute(
+                    "INSERT IGNORE INTO template_categories (key_name, label, display_order) VALUES (?, ?, 50)",
+                    [$k, $lbl]
+                );
+            } catch (\Throwable $e) {}
+        }
 
+        $sql = "SELECT tc.id as db_id, tc.key_name, tc.label, tc.description, tc.display_order,
+                       COUNT(wt.id) as count
+                FROM template_categories tc
+                LEFT JOIN workflow_templates wt ON tc.key_name = wt.category
+                GROUP BY tc.id, tc.key_name, tc.label, tc.description, tc.display_order
+                ORDER BY tc.display_order ASC, tc.label ASC";
+        $rows = Database::query($sql);
         $categories = [];
-        $existingKeys = [];
         foreach ($rows as $r) {
-            $cat = trim($r['category']);
-            if (empty($cat)) continue;
-            $existingKeys[$cat] = true;
-            $label = $preset[$cat] ?? ucwords(str_replace(['_', '-'], ' ', $cat));
-            $countRow = Database::fetchOne("SELECT COUNT(*) as cnt FROM workflow_templates WHERE category = ?", [$cat]);
             $categories[] = [
-                'id' => $cat,
-                'label' => $label,
-                'count' => (int)($countRow['cnt'] ?? 0),
+                'id' => $r['key_name'],
+                'db_id' => (int)$r['db_id'],
+                'label' => $r['label'],
+                'description' => $r['description'] ?? '',
+                'count' => (int)$r['count'],
             ];
         }
 
-        // Add presets that may not yet have templates
-        foreach ($preset as $key => $lbl) {
-            if (!isset($existingKeys[$key])) {
-                $categories[] = [
-                    'id' => $key,
-                    'label' => $lbl,
-                    'count' => 0,
-                ];
-            }
+        return $categories;
+    }
+
+    /**
+     * Create / Add a new template category.
+     */
+    public static function createCategory(string $label, ?string $keyName = null): array
+    {
+        $label = trim($label);
+        if (empty($label)) {
+            throw new RuntimeException("Category name is required.");
         }
 
-        return $categories;
+        if (empty($keyName)) {
+            $keyName = strtolower(preg_replace('/[^a-z0-9_]+/i', '_', $label));
+            $keyName = trim($keyName, '_');
+        }
+        if (empty($keyName)) {
+            $keyName = 'cat_' . bin2hex(random_bytes(3));
+        }
+
+        $existing = Database::fetchOne("SELECT * FROM template_categories WHERE key_name = ?", [$keyName]);
+        if ($existing) {
+            return [
+                'id' => $existing['key_name'],
+                'db_id' => (int)$existing['id'],
+                'label' => $existing['label'],
+                'count' => 0
+            ];
+        }
+
+        $maxOrder = Database::fetchOne("SELECT IFNULL(MAX(display_order), 0) + 1 as next_order FROM template_categories")['next_order'];
+        Database::execute(
+            "INSERT INTO template_categories (key_name, label, display_order) VALUES (?, ?, ?)",
+            [$keyName, $label, $maxOrder]
+        );
+        $newDbId = (int) Database::lastInsertId();
+
+        return [
+            'id' => $keyName,
+            'db_id' => $newDbId,
+            'label' => $label,
+            'count' => 0
+        ];
+    }
+
+    /**
+     * Delete a template category (only if no templates are using it).
+     */
+    public static function deleteCategory(int|string $idOrKey): bool
+    {
+        $field = is_numeric($idOrKey) ? 'id' : 'key_name';
+        $cat = Database::fetchOne("SELECT * FROM template_categories WHERE {$field} = ?", [$idOrKey]);
+        if (!$cat) {
+            return false;
+        }
+
+        $inUse = Database::fetchOne("SELECT COUNT(*) as cnt FROM workflow_templates WHERE category = ?", [$cat['key_name']])['cnt'];
+        if ($inUse > 0) {
+            throw new RuntimeException("Cannot delete category '{$cat['label']}' because {$inUse} template(s) are currently assigned to it. Reassign or delete those templates first.");
+        }
+
+        Database::execute("DELETE FROM template_categories WHERE id = ?", [$cat['id']]);
+        return true;
     }
 
     /**
@@ -283,6 +340,9 @@ class TemplateService
         if (empty($category)) {
             $category = 'lead_generation';
         }
+        try {
+            self::createCategory($rawCategory, $category);
+        } catch (\Throwable $e) {}
         $funnelMode = in_array($data['funnel_mode'] ?? '', ['quiz', 'calculator'], true) ? $data['funnel_mode'] : 'quiz';
         $badge = !empty($data['badge']) ? trim((string)$data['badge']) : null;
         $thumbnailUrl = !empty($data['thumbnail_url']) ? trim((string)$data['thumbnail_url']) : null;
